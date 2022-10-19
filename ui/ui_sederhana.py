@@ -1,7 +1,20 @@
+"""
+Script untuk kelas UI
+Script untuk menampilkan informasi dasar akun dan garis_horizontal pada terminal
+"""
+
 import os
 
 import pandas as pd
 from colorama import Fore, Style, init
+
+__author__ = "Johanes Indra Pradana Pao"
+__copyright__ = "Copyright 2022, Undecided"
+__license__ = "GPL"
+__version__ = "1.0.0"
+__maintainer = "Johanes Indra Pradana Pao"
+__email__ = "johanes.pao@gmail.com"
+__status__ = "Development"
 
 init()
 

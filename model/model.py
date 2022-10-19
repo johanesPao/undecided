@@ -1,7 +1,19 @@
+"""
+Script untuk kelas Model
+Script untuk melakukan penarikan data dari API endpoint
+"""
+
 import pandas as pd
 
+__author__ = "Johanes Indra Pradana Pao"
+__copyright__ = "Copyright 2022, Undecided"
+__license__ = "GPL"
+__version__ = "1.0.0"
+__maintainer = "Johanes Indra Pradana Pao"
+__email__ = "johanes.pao@gmail.com"
+__status__ = "Development"
 
-class DataHistoris:
+class Model:
     # set __init__ dengan kelas akun yg diinisiasi di undecided.py
     def __init__(self, akun):
         self.akun = akun
