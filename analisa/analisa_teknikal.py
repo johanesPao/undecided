@@ -13,14 +13,18 @@ __status__ = "Development"
 
 
 class AnalisaTeknikal:
-    def __init__(self, akun):
+    def __init__(self, akun) -> None:
         self.akun = akun
 
+    # definisi analisa teknikal dilakukan di bawah ini
+    # STOKASTIK
     def stokastik(self):
         pass
 
+    # MOVING AVERAGE
     def moving_average(self):
         pass
 
+    # PARABOLIC SAR
     def parabolic_sar(self):
         pass

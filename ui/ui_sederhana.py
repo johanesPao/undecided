@@ -20,15 +20,15 @@ init()
 
 
 class UI:
-    def __init__(self, akun):
+    def __init__(self, akun) -> None:
         self.akun = akun
         self.ukuran_terminal = os.get_terminal_size().columns
 
-    def garis_horizontal(self, komponen: str = "-"):
+    def garis_horizontal(self, komponen: str = "-") -> None:
         self.komponen = komponen
         print(self.komponen * self.ukuran_terminal)
 
-    def data_akun_futures(self):
+    def data_akun_futures(self) -> None:
         data_futures = self.akun.futures_account()
 
         bisa_trade = data_futures["canTrade"]
@@ -79,3 +79,6 @@ class UI:
         print(f"\n{Fore.GREEN}POSISI BERJALAN:{Style.RESET_ALL}")
         print(data_posisi_df)
         self.garis_horizontal()
+
+    def keluar(self) -> None:
+        print(f"{Fore.RED}Tekan Ctrl+C untuk menghentikan program.{Style.RESET_ALL}")

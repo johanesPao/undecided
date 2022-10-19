@@ -13,13 +13,14 @@ __maintainer = "Johanes Indra Pradana Pao"
 __email__ = "johanes.pao@gmail.com"
 __status__ = "Development"
 
+
 class Model:
     # set __init__ dengan kelas akun yg diinisiasi di undecided.py
-    def __init__(self, akun):
+    def __init__(self, akun) -> None:
         self.akun = akun
 
     # method untuk mengambil data historis
-    def ambil_data_historis(self, simbol, interval_kline, tgl_awal):
+    def ambil_data_historis(self, simbol, interval_kline, tgl_awal) -> pd.DataFrame:
         self.simbol = simbol
         self.interval_kline = interval_kline
         self.tgl_awal = tgl_awal
