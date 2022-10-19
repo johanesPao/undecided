@@ -1,11 +1,12 @@
 """
 Script untuk kelas UI
-Script untuk menampilkan informasi dasar akun dan garis_horizontal pada terminal
+Script untuk menampilkan informasi dasar exchange dan garis_horizontal pada terminal
 """
 
 import os
 
 import pandas as pd
+from binance import Client
 from colorama import Fore, Style, init
 
 __author__ = "Johanes Indra Pradana Pao"
@@ -20,8 +21,8 @@ init()
 
 
 class UI:
-    def __init__(self, akun) -> None:
-        self.akun = akun
+    def __init__(self, exchange: Client) -> None:
+        self.exchange = exchange
         self.ukuran_terminal = os.get_terminal_size().columns
 
     def garis_horizontal(self, komponen: str = "-") -> None:
@@ -29,7 +30,7 @@ class UI:
         print(self.komponen * self.ukuran_terminal)
 
     def data_akun_futures(self) -> None:
-        data_futures = self.akun.futures_account()
+        data_futures = self.exchange.futures_account()
 
         bisa_trade = data_futures["canTrade"]
         bisa_deposit = data_futures["canDeposit"]

@@ -5,7 +5,9 @@ Script ini berfungsi untuk menjalankan program utama dan mengintegrasikan berbag
 
 import time
 
-from akun.akun import Akun
+from akun.akun import InfoAkun
+from analisa.analisa_teknikal import AnalisaTeknikal
+from exchange.exchange import Exchange
 from model.model import Model
 from strategi.strategi import Strategi
 from ui.ui_sederhana import UI
@@ -20,27 +22,62 @@ __status__ = "Development"
 
 # PATH UNTUK FILE KONFIG AKUN
 PATH_AKUN = "./api_rahasia/api_konfig.json"
+# KONSTANTA
+JENIS_PASAR = "FUTURES"
+TGL_AWAL = "19 September 2022"
+MODE_BACKTEST = True
+# VARIABEL ASET
+ASET = "MATICUSDT"
 
-Akun = Akun()
-AkunBinance = Akun.binance(PATH_AKUN)
-UI = UI(AkunBinance)
+Exchange = Exchange()
+ExchangeBinance = Exchange.binance(PATH_AKUN)
+InfoAkun = InfoAkun(ExchangeBinance)
+UI = UI(ExchangeBinance)
+AnalisaTeknikal = AnalisaTeknikal()
 
 UI.garis_horizontal(komponen="=")
 print(f"UNDECIDED v{__version__}")
 UI.garis_horizontal(komponen="=")
 
-data = Model(AkunBinance)
+data = Model(ExchangeBinance)
 
 strategi = Strategi()
 
 while True:
-    # ambil data
+    # DATA AKAN DITAMPILKAN MENGGUNAKAN HANDLER UI
+    # data akun spot
+    (
+        maker_commission,
+        taker_commission,
+        buyer_commission,
+        seller_commission,
+        df_saldo_aset_spot,
+    ) = InfoAkun.akun_spot()
+
+    # data akun futures
+    (
+        fee_tier,
+        total_saldo,
+        saldo_tersedia,
+        saldo_terpakai,
+        laba_rugi_terbuka,
+        saldo_plus_profit,
+        df_saldo_aset_futures,
+    ) = InfoAkun.akun_futures()
+
+    # Tampilkan data spot jika terdapat saldo atau posisi pada spot
+
+    # Tampilkan data futures jika terdapat saldo atau posisi pada futures
     UI.data_akun_futures()
-    print("Mengambil data...")
-    data_matic_df = data.ambil_data_historis(
-        "MATICUSDT", AkunBinance.KLINE_INTERVAL_1MINUTE, "18 October 2022"
+
+    # Mengambil data aset
+    data_aset = data.ambil_data_historis(
+        ASET, ExchangeBinance.KLINE_INTERVAL_4HOUR, JENIS_PASAR, TGL_AWAL
     )
-    print(data_matic_df.tail())
+    df_ta = AnalisaTeknikal.stokastik(data_aset, 15, 5, 3, MODE_BACKTEST)
+
+    # print hasil analisa teknikal
+    print(df_ta)
     print("Hibernasi selama 60 detik...")
     UI.keluar()
     UI.garis_horizontal(komponen="=")
