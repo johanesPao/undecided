@@ -5,6 +5,8 @@ Script ini berfungsi untuk menjalankan program utama dan mengintegrasikan berbag
 
 import time
 
+from numpy import take
+
 from akun.akun import InfoAkun
 from analisa.analisa_teknikal import AnalisaTeknikal
 from baca_konfig import Konfigurasi
@@ -34,11 +36,11 @@ Exchange = Konfigurasi.inisiasi_exchange()
 Data = Konfigurasi.inisiasi_data_konektor()
 
 InfoAkun = InfoAkun(Exchange)
-UI = UI(Exchange)
+UI = UI()
 AnalisaTeknikal = AnalisaTeknikal()
 
 UI.garis_horizontal(komponen="=")
-print(f"UNDECIDED v{__version__}")
+print(f"{UI.judul()} v{__version__}")
 UI.garis_horizontal(komponen="=")
 
 data = Model(Exchange)
@@ -68,9 +70,72 @@ while True:
     ) = InfoAkun.akun_futures()
 
     # Tampilkan data spot jika terdapat saldo atau posisi pada spot
+    if len(df_saldo_aset_spot) > 0:
+        # urut ulang data akun spot dalam list
+        data_akun_spot = [
+            maker_commission,
+            taker_commission,
+            buyer_commission,
+            seller_commission,
+        ]
+        # assign label data akun spot
+        label_data_akun_spot = [
+            "Komisi Maker",
+            "Komisi Taker",
+            "Komisi Pembeli",
+            "Komisi Penjual",
+        ]
+
+        # print subjudul spot
+        UI.subjudul("data akun spot:")
+
+        # print iterasi list data_akun_spot
+        for x in range(len(data_akun_spot)):
+            UI.label_nilai(label_data_akun_spot[x], data_akun_spot[x])
+
+        # print dataframe aset spot
+        UI.spasi()
+        UI.subjudul("posisi aset spot:")
+        UI.print_dataframe_murni(df_saldo_aset_spot)
+        UI.garis_horizontal()
 
     # Tampilkan data futures jika terdapat saldo atau posisi pada futures
-    UI.data_akun_futures()
+    if len(df_saldo_aset_futures) > 0:
+        # urut ulang data akun futures dalam list
+        data_akun_futures = [
+            fee_tier,
+            round(saldo_tersedia, 2),
+            round(saldo_terpakai, 2),
+            round(total_saldo, 2),
+            round(laba_rugi_terbuka, 2),
+            round(saldo_plus_profit, 2),
+        ]
+        # assign label data akun futures
+        label_data_akun_futures = [
+            "Fee Tier",
+            "Saldo Tersedia",
+            "Saldo Terpakai",
+            "Saldo Total",
+            "Laba/Rugi Posisi",
+            "Saldo + Laba/Rugi",
+        ]
+
+        # print subjudul spot
+        UI.subjudul("data akun futures:")
+
+        # print iterasi list data_akun_futures
+        for x in range(len(data_akun_futures)):
+            UI.label_nilai(
+                label_data_akun_futures[x],
+                data_akun_futures[x],
+                True if x == 4 else False,
+            )
+
+        # print dataframe aset futures
+        UI.spasi()
+        UI.subjudul("posisi aset futures:")
+        UI.print_dataframe_murni(df_saldo_aset_futures)
+        UI.garis_horizontal()
 
     # Mengambil data aset
     data_aset = data.ambil_data_historis(
