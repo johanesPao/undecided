@@ -7,7 +7,7 @@ import time
 
 from akun.akun import InfoAkun
 from analisa.analisa_teknikal import AnalisaTeknikal
-from exchange.exchange import Exchange
+from baca_konfig import Konfigurasi
 from model.model import Model
 from strategi.strategi import Strategi
 from ui.ui_sederhana import UI
@@ -20,8 +20,8 @@ __maintainer = "Johanes Indra Pradana Pao"
 __email__ = "johanes.pao@gmail.com"
 __status__ = "Development"
 
-# PATH UNTUK FILE KONFIG AKUN
-PATH_AKUN = "./api_rahasia/api_konfig.json"
+# PATH UNTUK FILE KONFIGURASI
+PATH_KONFIGURASI = "./api_rahasia/api_konfig.json"
 # KONSTANTA
 JENIS_PASAR = "FUTURES"
 TGL_AWAL = "19 September 2022"
@@ -29,17 +29,19 @@ MODE_BACKTEST = True
 # VARIABEL ASET
 ASET = "MATICUSDT"
 
-Exchange = Exchange()
-ExchangeBinance = Exchange.binance(PATH_AKUN)
-InfoAkun = InfoAkun(ExchangeBinance)
-UI = UI(ExchangeBinance)
+Konfigurasi = Konfigurasi(PATH_KONFIGURASI)
+Exchange = Konfigurasi.inisiasi_exchange()
+Data = Konfigurasi.inisiasi_data_konektor()
+
+InfoAkun = InfoAkun(Exchange)
+UI = UI(Exchange)
 AnalisaTeknikal = AnalisaTeknikal()
 
 UI.garis_horizontal(komponen="=")
 print(f"UNDECIDED v{__version__}")
 UI.garis_horizontal(komponen="=")
 
-data = Model(ExchangeBinance)
+data = Model(Exchange)
 
 strategi = Strategi()
 
@@ -72,7 +74,7 @@ while True:
 
     # Mengambil data aset
     data_aset = data.ambil_data_historis(
-        ASET, ExchangeBinance.KLINE_INTERVAL_4HOUR, JENIS_PASAR, TGL_AWAL
+        ASET, Exchange.KLINE_INTERVAL_4HOUR, JENIS_PASAR, TGL_AWAL
     )
     df_ta = AnalisaTeknikal.stokastik(data_aset, 15, 5, 3, MODE_BACKTEST)
 
