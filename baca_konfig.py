@@ -3,10 +3,10 @@ Script untuk kelas Konfigurasi
 Script ini akan membaca file konfigurasi json dan melakukan inisiasi data dan exchange saat diperlukan
 """
 
-import json
-
 from binance import Client
 from tvDatafeed import TvDatafeed
+
+from api_rahasia.konfigurasi import Konfigurasi
 
 __author__ = "Johanes Indra Pradana Pao"
 __copyright__ = "Copyright 2022, Undecided"
@@ -17,20 +17,18 @@ __email__ = "johanes.pao@gmail.com"
 __status__ = "Development"
 
 
-class Konfigurasi:
-    def __init__(self, file_konfig: str) -> None:
-        self.file_konfig = file_konfig
-        with open(self.file_konfig, "r") as file_json:
-            self.data_konfigurasi = json.load(file_json)
+class Inisiasi:
+    def __init__(self) -> None:
+        self.konfigurasi = Konfigurasi()
 
-    def inisiasi_data_konektor(self) -> TvDatafeed:
+    def data(self) -> TvDatafeed:
         # username dan password di file konfigurasi
-        USERNAME = self.data_konfigurasi["DATAFEED"]["USERNAME"]
-        PASSWORD = self.data_konfigurasi["DATAFEED"]["PASSWORD"]
+        USERNAME = self.konfigurasi.DataFeed["USERNAME"]
+        PASSWORD = self.konfigurasi.DataFeed["PASSWORD"]
         return TvDatafeed(USERNAME, PASSWORD)
 
-    def inisiasi_exchange(self) -> Client:
+    def exchange(self) -> Client:
         # kunci API dan rahasia API di file konfigurasi
-        KUNCI_API = self.data_konfigurasi["EXCHANGE"]["BINANCE"]["KUNCI_API"]
-        RAHASIA_API = self.data_konfigurasi["EXCHANGE"]["BINANCE"]["RAHASIA_API"]
+        KUNCI_API = self.konfigurasi.Exchange["BINANCE"]["KUNCI_API"]
+        RAHASIA_API = self.konfigurasi.Exchange["BINANCE"]["RAHASIA_API"]
         return Client(KUNCI_API, RAHASIA_API)

@@ -5,12 +5,8 @@ Script ini berfungsi untuk menjalankan program utama dan mengintegrasikan berbag
 
 import time
 
-from numpy import take
-
 from akun.akun import InfoAkun
-from analisa.analisa_teknikal import AnalisaTeknikal
-from baca_konfig import Konfigurasi
-from model.model import Model
+from baca_konfig import Inisiasi
 from strategi.strategi import Strategi
 from ui.ui_sederhana import UI
 
@@ -22,30 +18,24 @@ __maintainer = "Johanes Indra Pradana Pao"
 __email__ = "johanes.pao@gmail.com"
 __status__ = "Development"
 
-# PATH UNTUK FILE KONFIGURASI
-PATH_KONFIGURASI = "./api_rahasia/api_konfig.json"
 # KONSTANTA
-JENIS_PASAR = "FUTURES"
 TGL_AWAL = "19 September 2022"
 MODE_BACKTEST = True
 # VARIABEL ASET
-ASET = "MATICUSDT"
+ASET = "MATICUSDTPERP"
+EXCHANGE = "BINANCE"
 
-Konfigurasi = Konfigurasi(PATH_KONFIGURASI)
-Exchange = Konfigurasi.inisiasi_exchange()
-Data = Konfigurasi.inisiasi_data_konektor()
+inisiasi_konektor = Inisiasi()
+konektor_exchange = inisiasi_konektor.exchange()
 
-InfoAkun = InfoAkun(Exchange)
-UI = UI()
-AnalisaTeknikal = AnalisaTeknikal()
+info_akun = InfoAkun(konektor_exchange)
+ui = UI()
 
-UI.garis_horizontal(komponen="=")
-print(f"{UI.judul()} v{__version__}")
-UI.garis_horizontal(komponen="=")
+ui.garis_horizontal(komponen="=")
+print(f"{ui.judul()} v{__version__}")
+ui.garis_horizontal(komponen="=")
 
-data = Model(Exchange)
-
-strategi = Strategi()
+strategi = Strategi(ASET, EXCHANGE)
 
 while True:
     # DATA AKAN DITAMPILKAN MENGGUNAKAN HANDLER UI
@@ -56,7 +46,7 @@ while True:
         buyer_commission,
         seller_commission,
         df_saldo_aset_spot,
-    ) = InfoAkun.akun_spot()
+    ) = info_akun.akun_spot()
 
     # data akun futures
     (
@@ -67,7 +57,7 @@ while True:
         laba_rugi_terbuka,
         saldo_plus_profit,
         df_saldo_aset_futures,
-    ) = InfoAkun.akun_futures()
+    ) = info_akun.akun_futures()
 
     # Tampilkan data spot jika terdapat saldo atau posisi pada spot
     if len(df_saldo_aset_spot) > 0:
@@ -87,17 +77,17 @@ while True:
         ]
 
         # print subjudul spot
-        UI.subjudul("data akun spot:")
+        ui.subjudul("data akun spot:")
 
         # print iterasi list data_akun_spot
-        for x in range(len(data_akun_spot)):
-            UI.label_nilai(label_data_akun_spot[x], data_akun_spot[x])
+        for nomor_data in range(len(data_akun_spot)):
+            ui.label_nilai(label_data_akun_spot[nomor_data], data_akun_spot[nomor_data])
 
         # print dataframe aset spot
-        UI.spasi()
-        UI.subjudul("posisi aset spot:")
-        UI.print_dataframe_murni(df_saldo_aset_spot)
-        UI.garis_horizontal()
+        ui.spasi()
+        ui.subjudul("posisi aset spot:")
+        ui.print_dataframe_murni(df_saldo_aset_spot)
+        ui.garis_horizontal()
 
     # Tampilkan data futures jika terdapat saldo atau posisi pada futures
     if len(df_saldo_aset_futures) > 0:
@@ -120,33 +110,28 @@ while True:
             "Saldo + Laba/Rugi",
         ]
 
-        # print subjudul spot
-        UI.subjudul("data akun futures:")
+        # print subjudul futures
+        ui.subjudul("data akun futures:")
 
         # print iterasi list data_akun_futures
-        for x in range(len(data_akun_futures)):
-            UI.label_nilai(
-                label_data_akun_futures[x],
-                data_akun_futures[x],
-                True if x == 4 else False,
+        for nomor_data in range(len(data_akun_futures)):
+            ui.label_nilai(
+                label_data_akun_futures[nomor_data],
+                data_akun_futures[nomor_data],
+                nomor_data == 4,
             )
 
         # print dataframe aset futures
-        UI.spasi()
-        UI.subjudul("posisi aset futures:")
-        UI.print_dataframe_murni(df_saldo_aset_futures)
-        UI.garis_horizontal()
+        ui.spasi()
+        ui.subjudul("posisi aset futures:")
+        ui.print_dataframe_murni(df_saldo_aset_futures)
+        ui.garis_horizontal()
 
-    # Mengambil data aset
-    data_aset = data.ambil_data_historis(
-        ASET, Exchange.KLINE_INTERVAL_4HOUR, JENIS_PASAR, TGL_AWAL
-    )
-    df_ta = AnalisaTeknikal.stokastik(data_aset, 15, 5, 3, MODE_BACKTEST)
+    # Eksekusi strategi
+    strategi.stokastik_jpao(["4 jam", "1 hari"], k_cepat=15, k_lambat=5, d_lambat=3)
 
-    # print hasil analisa teknikal
-    print(df_ta)
-    print("Hibernasi selama 60 detik...")
-    UI.keluar()
-    UI.garis_horizontal(komponen="=")
+    print("Hibernasi selama 5 detik...")
+    ui.keluar()
+    ui.garis_horizontal(komponen="=")
 
-    time.sleep(60.0)
+    time.sleep(5.0)

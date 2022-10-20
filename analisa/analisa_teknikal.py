@@ -48,45 +48,31 @@ class AnalisaTeknikal:
         self.backtest = backtest
 
         df = self.data.copy()
-        df = df[
-            ["Waktu Pembukaan", "Buka", "Tinggi", "Rendah", "Tutup", "Waktu Penutupan"]
-        ]
-
-        # jika tanggal dan waktu pada baris pertama > tanggal dan waktu pada baris kedua,
-        # maka data dalam susunan descending, lakukan pembalikan untuk kalkulasi
-        if df.iloc[0, 0] > df.iloc[1, 0]:  # type: ignore
-            df.sort_index(ascending=False, inplace=True)
-
-        # jika mode backtest false hanya ambil n period (self.p_k_cepat) terakhir dari data
-        # dengan menambahkan n period dari self.p_k_lambat atau self.p_d_lambat (yang mana yang
-        # paling besar)
-        if not self.backtest:
-            df = df.iloc[
-                -(self.p_k_cepat + max(self.p_k_lambat, self.p_d_lambat) - 1) :, :
-            ]
+        df = df[["open", "high", "low", "close", "volume"]]
 
         # Menambahkan kolom 'n_tinggi' dengan nilai maks dari n periode (self.p_k_cepat) sebelumnya
-        df["n_tinggi"] = df["Tinggi"].rolling(self.p_k_cepat).max()
+        df["n_tinggi"] = df["high"].rolling(self.p_k_cepat).max()
 
         # Menambahkan kolom 'n_rendah' dengan nilai minimum dari n periode (self.p_k_cepat) sebelumnya
-        df["n_rendah"] = df["Rendah"].rolling(self.p_k_cepat).min()
+        df["n_rendah"] = df["low"].rolling(self.p_k_cepat).min()
 
         # Menggunakan nilai min/maks untuk menghitung %k_cepat
         df["k_cepat"] = (
-            (df["Tutup"] - df["n_rendah"]) / (df["n_tinggi"] - df["n_rendah"])
+            (df["close"] - df["n_rendah"]) / (df["n_tinggi"] - df["n_rendah"])
         ) * 100
 
         # Menghitung nilai %k_lambat yang merupakan rata-rata dari %k_cepat selama n periode (self.p_k_lambat) sebelumnya
         df["k_lambat"] = df["k_cepat"].rolling(self.p_k_lambat).mean()
 
-        # Menghitung nilai %d_lambat yang merupakan rata-rate dari %k_cepat selama n periode (self.p_d_lambat) sebelumnya
-        df["d_lambat"] = df["k_cepat"].rolling(self.p_d_lambat).mean()
+        # Menghitung nilai %d_lambat yang merupakan rata-rata dari %k_lambat selama n periode (self.p_d_lambat) sebelumnya
+        df["d_lambat"] = df["k_lambat"].rolling(self.p_d_lambat).mean()
 
         # Jika bukan backtest, kembalikan kolom k_lambat dan d_lambat dari baris terakhir data
+        # Dengan perubahan data API endpoint ke tradingview, baris terakhir akan menghasilkan nilai yang berjalan dan belum close, ambil data pada urutan baris kedua terakhir saja (dalam kasus backtest false) atau sampai dengan dua baris terakhir saja (dalam kasus backtest true)
         if not self.backtest:
-            df = df[["k_lambat", "d_lambat"]].iloc[-1:, :]
+            df = df[["k_lambat", "d_lambat"]].iloc[-2:-1, :]
         else:
-            df = df[["Waktu Penutupan", "k_lambat", "d_lambat"]]
+            df = df[["k_lambat", "d_lambat"]].iloc[:-1, :]
 
         # Membuang data dengan nilai NaN pada kolom k_lambat atau d_lambat
         df.dropna(subset=["k_lambat", "d_lambat"], inplace=True)
