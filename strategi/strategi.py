@@ -22,15 +22,27 @@ __status__ = "Development"
 
 
 class Strategi:
-    def __init__(self, simbol: str, exchange: str) -> None:
+    def __init__(
+        self,
+        simbol: str,
+        exchange: str,
+        backtest: bool = False,
+        jumlah_periode_backtest: int = 0,
+    ) -> None:
         self.inisiasi = Inisiasi()
         self.konektor_data = self.inisiasi.data()
         self.model = Model(self.konektor_data)
         self.simbol = simbol
         self.exchange = exchange
         self.analisa_teknikal = AnalisaTeknikal()
+        self.backtest = backtest
+        self.jumlah_periode_backtest = jumlah_periode_backtest
+        if self.backtest and self.jumlah_periode_backtest <= 0:
+            raise ValueError(
+                f"Jika backtest={self.backtest}, maka jumlah_periode_backtest harus lebih besar dari 0."
+            )
 
-    def stokastik_jpao(
+    def jpao_hold_trade_sto_1533(
         self,
         interval: List[
             Literal[
@@ -49,50 +61,67 @@ class Strategi:
                 "1 bulan",
             ]
         ] = ["4 jam", "1 hari"],
-        k_cepat: int = 14,
-        k_lambat: int = 3,
+        k_cepat: int = 15,
+        k_lambat: int = 5,
         d_lambat: int = 3,
-    ):
-        if len(interval) != 2:
+    ) -> None | list:
+        self.interval = interval
+        self.k_cepat = k_cepat
+        self.k_lambat = k_lambat
+        self.d_lambat = d_lambat
+
+        if len(self.interval) != 2:
             return print(
                 "Strategi ini (strategi_stokastik_jpao) memerlukan dua interval waktu dalam list"
             )
 
-        jumlah_bar = k_cepat * max(k_lambat, d_lambat)
+        self.jumlah_bar = max(
+            self.jumlah_periode_backtest, self.k_cepat + self.k_lambat + self.d_lambat
+        )
 
-        for waktu in interval:
+        self.data_stokastik = []
+
+        for waktu in self.interval:
             match waktu:
                 case "1 menit":
-                    interval_data = Interval.in_1_minute
+                    self.interval_data = Interval.in_1_minute
                 case "3 menit":
-                    interval_data = Interval.in_3_minute
+                    self.interval_data = Interval.in_3_minute
                 case "5 menit":
-                    interval_data = Interval.in_5_minute
+                    self.interval_data = Interval.in_5_minute
                 case "15 menit":
-                    interval_data = Interval.in_15_minute
+                    self.interval_data = Interval.in_15_minute
                 case "30 menit":
-                    interval_data = Interval.in_30_minute
+                    self.interval_data = Interval.in_30_minute
                 case "45 menit":
-                    interval_data = Interval.in_45_minute
+                    self.interval_data = Interval.in_45_minute
                 case "1 jam":
-                    interval_data = Interval.in_1_hour
+                    self.interval_data = Interval.in_1_hour
                 case "2 jam":
-                    interval_data = Interval.in_2_hour
+                    self.interval_data = Interval.in_2_hour
                 case "3 jam":
-                    interval_data = Interval.in_3_hour
+                    self.interval_data = Interval.in_3_hour
                 case "4 jam":
-                    interval_data = Interval.in_4_hour
+                    self.interval_data = Interval.in_4_hour
                 case "1 hari":
-                    interval_data = Interval.in_daily
+                    self.interval_data = Interval.in_daily
                 case "1 minggu":
-                    interval_data = Interval.in_weekly
+                    self.interval_data = Interval.in_weekly
                 case "1 bulan":
-                    interval_data = Interval.in_monthly
+                    self.interval_data = Interval.in_monthly
 
-            df = self.model.ambil_data_historis(
-                self.simbol, self.exchange, interval_data, jumlah_bar
+            self.df = self.model.ambil_data_historis(
+                self.simbol, self.exchange, self.interval_data, self.jumlah_bar
             )
 
-            df_ta = self.analisa_teknikal.stokastik(df, k_cepat, k_lambat, d_lambat)
+            self.df_ta = self.analisa_teknikal.stokastik(
+                self.df, self.k_cepat, self.k_lambat, self.d_lambat, self.backtest
+            )
 
-            print(df_ta)
+            self.data_stokastik.append(self.df_ta)
+
+        print(self.data_stokastik)
+
+        return self.data_stokastik
+        # # do something here regarding the stochastic value
+        # print(self.data_stokastik_final)

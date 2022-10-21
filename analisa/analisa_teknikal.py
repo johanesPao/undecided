@@ -47,37 +47,38 @@ class AnalisaTeknikal:
         self.p_d_lambat = periode_d_lambat
         self.backtest = backtest
 
-        df = self.data.copy()
-        df = df[["open", "high", "low", "close", "volume"]]
+        self.df = self.data.copy()
+        self.df = self.df[["open", "high", "low", "close", "volume"]]
 
         # Menambahkan kolom 'n_tinggi' dengan nilai maks dari n periode (self.p_k_cepat) sebelumnya
-        df["n_tinggi"] = df["high"].rolling(self.p_k_cepat).max()
+        self.df["n_tinggi"] = self.df["high"].rolling(self.p_k_cepat).max()
 
         # Menambahkan kolom 'n_rendah' dengan nilai minimum dari n periode (self.p_k_cepat) sebelumnya
-        df["n_rendah"] = df["low"].rolling(self.p_k_cepat).min()
+        self.df["n_rendah"] = self.df["low"].rolling(self.p_k_cepat).min()
 
         # Menggunakan nilai min/maks untuk menghitung %k_cepat
-        df["k_cepat"] = (
-            (df["close"] - df["n_rendah"]) / (df["n_tinggi"] - df["n_rendah"])
+        self.df["k_cepat"] = (
+            (self.df["close"] - self.df["n_rendah"])
+            / (self.df["n_tinggi"] - self.df["n_rendah"])
         ) * 100
 
         # Menghitung nilai %k_lambat yang merupakan rata-rata dari %k_cepat selama n periode (self.p_k_lambat) sebelumnya
-        df["k_lambat"] = df["k_cepat"].rolling(self.p_k_lambat).mean()
+        self.df["k_lambat"] = self.df["k_cepat"].rolling(self.p_k_lambat).mean()
 
         # Menghitung nilai %d_lambat yang merupakan rata-rata dari %k_lambat selama n periode (self.p_d_lambat) sebelumnya
-        df["d_lambat"] = df["k_lambat"].rolling(self.p_d_lambat).mean()
+        self.df["d_lambat"] = self.df["k_lambat"].rolling(self.p_d_lambat).mean()
 
         # Jika bukan backtest, kembalikan kolom k_lambat dan d_lambat dari baris terakhir data
         # Dengan perubahan data API endpoint ke tradingview, baris terakhir akan menghasilkan nilai yang berjalan dan belum close, ambil data pada urutan baris kedua terakhir saja (dalam kasus backtest false) atau sampai dengan dua baris terakhir saja (dalam kasus backtest true)
         if not self.backtest:
-            df = df[["k_lambat", "d_lambat"]].iloc[-2:-1, :]
+            self.df = self.df[["k_lambat", "d_lambat"]].iloc[-2:-1, :]
         else:
-            df = df[["k_lambat", "d_lambat"]].iloc[:-1, :]
+            self.df = self.df[["k_lambat", "d_lambat"]].iloc[:-1, :]
 
         # Membuang data dengan nilai NaN pada kolom k_lambat atau d_lambat
-        df.dropna(subset=["k_lambat", "d_lambat"], inplace=True)
+        self.df.dropna(subset=["k_lambat", "d_lambat"], inplace=True)
 
-        return df
+        return self.df
 
     # MOVING AVERAGE
     def moving_average(self):

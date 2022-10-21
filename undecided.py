@@ -128,7 +128,7 @@ while True:
         ui.garis_horizontal()
 
     # Eksekusi strategi
-    strategi.stokastik_jpao(["4 jam", "1 hari"], k_cepat=15, k_lambat=5, d_lambat=3)
+    strategi.jpao_hold_trade_sto_1533()
 
     print("Hibernasi selama 5 detik...")
     ui.keluar()
