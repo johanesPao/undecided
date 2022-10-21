@@ -8,9 +8,11 @@ from typing import List, Literal
 import pandas as pd
 from tvDatafeed import Interval
 
+from akun.akun import InfoAkun
 from analisa.analisa_teknikal import AnalisaTeknikal
 from baca_konfig import Inisiasi
 from model.model import Model
+from tindakan.tindakan import Order
 
 __author__ = "Johanes Indra Pradana Pao"
 __copyright__ = "Copyright 2022, Undecided"
@@ -31,10 +33,13 @@ class Strategi:
     ) -> None:
         self.inisiasi = Inisiasi()
         self.konektor_data = self.inisiasi.data()
+        self.konektor_exchange = self.inisiasi.exchange()
         self.model = Model(self.konektor_data)
+        self.analisa_teknikal = AnalisaTeknikal()
+        self.posisi_futures = InfoAkun(self.konektor_exchange).akun_futures()[6]
+        self.order = Order()
         self.simbol = simbol
         self.exchange = exchange
-        self.analisa_teknikal = AnalisaTeknikal()
         self.backtest = backtest
         self.jumlah_periode_backtest = jumlah_periode_backtest
         if self.backtest and self.jumlah_periode_backtest <= 0:
@@ -120,8 +125,11 @@ class Strategi:
 
             self.data_stokastik.append(self.df_ta)
 
-        print(self.data_stokastik)
+        print(self.data_stokastik)  # HAPUS NANTI
+
+        # jika live stream strategi
+        if not self.backtest:
+            # cek posisi aset yang dipegang saat ini
+            print(self.posisi_futures["positionSide"])
 
         return self.data_stokastik
-        # # do something here regarding the stochastic value
-        # print(self.data_stokastik_final)
