@@ -128,7 +128,7 @@ while True:
         ui.garis_horizontal()
 
     # Eksekusi strategi
-    strategi.jpao_hold_trade_sto_1553()
+    strategi.jpao_niten_ichi_ryu_26_18_8()
 
     print("Hibernasi selama 5 detik...")
     ui.keluar()

@@ -39,8 +39,8 @@ class Strategi:
         self.model = Model(self.konektor_data)
         self.analisa_teknikal = AnalisaTeknikal()
         self.posisi_futures = InfoAkun(self.konektor_exchange).akun_futures()[6]
-        self.order = Order()
         self.simbol = simbol
+        self.order = Order(self.simbol)
         self.exchange = exchange
         self.backtest = backtest
         self.jumlah_periode_backtest = jumlah_periode_backtest
@@ -97,8 +97,6 @@ class Strategi:
         )
 
         self.data_stokastik = []
-
-        self.offset = pd.DateOffset()
 
         try:
             if self.interval[0] == self.interval[1]:
