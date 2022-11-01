@@ -76,8 +76,10 @@ class UI:
                 )
             sys.stdout.flush()
             time.sleep(1)
+        kalimat_selesai_hitung_mundur = "Melakukan eksekusi strategi!"
         sys.stdout.write(
-            "\rMelakukan eksekusi strategi!" + (" " * self.ukuran_terminal)
+            f"\r{kalimat_selesai_hitung_mundur}"
+            + (" " * (self.ukuran_terminal - len(kalimat_selesai_hitung_mundur)))
         )
 
     def keluar(self) -> None:
