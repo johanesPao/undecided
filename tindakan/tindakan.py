@@ -6,7 +6,9 @@ Script ini akan melakukan eksekusi order buka_long, buka_short, tutup_long atau 
 import math
 
 from akun.akun import InfoAkun
+from api_rahasia.konfigurasi import Konfigurasi
 from baca_konfig import Inisiasi
+from fungsi.fungsi import Fungsi
 
 __author__ = "Johanes Indra Pradana Pao"
 __copyright__ = "Copyright 2022, Undecided"
@@ -26,6 +28,9 @@ class Order:
         self.exchange = self.inisiasi_konektor.exchange()
         self.info_akun = InfoAkun(self.exchange)
         self.aset = aset
+        self.pengguna_email = Konfigurasi().Email["USERNAME"]
+        self.kunci_email = Konfigurasi().Email["KUNCI"]
+        self.fungsi = Fungsi()
 
     def buka_long(
         self, kuantitas: float, leverage: int = 10, tipe_order: str = "MARKET"
@@ -45,12 +50,24 @@ class Order:
             harga_masuk_long = df_long.iloc[0]["entryPrice"]
             saldo_long = df_long.iloc[0]["isolatedWallet"]
 
-            return print(
-                f"Posisi LONG senilai {saldo_long} USDT / {math.floor(kuantitas)} {self.aset} berhasil dibuka untuk {self.aset} pada harga {harga_masuk_long}"
+            kalimat = f"Posisi LONG senilai {saldo_long} USDT / {math.floor(kuantitas)} {self.aset} berhasil dibuka untuk {self.aset} pada harga {harga_masuk_long}"
+        except Exception as e:
+            print(e)
+            kalimat = f"Posisi LONG tidak berhasil dibuka untuk {self.aset}"
+
+        print(kalimat)
+
+        try:
+            self.fungsi.kirim_email(
+                self.pengguna_email,
+                self.pengguna_email,
+                "STATUS TRIGGER BUKA LONG",
+                kalimat,
+                self.kunci_email,
             )
         except Exception as e:
             print(e)
-            return print(f"Posisi LONG tidak berhasil dibuka untuk {self.aset}")
+            print("Terjadi kesalahan dalam mengirimkan notifikasi email")
 
     def buka_short(
         self, kuantitas: float, leverage: int = 10, tipe_order: str = "MARKET"
@@ -69,12 +86,24 @@ class Order:
             harga_masuk_short = df_short.iloc[0]["entryPrice"]
             saldo_short = df_short.iloc[0]["isolatedWallet"]
 
-            return print(
-                f"Posisi SHORT senilai {saldo_short} USDT / {math.floor(kuantitas)} {self.aset} berhasil dibuka untuk {self.aset} pada harga {harga_masuk_short}"
+            kalimat = f"Posisi SHORT senilai {saldo_short} USDT / {math.floor(kuantitas)} {self.aset} berhasil dibuka untuk {self.aset} pada harga {harga_masuk_short}"
+        except Exception as e:
+            print(e)
+            kalimat = f"Posisi SHORT tidak berhasil dibuka untuk {self.aset}"
+
+        print(kalimat)
+
+        try:
+            self.fungsi.kirim_email(
+                self.pengguna_email,
+                self.pengguna_email,
+                "STATUS TRIGGER BUKA SHORT",
+                kalimat,
+                self.kunci_email,
             )
         except Exception as e:
             print(e)
-            return print(f"Posisi SHORT tidak berhasil dibuka untuk {self.aset}")
+            print("Terjadi kesalahan dalam mengirimkan notifikasi email")
 
     def tutup_long(
         self, kuantitas: float, leverage: int = 10, tipe_order: str = "MARKET"
@@ -93,12 +122,24 @@ class Order:
                 quantity=math.ceil(kuantitas),
             )
 
-            return print(
-                f"Posisi LONG senilai {saldo_long} USDT / {math.ceil(kuantitas)} {self.aset} berhasil ditutup untuk {self.aset}"
+            kalimat = f"Posisi LONG senilai {saldo_long} USDT / {math.floor(kuantitas)} {self.aset} berhasil ditutup untuk {self.aset}"
+        except Exception as e:
+            print(e)
+            kalimat = f"Posisi LONG tidak berhasil ditutup untuk {self.aset}"
+
+        print(kalimat)
+
+        try:
+            self.fungsi.kirim_email(
+                self.pengguna_email,
+                self.pengguna_email,
+                "STATUS TRIGGER TUTUP LONG",
+                kalimat,
+                self.kunci_email,
             )
         except Exception as e:
             print(e)
-            return print(f"Posisi LONG tidak berhasil ditutup untuk {self.aset}")
+            print("Terjadi kesalahan dalam mengirimkan notifikasi email")
 
     def tutup_short(
         self, kuantitas: float, leverage: int = 10, tipe_order: str = "MARKET"
@@ -117,9 +158,21 @@ class Order:
                 quantity=math.ceil(kuantitas),
             )
 
-            return print(
-                f"Posisi SHORT senilai {saldo_short} USDT / {math.ceil(kuantitas)} {self.aset} berhasil ditutup untuk {self.aset}"
+            kalimat = f"Posisi SHORT senilai {saldo_short} USDT / {math.floor(kuantitas)} {self.aset} berhasil ditutup untuk {self.aset}"
+        except Exception as e:
+            print(e)
+            kalimat = f"Posisi SHORT tidak berhasil ditutup untuk {self.aset}"
+
+        print(kalimat)
+
+        try:
+            self.fungsi.kirim_email(
+                self.pengguna_email,
+                self.pengguna_email,
+                "STATUS TRIGGER TUTUP SHORT",
+                kalimat,
+                self.kunci_email,
             )
         except Exception as e:
             print(e)
-            return print(f"Posisi SHORT tidak berhasil ditutup untuk {self.aset}")
+            print("Terjadi kesalahan dalam mengirimkan notifikasi email")

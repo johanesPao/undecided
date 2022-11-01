@@ -4,7 +4,10 @@ Script ini akan melakukan perintah fungsi dasar di luar perdagangan spesifik
 """
 
 import datetime
+import smtplib
 import time
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 __author__ = "Johanes Indra Pradana Pao"
 __copyright__ = "Copyright 2022, Undecided"
@@ -66,3 +69,20 @@ class Fungsi:
             return hitung_mundur
         except:
             print("Terjadi kesalahan dalam fungsi kalibrasi_waktu")
+
+    def kirim_email(self, dari, ke, judul, isi_pesan, kunci) -> None:
+        pesan = MIMEMultipart("alternative")
+        pesan["Subject"] = judul
+        pesan["From"] = dari
+        pesan["To"] = ke
+
+        isi_pean_ke_html = MIMEText(isi_pesan, "html")
+
+        pesan.attach(isi_pean_ke_html)
+
+        email = smtplib.SMTP("smtp.gmail.com", 587)
+        email.ehlo()
+        email.starttls()
+        email.login(dari, kunci)
+        email.sendmail(dari, ke, pesan.as_string())
+        email.quit()

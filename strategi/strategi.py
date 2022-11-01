@@ -66,7 +66,7 @@ class Strategi:
         self.leverage_backtest = leverage_backtest
         self.HOLD_TRADE = ""
 
-    def jpao_niten_ichi_ryu_26_18_8(
+    def jpao_niten_ichi_ryu_28_16_8(
         self,
         interval: List[
             Literal[
@@ -84,9 +84,9 @@ class Strategi:
                 "1 minggu",
                 "1 bulan",
             ]
-        ] = ["4 jam", "1 hari"],
-        k_cepat: int = 26,
-        k_lambat: int = 18,
+        ] = ["4 jam", "4 jam"],
+        k_cepat: int = 28,
+        k_lambat: int = 16,
         d_lambat: int = 8,
     ) -> None | list:
         self.interval = interval
@@ -201,7 +201,7 @@ class Strategi:
             # cek posisi aset yang dipegang saat ini
             POSISI = DATA_POSISI_FUTURES["positionSide"].unique().tolist()
 
-            USDT_AKUN = min(self.saldo_tersedia + self.saldo_terpakai, 8.784)
+            USDT_AKUN = math.floor(self.saldo_tersedia + self.saldo_terpakai)
             harga_koin_terakhir = self.akun.harga_koin_terakhir(self.simbol)
             nilai_buka_posisi = float(
                 math.ceil(USDT_AKUN / 2 * self.leverage / harga_koin_terakhir)

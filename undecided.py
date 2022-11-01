@@ -6,6 +6,7 @@ Script ini berfungsi untuk menjalankan program utama dan mengintegrasikan berbag
 import time
 
 from akun.akun import InfoAkun
+from api_rahasia.konfigurasi import Konfigurasi
 from baca_konfig import Inisiasi
 from fungsi.fungsi import Fungsi
 from strategi.strategi import Strategi
@@ -33,6 +34,9 @@ JUMLAH_ERROR = 0
 inisiasi_konektor = Inisiasi()
 konektor_exchange = inisiasi_konektor.exchange()
 info_akun = InfoAkun(konektor_exchange)
+
+pengguna_email = Konfigurasi().Email["USERNAME"]
+kunci_email = Konfigurasi().Email["KUNCI"]
 
 ui = UI()
 fungsi = Fungsi()
@@ -170,6 +174,13 @@ while True:
         print(e)
         print(f"Terjadi kesalahan, mengulang proses....")
         JUMLAH_ERROR += 1
-        if JUMLAH_ERROR == 20:
-            print("Email me!")
+        if JUMLAH_ERROR % 10 == 0:
+            print("Terjadi 10 kesalahan berturut - turut...")
+            fungsi.kirim_email(
+                pengguna_email,
+                pengguna_email,
+                f"KESALAHAN PADA {ui.judul()}",
+                "Terjadi kesalahan beruntun yang menyebabkan script tidak dapat melanjutkan pekerjaannya, mohon cek script pada master-server",
+                kunci_email,
+            )
         time.sleep(1)
