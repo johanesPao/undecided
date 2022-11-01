@@ -158,7 +158,7 @@ while True:
         INISIATOR_WAKTU = False
 
         # Eksekusi strategi
-        strategi.jpao_niten_ichi_ryu_26_18_8(interval=INTERVAL, k_cepat=15, k_lambat=8, d_lambat=3)  # type: ignore
+        strategi.jpao_niten_ichi_ryu_26_18_8()  # type: ignore
 
         # Reset jumlah error b2eruntun
         JUMLAH_ERROR = 0

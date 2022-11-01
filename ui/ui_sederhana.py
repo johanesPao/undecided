@@ -58,7 +58,7 @@ class UI:
             hari = int(math.floor(waktu / (60**2 * 24)))
             jam = int(math.floor((waktu - (hari * 60**2 * 24)) / 60**2))
             menit = int(
-                math.floor((waktu - (hari * 60**2 * 24) + (jam * 60**2)) / 60)
+                math.floor((waktu - ((hari * 60**2 * 24) + (jam * 60**2))) / 60)
             )
             detik = int(waktu % 60)
             sys.stdout.write("\r")
