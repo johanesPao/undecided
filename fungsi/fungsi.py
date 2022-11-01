@@ -50,20 +50,19 @@ class Fungsi:
                 case "menit":
                     faktor_detik = 60
                 case "jam":
-                    faktor_detik = 60 ^ 2
+                    faktor_detik = 60**2
                 case "hari":
-                    faktor_detik = 60 ^ 2 * 24
+                    faktor_detik = 60**2 * 24
                 case "minggu":
-                    faktor_detik = 60 ^ 2 * 24 * 7
+                    faktor_detik = 60**2 * 24 * 7
                 case "bulan":
                     # kita harus menentukan jumlah hari dalam bulan berjalan setiap kali fungsi
                     # kalibrasi waktu dijalankan
                     faktor_detik = 60 ^ 2 * 24 * hari_dlm_bulan
                 case _:
                     faktor_detik = 1
-
-            interval_detik = int(interval[0]) * faktor_detik
-            hitung_mundur = faktor_detik - (waktu_saat_ini_unix % interval_detik)
+            interval_detik = int(list_interval[0]) * faktor_detik
+            hitung_mundur = interval_detik - (waktu_saat_ini_unix % interval_detik)
             return hitung_mundur
         except:
             print("Terjadi kesalahan dalam fungsi kalibrasi_waktu")

@@ -20,19 +20,20 @@ __email__ = "johanes.pao@gmail.com"
 __status__ = "Development"
 
 # KONSTANTA
-TGL_AWAL = "19 September 2022"
-MODE_BACKTEST = True
+MODE_BACKTEST = False
+PERIODE_BACKTEST = 1000
 INTERVAL = ["1 menit", "1 menit"]
 # VARIABEL ASET
-ASET = "MATICUSDTPERP"
+ASET_DATA = "MATICUSDTPERP"
+ASET = "MATICUSDT"
 EXCHANGE = "BINANCE"
 INISIATOR_WAKTU = True
 JUMLAH_ERROR = 0
 
 inisiasi_konektor = Inisiasi()
 konektor_exchange = inisiasi_konektor.exchange()
-
 info_akun = InfoAkun(konektor_exchange)
+
 ui = UI()
 fungsi = Fungsi()
 
@@ -40,10 +41,17 @@ ui.garis_horizontal(komponen="=")
 print(f"{ui.judul()} v{__version__}")
 ui.garis_horizontal(komponen="=")
 
-strategi = Strategi(ASET, EXCHANGE, MODE_BACKTEST, 1000)
 
 while True:
     try:
+        strategi = Strategi(
+            ASET_DATA,
+            ASET,
+            EXCHANGE,
+            backtest=MODE_BACKTEST,
+            jumlah_periode_backtest=PERIODE_BACKTEST,
+        )
+
         # DATA AKAN DITAMPILKAN MENGGUNAKAN HANDLER UI
         # data akun spot
         (
@@ -139,31 +147,29 @@ while True:
         if INISIATOR_WAKTU:
             hitung_mundur = fungsi.kalibrasi_waktu(INTERVAL[0])
             if hitung_mundur is not None and hitung_mundur > 2:
-                print(
-                    f"Program akan menunggu selama {hitung_mundur} detik sebelum melakukan eksekusi strategi..."
-                )
-                time.sleep(int(hitung_mundur))
+                ui.keluar()
+                ui.hitung_mundur(hitung_mundur, True)
 
         # Hentikan inisiator_waktu
         INISIATOR_WAKTU = False
 
         # Eksekusi strategi
-        strategi.jpao_niten_ichi_ryu_26_18_8(interval=INTERVAL)  # type: ignore
-        
-        # Reset jumlah error beruntun
+        strategi.jpao_niten_ichi_ryu_26_18_8(interval=INTERVAL, k_cepat=15, k_lambat=8, d_lambat=3)  # type: ignore
+
+        # Reset jumlah error b2eruntun
         JUMLAH_ERROR = 0
 
         # Kalibrasi waktu untuk eksekusi selanjutnya
         hitung_mundur = fungsi.kalibrasi_waktu(INTERVAL[0])
         if hitung_mundur is not None and hitung_mundur > 2:
-            print(f"Hibernasi selama {hitung_mundur} detik...")
-            ui.keluar()
             ui.garis_horizontal(komponen="=")
-            time.sleep(int(hitung_mundur))
+            ui.keluar()
+            ui.hitung_mundur(hitung_mundur)
     # Cegah program crash dan retry dalam 1 detik
-    except:
+    except Exception as e:
+        print(e)
         print(f"Terjadi kesalahan, mengulang proses....")
         JUMLAH_ERROR += 1
         if JUMLAH_ERROR == 20:
-            print('Email me!')
+            print("Email me!")
         time.sleep(1)

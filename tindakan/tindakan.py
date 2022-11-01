@@ -3,6 +3,8 @@ Script untuk kelas Order
 Script ini akan melakukan eksekusi order buka_long, buka_short, tutup_long atau tutup_short
 """
 
+import math
+
 from akun.akun import InfoAkun
 from baca_konfig import Inisiasi
 
@@ -35,7 +37,7 @@ class Order:
                 type=tipe_order,
                 side="BUY",
                 positionSide="LONG",
-                quantity=kuantitas,
+                quantity=math.floor(kuantitas),
             )
 
             *_, df_saldo_futures = self.info_akun.akun_futures()
@@ -44,9 +46,10 @@ class Order:
             saldo_long = df_long.iloc[0]["isolatedWallet"]
 
             return print(
-                f"Posisi LONG senilai {saldo_long} USDT berhasil dibuka untuk {self.aset} pada harga {harga_masuk_long}"
+                f"Posisi LONG senilai {saldo_long} USDT / {math.floor(kuantitas)} {self.aset} berhasil dibuka untuk {self.aset} pada harga {harga_masuk_long}"
             )
-        except:
+        except Exception as e:
+            print(e)
             return print(f"Posisi LONG tidak berhasil dibuka untuk {self.aset}")
 
     def buka_short(
@@ -59,7 +62,7 @@ class Order:
                 type=tipe_order,
                 side="SELL",
                 positionSide="SHORT",
-                quantity=kuantitas,
+                quantity=math.floor(kuantitas),
             )
             *_, df_saldo_futures = self.info_akun.akun_futures()
             df_short = df_saldo_futures[df_saldo_futures["positionSide"] == "SHORT"]
@@ -67,9 +70,10 @@ class Order:
             saldo_short = df_short.iloc[0]["isolatedWallet"]
 
             return print(
-                f"Posisi SHORT senilai {saldo_short} USDT berhasil dibuka untuk {self.aset} pada harga {harga_masuk_short}"
+                f"Posisi SHORT senilai {saldo_short} USDT / {math.floor(kuantitas)} {self.aset} berhasil dibuka untuk {self.aset} pada harga {harga_masuk_short}"
             )
-        except:
+        except Exception as e:
+            print(e)
             return print(f"Posisi SHORT tidak berhasil dibuka untuk {self.aset}")
 
     def tutup_long(
@@ -86,13 +90,14 @@ class Order:
                 type=tipe_order,
                 side="SELL",
                 positionSide="LONG",
-                quantity=kuantitas,
+                quantity=math.ceil(kuantitas),
             )
 
             return print(
-                f"Posisi LONG senilai {saldo_long} USDT berhasil ditutup untuk {self.aset}"
+                f"Posisi LONG senilai {saldo_long} USDT / {math.ceil(kuantitas)} {self.aset} berhasil ditutup untuk {self.aset}"
             )
-        except:
+        except Exception as e:
+            print(e)
             return print(f"Posisi LONG tidak berhasil ditutup untuk {self.aset}")
 
     def tutup_short(
@@ -109,11 +114,12 @@ class Order:
                 type=tipe_order,
                 side="BUY",
                 positionSide="SHORT",
-                quantity=kuantitas,
+                quantity=math.ceil(kuantitas),
             )
 
             return print(
-                f"Posisi SHORT senilai {saldo_short} USDT berhasil ditutup untuk {self.aset}"
+                f"Posisi SHORT senilai {saldo_short} USDT / {math.ceil(kuantitas)} {self.aset} berhasil ditutup untuk {self.aset}"
             )
-        except:
+        except Exception as e:
+            print(e)
             return print(f"Posisi SHORT tidak berhasil ditutup untuk {self.aset}")

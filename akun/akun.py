@@ -69,6 +69,10 @@ class InfoAkun:
             [
                 "symbol",
                 "positionSide",
+                "leverage",
+                "isolated",
+                "initialMargin",
+                "maintMargin",
                 "isolatedWallet",
                 "entryPrice",
                 "unrealizedProfit",
@@ -84,3 +88,6 @@ class InfoAkun:
             saldo_plus_profit,
             data_posisi_df,
         )
+
+    def harga_koin_terakhir(self, simbol: str) -> float:
+        return float(self.exchange.futures_ticker(symbol=simbol)["lastPrice"])

@@ -3,7 +3,10 @@ Script untuk kelas UI
 Script untuk menampilkan informasi dasar exchange dan garis_horizontal pada terminal
 """
 
+import math
 import os
+import sys
+import time
 
 import pandas as pd
 from colorama import Fore, Style, init
@@ -50,5 +53,32 @@ class UI:
     def print_dataframe_murni(self, df: pd.DataFrame) -> None:
         print(df)
 
+    def hitung_mundur(self, hitung_mundur: float, run_pertama: bool = False) -> None:
+        for waktu in range(int(hitung_mundur), 0, -1):
+            hari = int(math.floor(waktu / (60**2 * 24)))
+            jam = int(math.floor((waktu - (hari * 60**2 * 24)) / 60**2))
+            menit = int(
+                math.floor((waktu - (hari * 60**2 * 24) + (jam * 60**2)) / 60)
+            )
+            detik = int(waktu % 60)
+            sys.stdout.write("\r")
+            if run_pertama:
+                sys.stdout.write(
+                    "Program akan menunggu selama {:2d} hari {:2d} jam {:2d} menit {:2d} detik sebelum melakukan eksekusi strategi...".format(
+                        hari, jam, menit, detik
+                    )
+                )
+            else:
+                sys.stdout.write(
+                    "Hibernasi selama {:2d} hari {:2d} jam {:2d} menit {:2d} detik...".format(
+                        hari, jam, menit, detik
+                    )
+                )
+            sys.stdout.flush()
+            time.sleep(1)
+        sys.stdout.write(
+            "\rMelakukan eksekusi strategi!" + (" " * self.ukuran_terminal)
+        )
+
     def keluar(self) -> None:
-        print(f"{Fore.RED}Tekan Ctrl+C untuk menghentikan program.{Style.RESET_ALL}")
+        print(f"{Fore.RED}Tekan Ctrl+C 2x untuk menghentikan program.{Style.RESET_ALL}")

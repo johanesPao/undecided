@@ -3,6 +3,7 @@ Script untuk kelas Strategi
 Script untuk implementasi strategi trading berdasarkan pertimbangan pribadi akan beberapa faktor seperti analisa teknikal
 """
 
+import math
 from typing import List, Literal
 
 import pandas as pd
@@ -26,30 +27,43 @@ __status__ = "Development"
 class Strategi:
     def __init__(
         self,
+        simbol_data: str,
         simbol: str,
         exchange: str,
+        leverage: int = 10,
         backtest: bool = False,
         jumlah_periode_backtest: int = 0,
-        saldo: float = 40,
-        leverage: int = 10,
+        saldo_backtest: float = 40,
+        leverage_backtest: int = 10,
     ) -> None:
         self.inisiasi = Inisiasi()
         self.konektor_data = self.inisiasi.data()
         self.konektor_exchange = self.inisiasi.exchange()
         self.model = Model(self.konektor_data)
         self.analisa_teknikal = AnalisaTeknikal()
-        self.posisi_futures = InfoAkun(self.konektor_exchange).akun_futures()[6]
+        self.akun = InfoAkun(self.konektor_exchange)
+        (
+            self.fee_tier,
+            self.total_saldo,
+            self.saldo_tersedia,
+            self.saldo_terpakai,
+            self.laba_rugi_terbuka,
+            self.saldo_plus_profit,
+            self.posisi_futures,
+        ) = self.akun.akun_futures()
+        self.simbol_data = simbol_data
         self.simbol = simbol
         self.order = Order(self.simbol)
         self.exchange = exchange
+        self.leverage = leverage
         self.backtest = backtest
         self.jumlah_periode_backtest = jumlah_periode_backtest
         if self.backtest and self.jumlah_periode_backtest <= 0:
             raise ValueError(
                 f"Jika backtest={self.backtest}, maka jumlah_periode_backtest harus lebih besar dari 0."
             )
-        self.saldo = saldo
-        self.leverage = leverage
+        self.saldo_backtest = saldo_backtest
+        self.leverage_backtest = leverage_backtest
         self.HOLD_TRADE = ""
 
     def jpao_niten_ichi_ryu_26_18_8(
@@ -134,6 +148,8 @@ class Strategi:
                         self.offset = pd.DateOffset(weeks=1)
                     case "1 bulan":
                         self.offset = pd.DateOffset(months=1)
+                    case _:
+                        self.offset = pd.DateOffset(minutes=1)
         except:
             print(
                 "KESALAHAN: Kami tidak dapat membaca interval waktu yang diberikan, pastikan interval waktu dalam list dengan dua komponen dimana komponen kedua adalah timeframe yang lebih besar atau sama dengan timeframe kecil (komponen pertama)"
@@ -169,7 +185,7 @@ class Strategi:
                     self.interval_data = Interval.in_monthly
 
             self.df = self.model.ambil_data_historis(
-                self.simbol, self.exchange, self.interval_data, self.jumlah_bar
+                self.simbol_data, self.exchange, self.interval_data, self.jumlah_bar
             )
 
             self.df_ta = self.analisa_teknikal.stokastik(
@@ -180,16 +196,24 @@ class Strategi:
 
         # FUNGSI SAAT LIVE
         def live(list_df_stokastik) -> str | None:
+            # VARIABEL DAN KONSTANTA
+            DATA_POSISI_FUTURES = self.posisi_futures
             # cek posisi aset yang dipegang saat ini
-            posisi_aset = self.posisi_futures["positionSide"]
+            POSISI = DATA_POSISI_FUTURES["positionSide"].unique().tolist()
+
+            USDT_AKUN = min(self.saldo_tersedia + self.saldo_terpakai, 8.784)
+            harga_koin_terakhir = self.akun.harga_koin_terakhir(self.simbol)
+            nilai_buka_posisi = float(
+                math.ceil(USDT_AKUN / 2 * self.leverage / harga_koin_terakhir)
+            )
 
             # set nilai k_lambat_tf_kecil, d_lambat_tf_kecil, k_lambat_tf_besar dan d_lambat_tf_besar
             # untuk evaluasi state strategi
-            k_lambat_tf_kecil = self.data_stokastik[0].iloc[-1]["k_lambat"]
-            d_lambat_tf_kecil = self.data_stokastik[0].iloc[-1]["d_lambat"]
-            k_lambat_tf_besar = self.data_stokastik[1].iloc[-1]["k_lambat"]
-            d_lambat_tf_besar = self.data_stokastik[1].iloc[-1]["d_lambat"]
-            print(f"Posisi Aset: {posisi_aset}")
+            k_lambat_tf_kecil = list_df_stokastik[0].iloc[-1]["k_lambat"]
+            d_lambat_tf_kecil = list_df_stokastik[0].iloc[-1]["d_lambat"]
+            k_lambat_tf_besar = list_df_stokastik[1].iloc[-1]["k_lambat"]
+            d_lambat_tf_besar = list_df_stokastik[1].iloc[-1]["d_lambat"]
+            print(f"Posisi Aset: {POSISI}")
             print(f"k_lambat pada timeframe kecil: {k_lambat_tf_kecil}")
             print(f"d_lambat pada timeframe kecil: {d_lambat_tf_kecil}")
             print(f"k_lambat pada timeframe besar: {k_lambat_tf_besar}")
@@ -207,52 +231,55 @@ class Strategi:
                 # print("BUKA_LONG")
                 # jangan memaksakan diri untuk membuka posisi LONG
                 # jika timeframe kecil tidak mendukung
-                if (
-                    "LONG" not in posisi_aset.unique()
-                    and k_lambat_tf_kecil >= d_lambat_tf_kecil
-                ):
-                    return "BUKA_LONG"
+                if "LONG" not in POSISI and k_lambat_tf_kecil >= d_lambat_tf_kecil:
+                    self.order.buka_long(nilai_buka_posisi)
                 # jika k_lambat < d_lambat pada timeframe kecil
                 if k_lambat_tf_kecil < d_lambat_tf_kecil:
                     # jika tidak ada posisi SHORT
-                    if "SHORT" not in posisi_aset.unique():
-                        return "BUKA_SHORT"
+                    if "SHORT" not in POSISI:
+                        self.order.buka_short(nilai_buka_posisi)
                 # jika ada posisi SHORT
-                elif "SHORT" in posisi_aset.unique():
-                    return "TUTUP_SHORT"
-                else:
-                    return None
+                elif "SHORT" in POSISI:
+                    data_short = DATA_POSISI_FUTURES[
+                        DATA_POSISI_FUTURES["positionSide"] == "SHORT"
+                    ]
+                    nilai_usdt = float(data_short.iloc[0]["isolatedWallet"])
+                    harga_masuk_short = float(data_short.iloc[0]["entryPrice"])
+                    leverage = float(data_short.iloc[0]["leverage"])
+                    nilai_tutup_posisi = float(
+                        nilai_usdt / harga_masuk_short * leverage
+                    )
+                    self.order.tutup_short(nilai_tutup_posisi)
             # jika variabel self.HOLD_TRADE == 'SHORT_LONG
             elif self.HOLD_TRADE == "SHORT_LONG":
                 # jika tidak ada posisi SHORT
                 # print("BUKA_SHORT")
                 # jangan memaksakan diri untuk membuka posisi SHORT
                 # jika timeframe kecil tidak mendukung
-                if (
-                    "SHORT" not in posisi_aset.unique()
-                    and k_lambat_tf_kecil < d_lambat_tf_kecil
-                ):
-                    return "BUKA_SHORT"
+                if "SHORT" not in POSISI and k_lambat_tf_kecil < d_lambat_tf_kecil:
+                    self.order.buka_short(nilai_buka_posisi)
                 # jika k_lambat >= d_lambat pada timeframe kecil
                 if k_lambat_tf_kecil >= d_lambat_tf_kecil:
                     # jika tidak ada posisi LONG
-                    if "LONG" not in posisi_aset.unique():
-                        return "BUKA_LONG"
+                    if "LONG" not in POSISI:
+                        self.order.buka_long(nilai_buka_posisi)
                 # jika ada posisi LONG
-                elif "LONG" in posisi_aset.unique():
-                    return "TUTUP_LONG"
-                else:
-                    return None
+                elif "LONG" in POSISI:
+                    data_long = DATA_POSISI_FUTURES[
+                        DATA_POSISI_FUTURES["positionSide"] == "LONG"
+                    ]
+                    nilai_usdt = float(data_long.iloc[0]["isolatedWallet"])
+                    harga_masuk_long = float(data_long.iloc[0]["entryPrice"])
+                    leverage = float(data_long.iloc[0]["leverage"])
+                    nilai_tutup_posisi = float(nilai_usdt / harga_masuk_long * leverage)
+                    self.order.tutup_long(nilai_tutup_posisi)
 
         # FUNGSI SAAT BACKTEST
         def backtest(list_df_stokastik) -> str:
             # VARIABEL DAN KONSTANTA
-            ASET = self.simbol
-            EXCHANGE = self.exchange
-            SALDO = self.saldo
-            LEVERAGE = self.leverage
-            STOKASTIK = self.data_stokastik
-            JUMLAH_PERIODE_BACKTEST = self.jumlah_periode_backtest
+            SALDO = self.saldo_backtest
+            LEVERAGE = self.leverage_backtest
+            STOKASTIK = list_df_stokastik
 
             if type(STOKASTIK) == list:
                 # iterrows pada timeframe kecil
@@ -453,7 +480,7 @@ class Strategi:
 
         # jika live stream strategi
         if not self.backtest:
-            print(live(self.data_stokastik))
+            live(self.data_stokastik)
         else:
             print(backtest(self.data_stokastik))
 
