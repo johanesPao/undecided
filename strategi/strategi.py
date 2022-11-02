@@ -218,10 +218,10 @@ class Strategi:
                 harga_masuk_long = float(data_long.iloc[0]["entryPrice"])
                 leverage_long = float(data_long.iloc[0]["leverage"])
 
-            USDT_AKUN = math.floor(self.saldo_tersedia + self.saldo_terpakai)
+            USDT_AKUN = math.floor(self.total_saldo)-1
             harga_koin_terakhir = self.akun.harga_koin_terakhir(self.simbol)
             nilai_buka_posisi = float(
-                math.ceil(USDT_AKUN / 2 * self.leverage / harga_koin_terakhir)
+                math.floor(USDT_AKUN / 2 * self.leverage / harga_koin_terakhir)
             )
 
             # set nilai k_lambat_tf_kecil, d_lambat_tf_kecil, k_lambat_tf_besar dan d_lambat_tf_besar
@@ -256,7 +256,7 @@ class Strategi:
                     if "SHORT" not in POSISI:
                         self.order.buka_short(nilai_buka_posisi)
                 # jika ada posisi SHORT
-                elif "SHORT" in POSISI and (harga_masuk_short and nilai_usdt and leverage_short) and harga_koin_terakhir < harga_masuk_short:  # type: ignore
+                elif "SHORT" in POSISI and (harga_masuk_short and nilai_usdt and leverage_short) and harga_koin_terakhir < (harga_masuk_short - harga_masuk_short * 0.008):  # type: ignore
                     nilai_tutup_posisi = float(
                         nilai_usdt / harga_masuk_short * leverage_short
                     )
@@ -275,7 +275,7 @@ class Strategi:
                     if "LONG" not in POSISI:
                         self.order.buka_long(nilai_buka_posisi)
                 # jika ada posisi LONG
-                elif "LONG" in POSISI and (harga_masuk_long and nilai_usdt and leverage_long) and harga_koin_terakhir > harga_masuk_long:  # type: ignore
+                elif "LONG" in POSISI and (harga_masuk_long and nilai_usdt and leverage_long) and harga_koin_terakhir > (harga_masuk_long + harga_masuk_long * 0.008):  # type: ignore
                     nilai_tutup_posisi = float(
                         nilai_usdt / harga_masuk_long * leverage_long
                     )
@@ -294,7 +294,8 @@ class Strategi:
                 df_backtest = pd.DataFrame()
 
                 # pembentukan df inisial waktu_tf_kecil, close_tf_kecil, k_lambat_tf_kecil, d_lambat_tf_kecil, waktu_tf_besar, k_lambat_tf_besar, d_lambat_tf_besar
-                for baris in STOKASTIK[0].iterrows():  # type: ignore : pasti mengembalikan list
+                # type: ignore : pasti mengembalikan list
+                for baris in STOKASTIK[0].iterrows():
                     # kembalikan waktu_tf_kecil, waktu_tf_besar, k_lambat_tf_kecil,
                     # d_lambat_tf_kecil, k_lambat_tf_besar, d_lambat_tf_besar
                     waktu_tf_kecil = baris[0]
@@ -442,7 +443,8 @@ class Strategi:
                         saldo_long = 0
                     if "TUTUP_SHORT" in df_backtest.iloc[baris]["tindakan"]:
                         harga_keluar = df_backtest.iloc[baris]["close_tf_kecil"]
-                        harga_short = df_backtest.iloc[baris - 1]["harga_short"]
+                        harga_short = df_backtest.iloc[baris -
+                                                       1]["harga_short"]
                         profit_dan_loss = (
                             (harga_short - harga_keluar)
                             / harga_short
@@ -453,7 +455,8 @@ class Strategi:
                         saldo_short = 0
                     if "MARGIN_CALL_SHORT" in df_backtest.iloc[baris]["tindakan"]:
                         harga_keluar = df_backtest.iloc[baris]["close_tf_kecil"]
-                        harga_short = df_backtest.iloc[baris - 1]["harga_short"]
+                        harga_short = df_backtest.iloc[baris -
+                                                       1]["harga_short"]
                         profit_dan_loss = -saldo_short
                         SALDO = SALDO + saldo_short + profit_dan_loss
                         saldo_short = 0
@@ -481,7 +484,8 @@ class Strategi:
                                 saldo_long = 0.5 * SALDO
                                 SALDO = SALDO - saldo_long
                             else:
-                                saldo_long = min((SALDO + saldo_short) / 2, SALDO)
+                                saldo_long = min(
+                                    (SALDO + saldo_short) / 2, SALDO)
                                 SALDO = SALDO - saldo_long
                     if "BUKA_SHORT" in df_backtest.iloc[baris]["tindakan"]:
                         # jika baris pertama dalam iterrows
@@ -498,7 +502,8 @@ class Strategi:
                                 saldo_short = 0.5 * SALDO
                                 SALDO = SALDO - saldo_short
                             else:
-                                saldo_short = min((SALDO + saldo_long) / 2, SALDO)
+                                saldo_short = min(
+                                    (SALDO + saldo_long) / 2, SALDO)
                                 SALDO = SALDO - saldo_short
                     list_df_saldo_tersedia.append(SALDO)
                     list_df_saldo_long.append(saldo_long)
@@ -512,7 +517,7 @@ class Strategi:
                 # print(k_lambat_tf_kecil)
 
                 print(df_backtest.to_string())
-            return f'Profit dan Loss menggunakan strategi ini: {float(sum(df_backtest["profit_dan_loss"]))} dollar.'  # type: ignore
+            return f'Profit dan Loss menggunakan strategi ini: {float(sum(df_backtest["profit_dan_loss"]))} dollar.'
 
         # jika live stream strategi
         if not self.backtest:

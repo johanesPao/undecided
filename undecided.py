@@ -23,7 +23,7 @@ __status__ = "Development"
 # KONSTANTA
 MODE_BACKTEST = False
 PERIODE_BACKTEST = 1000
-INTERVAL = ["4 jam", "4 jam"]
+INTERVAL = ["1 menit", "30 menit"]
 # VARIABEL ASET
 ASET_DATA = "MATICUSDTPERP"
 ASET = "MATICUSDT"
@@ -160,7 +160,8 @@ while True:
         )
 
         # Eksekusi strategi
-        strategi.jpao_niten_ichi_ryu_28_16_8()  # type: ignore
+        strategi.jpao_niten_ichi_ryu_28_16_8(
+            interval=INTERVAL, k_cepat=15, k_lambat=5, d_lambat=3)  # type: ignore
 
         # Reset jumlah error b2eruntun
         JUMLAH_ERROR = 0
