@@ -230,7 +230,6 @@ class Strategi:
             d_lambat_tf_kecil = list_df_stokastik[0].iloc[-1]["d_lambat"]
             k_lambat_tf_besar = list_df_stokastik[1].iloc[-1]["k_lambat"]
             d_lambat_tf_besar = list_df_stokastik[1].iloc[-1]["d_lambat"]
-            print(f"Posisi Aset: {POSISI}")
             print(f"k_lambat pada timeframe kecil: {k_lambat_tf_kecil}")
             print(f"d_lambat pada timeframe kecil: {d_lambat_tf_kecil}")
             print(f"k_lambat pada timeframe besar: {k_lambat_tf_besar}")
@@ -240,7 +239,7 @@ class Strategi:
             self.HOLD_TRADE = (
                 "LONG_SHORT" if k_lambat_tf_besar >= d_lambat_tf_besar else "SHORT_LONG"
             )
-            print(self.HOLD_TRADE)
+            print(f'MODE STRATEGI: {self.HOLD_TRADE}')
 
             # STRATEGI HOLD
             # jika variabel self.HOLD_TRADE == 'LONG_SHORT'
@@ -264,7 +263,6 @@ class Strategi:
                     self.order.tutup_short(nilai_tutup_posisi)
             # jika variabel self.HOLD_TRADE == 'SHORT_LONG
             elif self.HOLD_TRADE == "SHORT_LONG":
-                print(harga_koin_terakhir, harga_masuk_long, harga_masuk_long + harga_masuk_long * 0.008 / leverage_long)
                 # jika tidak ada posisi SHORT
                 # print("BUKA_SHORT")
                 # jangan memaksakan diri untuk membuka posisi SHORT
