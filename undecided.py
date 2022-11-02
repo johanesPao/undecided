@@ -48,13 +48,6 @@ ui.garis_horizontal(komponen="=")
 
 while True:
     try:
-        strategi = Strategi(
-            ASET_DATA,
-            ASET,
-            EXCHANGE,
-            backtest=MODE_BACKTEST,
-            jumlah_periode_backtest=PERIODE_BACKTEST,
-        )
 
         # DATA AKAN DITAMPILKAN MENGGUNAKAN HANDLER UI
         # data akun spot
@@ -156,6 +149,15 @@ while True:
 
         # Hentikan inisiator_waktu
         INISIATOR_WAKTU = False
+
+        # Inisiasi strategi
+        strategi = Strategi(
+            ASET_DATA,
+            ASET,
+            EXCHANGE,
+            backtest=MODE_BACKTEST,
+            jumlah_periode_backtest=PERIODE_BACKTEST,
+        )
 
         # Eksekusi strategi
         strategi.jpao_niten_ichi_ryu_28_16_8()  # type: ignore
