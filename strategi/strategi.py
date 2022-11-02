@@ -200,6 +200,23 @@ class Strategi:
             DATA_POSISI_FUTURES = self.posisi_futures
             # cek posisi aset yang dipegang saat ini
             POSISI = DATA_POSISI_FUTURES["positionSide"].unique().tolist()
+            if "SHORT" in POSISI:
+                data_short = DATA_POSISI_FUTURES[
+                    DATA_POSISI_FUTURES["positionSide"] == "SHORT"
+                ]
+                nilai_usdt = float(data_short.iloc[0]["isolatedWallet"])
+                harga_masuk_short = float(data_short.iloc[0]["entryPrice"])
+                leverage_short = float(data_short.iloc[0]["leverage"])
+            if "LONG" in POSISI:
+                data_long = DATA_POSISI_FUTURES[
+                    DATA_POSISI_FUTURES["positionSide"] == "LONG"
+                ]
+                data_long = DATA_POSISI_FUTURES[
+                    DATA_POSISI_FUTURES["positionSide"] == "LONG"
+                ]
+                nilai_usdt = float(data_long.iloc[0]["isolatedWallet"])
+                harga_masuk_long = float(data_long.iloc[0]["entryPrice"])
+                leverage_long = float(data_long.iloc[0]["leverage"])
 
             USDT_AKUN = math.floor(self.saldo_tersedia + self.saldo_terpakai)
             harga_koin_terakhir = self.akun.harga_koin_terakhir(self.simbol)
@@ -239,15 +256,9 @@ class Strategi:
                     if "SHORT" not in POSISI:
                         self.order.buka_short(nilai_buka_posisi)
                 # jika ada posisi SHORT
-                elif "SHORT" in POSISI:
-                    data_short = DATA_POSISI_FUTURES[
-                        DATA_POSISI_FUTURES["positionSide"] == "SHORT"
-                    ]
-                    nilai_usdt = float(data_short.iloc[0]["isolatedWallet"])
-                    harga_masuk_short = float(data_short.iloc[0]["entryPrice"])
-                    leverage = float(data_short.iloc[0]["leverage"])
+                elif "SHORT" in POSISI and (harga_masuk_short and nilai_usdt and leverage_short) and harga_koin_terakhir < harga_masuk_short:  # type: ignore
                     nilai_tutup_posisi = float(
-                        nilai_usdt / harga_masuk_short * leverage
+                        nilai_usdt / harga_masuk_short * leverage_short
                     )
                     self.order.tutup_short(nilai_tutup_posisi)
             # jika variabel self.HOLD_TRADE == 'SHORT_LONG
@@ -264,14 +275,10 @@ class Strategi:
                     if "LONG" not in POSISI:
                         self.order.buka_long(nilai_buka_posisi)
                 # jika ada posisi LONG
-                elif "LONG" in POSISI:
-                    data_long = DATA_POSISI_FUTURES[
-                        DATA_POSISI_FUTURES["positionSide"] == "LONG"
-                    ]
-                    nilai_usdt = float(data_long.iloc[0]["isolatedWallet"])
-                    harga_masuk_long = float(data_long.iloc[0]["entryPrice"])
-                    leverage = float(data_long.iloc[0]["leverage"])
-                    nilai_tutup_posisi = float(nilai_usdt / harga_masuk_long * leverage)
+                elif "LONG" in POSISI and (harga_masuk_long and nilai_usdt and leverage_long) and harga_koin_terakhir > harga_masuk_long:  # type: ignore
+                    nilai_tutup_posisi = float(
+                        nilai_usdt / harga_masuk_long * leverage_long
+                    )
                     self.order.tutup_long(nilai_tutup_posisi)
 
         # FUNGSI SAAT BACKTEST
