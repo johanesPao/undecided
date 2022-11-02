@@ -240,6 +240,7 @@ class Strategi:
             self.HOLD_TRADE = (
                 "LONG_SHORT" if k_lambat_tf_besar >= d_lambat_tf_besar else "SHORT_LONG"
             )
+            print(self.HOLD_TRADE)
 
             # STRATEGI HOLD
             # jika variabel self.HOLD_TRADE == 'LONG_SHORT'
@@ -256,13 +257,14 @@ class Strategi:
                     if "SHORT" not in POSISI:
                         self.order.buka_short(nilai_buka_posisi)
                 # jika ada posisi SHORT
-                elif "SHORT" in POSISI and (harga_masuk_short and nilai_usdt and leverage_short) and harga_koin_terakhir < (harga_masuk_short - harga_masuk_short * 0.008):  # type: ignore
+                elif "SHORT" in POSISI and harga_koin_terakhir < (harga_masuk_short - harga_masuk_short * 0.008 / leverage_short):  # type: ignore
                     nilai_tutup_posisi = float(
                         nilai_usdt / harga_masuk_short * leverage_short
                     )
                     self.order.tutup_short(nilai_tutup_posisi)
             # jika variabel self.HOLD_TRADE == 'SHORT_LONG
             elif self.HOLD_TRADE == "SHORT_LONG":
+                print(harga_koin_terakhir, harga_masuk_long, harga_masuk_long + harga_masuk_long * 0.008 / leverage_long)
                 # jika tidak ada posisi SHORT
                 # print("BUKA_SHORT")
                 # jangan memaksakan diri untuk membuka posisi SHORT
@@ -275,7 +277,7 @@ class Strategi:
                     if "LONG" not in POSISI:
                         self.order.buka_long(nilai_buka_posisi)
                 # jika ada posisi LONG
-                elif "LONG" in POSISI and (harga_masuk_long and nilai_usdt and leverage_long) and harga_koin_terakhir > (harga_masuk_long + harga_masuk_long * 0.008):  # type: ignore
+                elif "LONG" in POSISI and harga_koin_terakhir > (harga_masuk_long + harga_masuk_long * 0.008 / leverage_long):  # type: ignore
                     nilai_tutup_posisi = float(
                         nilai_usdt / harga_masuk_long * leverage_long
                     )
