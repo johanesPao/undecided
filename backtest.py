@@ -23,7 +23,7 @@ strategi_backtest = Strategi(
     ASET,
     EXCHANGE,
     backtest=True,
-    jumlah_periode_backtest=1490,
+    jumlah_periode_backtest=10110,
     saldo_backtest=70,
     leverage_backtest=10,
 )
