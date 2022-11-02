@@ -349,6 +349,25 @@ class Strategi:
                         else "SHORT_LONG"
                     )
 
+                    # Cek semua posisi pada masing - masing interval,
+                    # jika ada posisi short atau long dengan
+                    # percentage loss * leverage >= 100% anggap terkena
+                    # margin call dan hapus posisi
+                    if (
+                        "LONG" in posisi
+                        and (harga - harga_long) / harga_long * LEVERAGE <= -1
+                    ):
+                        tindakan.append("MARGIN_CALL_LONG")
+                        posisi.remove("LONG")
+                        harga_long.clear()
+                    if (
+                        "SHORT" in posisi
+                        and (harga_short - harga) / harga_short * LEVERAGE <= -1
+                    ):
+                        tindakan.append("MARGIN_CALL_SHORT")
+                        posisi.remove("SHORT")
+                        harga_short.clear()
+
                     if HOLD_TRADE == "LONG_SHORT":
                         if (
                             "LONG" not in posisi
@@ -362,7 +381,7 @@ class Strategi:
                                 tindakan.append("BUKA_SHORT")
                                 posisi.append("SHORT")
                                 harga_short.append(harga)
-                        elif "SHORT" in posisi:
+                        elif "SHORT" in posisi and harga < harga_short:
                             tindakan.append("TUTUP_SHORT")
                             posisi.remove("SHORT")
                             harga_short.clear()
@@ -379,7 +398,7 @@ class Strategi:
                                 tindakan.append("BUKA_LONG")
                                 posisi.append("LONG")
                                 harga_long.append(harga)
-                        elif "LONG" in posisi:
+                        elif "LONG" in posisi and harga > harga_long:
                             tindakan.append("TUTUP_LONG")
                             posisi.remove("LONG")
                             harga_long.clear()
@@ -412,8 +431,6 @@ class Strategi:
                             * saldo_long
                             * LEVERAGE
                         )
-                        if profit_dan_loss < 0 and abs(profit_dan_loss) >= saldo_long:
-                            profit_dan_loss = -saldo_long
                         SALDO = SALDO + saldo_long + profit_dan_loss
                         saldo_long = 0
                     if "TUTUP_SHORT" in df_backtest.iloc[baris]["tindakan"]:
@@ -425,10 +442,20 @@ class Strategi:
                             * saldo_short
                             * LEVERAGE
                         )
-                        if profit_dan_loss < 0 and abs(profit_dan_loss) >= saldo_short:
-                            profit_dan_loss = -saldo_short
                         SALDO = SALDO + saldo_short + profit_dan_loss
                         saldo_short = 0
+                    if "MARGIN_CALL_SHORT" in df_backtest.iloc[baris]["tindakan"]:
+                        harga_keluar = df_backtest.iloc[baris]["close_tf_kecil"]
+                        harga_short = df_backtest.iloc[baris - 1]["harga_short"]
+                        profit_dan_loss = -saldo_short
+                        SALDO = SALDO + saldo_short + profit_dan_loss
+                        saldo_short = 0
+                    if "MARGIN_CALL_LONG" in df_backtest.iloc[baris]["tindakan"]:
+                        harga_keluar = df_backtest.iloc[baris]["close_tf_kecil"]
+                        harga_long = df_backtest.iloc[baris - 1]["harga_long"]
+                        profit_dan_loss = -saldo_long
+                        SALDO = SALDO + saldo_long + profit_dan_loss
+                        saldo_long = 0
                     # NOTES: Penggunaan saldo untuk pembukaan posisi tidak harus setengah atau seluruh saldo, tapi akan
                     # selalu merujuk kepada saldo + saldo_posisi jika ada dibagi dua atau saldo tersedia
                     # jika saldo tersedia < saldo + saldo_posisi dibagi dua
@@ -439,9 +466,10 @@ class Strategi:
                             SALDO = SALDO - saldo_long
                         else:
                             # jika ada posisi short pada timeframe sebelumnya dan ditutup pada timeframe ini maka gunakan setengah saldo yang ada
-                            if (
-                                "SHORT" in df_backtest.iloc[baris - 1]["posisi"]
-                                and "TUTUP_SHORT" in df_backtest.iloc[baris]["tindakan"]
+                            if "SHORT" in df_backtest.iloc[baris - 1]["posisi"] and (
+                                "TUTUP_SHORT" in df_backtest.iloc[baris]["tindakan"]
+                                or "MARGIN_CALL_SHORT"
+                                in df_backtest.iloc[baris]["tindakan"]
                             ):
                                 saldo_long = 0.5 * SALDO
                                 SALDO = SALDO - saldo_long
@@ -455,9 +483,10 @@ class Strategi:
                             SALDO = SALDO - saldo_short
                         else:
                             # jika ada posisi long pada timeframe sebelumnya dan ditutup pada timeframe ini maka gunakan setengah saldo yang ada
-                            if (
-                                "LONG" in df_backtest.iloc[baris - 1]["posisi"]
-                                and "TUTUP_LONG" in df_backtest.iloc[baris]["tindakan"]
+                            if "LONG" in df_backtest.iloc[baris - 1]["posisi"] and (
+                                "TUTUP_LONG" in df_backtest.iloc[baris]["tindakan"]
+                                or "MARGIN_CALL_LONG"
+                                in df_backtest.iloc[baris]["tindakan"]
                             ):
                                 saldo_short = 0.5 * SALDO
                                 SALDO = SALDO - saldo_short
