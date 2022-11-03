@@ -23,12 +23,12 @@ strategi_backtest = Strategi(
     ASET,
     EXCHANGE,
     backtest=True,
-    jumlah_periode_backtest=10110,
+    jumlah_periode_backtest=13942,
     saldo_backtest=70,
-    leverage_backtest=10,
+    leverage_backtest=3,
 )
 
 # Eksekusi strategi dalam fungsi backtest kelas Strategi
 hasil_strategi = strategi_backtest.jpao_niten_ichi_ryu_28_16_8(
-    interval=["1 menit", "30 menit"], k_cepat=15, k_lambat=5, d_lambat=3
+    interval=["45 menit", "1 hari"]
 )

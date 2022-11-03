@@ -249,12 +249,12 @@ class Strategi:
                 # jangan memaksakan diri untuk membuka posisi LONG
                 # jika timeframe kecil tidak mendukung
                 if "LONG" not in POSISI and k_lambat_tf_kecil >= d_lambat_tf_kecil:
-                    self.order.buka_long(nilai_buka_posisi)
+                    self.order.buka_long(nilai_buka_posisi, leverage=self.leverage)
                 # jika k_lambat < d_lambat pada timeframe kecil
                 if k_lambat_tf_kecil < d_lambat_tf_kecil:
                     # jika tidak ada posisi SHORT
                     if "SHORT" not in POSISI:
-                        self.order.buka_short(nilai_buka_posisi)
+                        self.order.buka_short(nilai_buka_posisi, leverage=self.leverage)
                 # jika ada posisi SHORT
                 elif "SHORT" in POSISI and harga_koin_terakhir < (harga_masuk_short - harga_masuk_short * 0.008 / leverage_short):  # type: ignore
                     nilai_tutup_posisi = float(
@@ -268,12 +268,12 @@ class Strategi:
                 # jangan memaksakan diri untuk membuka posisi SHORT
                 # jika timeframe kecil tidak mendukung
                 if "SHORT" not in POSISI and k_lambat_tf_kecil < d_lambat_tf_kecil:
-                    self.order.buka_short(nilai_buka_posisi)
+                    self.order.buka_short(nilai_buka_posisi, leverage=self.leverage)
                 # jika k_lambat >= d_lambat pada timeframe kecil
                 if k_lambat_tf_kecil >= d_lambat_tf_kecil:
                     # jika tidak ada posisi LONG
                     if "LONG" not in POSISI:
-                        self.order.buka_long(nilai_buka_posisi)
+                        self.order.buka_long(nilai_buka_posisi, leverage=self.leverage)
                 # jika ada posisi LONG
                 elif "LONG" in POSISI and harga_koin_terakhir > (harga_masuk_long + harga_masuk_long * 0.008 / leverage_long):  # type: ignore
                     nilai_tutup_posisi = float(

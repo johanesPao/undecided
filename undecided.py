@@ -23,11 +23,12 @@ __status__ = "Development"
 # KONSTANTA
 MODE_BACKTEST = False
 PERIODE_BACKTEST = 1000
-INTERVAL = ["1 menit", "30 menit"]
+INTERVAL = ["45 menit", "1 hari"]
 # VARIABEL ASET
 ASET_DATA = "MATICUSDTPERP"
 ASET = "MATICUSDT"
 EXCHANGE = "BINANCE"
+LEVERAGE = 3
 INISIATOR_WAKTU = True
 JUMLAH_ERROR = 0
 
@@ -37,6 +38,7 @@ info_akun = InfoAkun(konektor_exchange)
 
 pengguna_email = Konfigurasi().Email["USERNAME"]
 kunci_email = Konfigurasi().Email["KUNCI"]
+email_tujuan = 'kripto.jpao@gmail.com'
 
 ui = UI()
 fungsi = Fungsi()
@@ -155,13 +157,13 @@ while True:
             ASET_DATA,
             ASET,
             EXCHANGE,
+            leverage=LEVERAGE,
             backtest=MODE_BACKTEST,
             jumlah_periode_backtest=PERIODE_BACKTEST,
         )
 
         # Eksekusi strategi
-        strategi.jpao_niten_ichi_ryu_28_16_8(
-            interval=INTERVAL, k_cepat=15, k_lambat=5, d_lambat=3)  # type: ignore
+        strategi.jpao_niten_ichi_ryu_28_16_8(interval=INTERVAL)  # type: ignore
 
         # Reset jumlah error b2eruntun
         JUMLAH_ERROR = 0
@@ -181,9 +183,9 @@ while True:
             print("Terjadi 10 kesalahan berturut - turut...")
             fungsi.kirim_email(
                 pengguna_email,
-                pengguna_email,
+                email_tujuan,
                 f"KESALAHAN PADA {ui.judul()}",
-                "Terjadi kesalahan beruntun yang menyebabkan script tidak dapat melanjutkan pekerjaannya, mohon cek script pada master-server",
+                f"Terjadi kesalahan beruntun yang menyebabkan script tidak dapat melanjutkan pekerjaannya, mohon cek script pada master-server:\n{e}",
                 kunci_email,
             )
         time.sleep(1)

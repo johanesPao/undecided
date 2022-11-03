@@ -30,6 +30,7 @@ class Order:
         self.aset = aset
         self.pengguna_email = Konfigurasi().Email["USERNAME"]
         self.kunci_email = Konfigurasi().Email["KUNCI"]
+        self.email_tujuan = "kripto.jpao@gmail.com"
         self.fungsi = Fungsi()
 
     def buka_long(
@@ -53,14 +54,14 @@ class Order:
             kalimat = f"Posisi LONG senilai {saldo_long} USDT / {math.floor(kuantitas)} {self.aset} berhasil dibuka untuk {self.aset} pada harga {harga_masuk_long}"
         except Exception as e:
             print(e)
-            kalimat = f"Posisi LONG tidak berhasil dibuka untuk {self.aset}"
+            kalimat = f"Posisi LONG tidak berhasil dibuka untuk {self.aset}:\n{e}"
 
         print(kalimat)
 
         try:
             self.fungsi.kirim_email(
                 self.pengguna_email,
-                self.pengguna_email,
+                self.email_tujuan,
                 "STATUS TRIGGER BUKA LONG",
                 kalimat,
                 self.kunci_email,
@@ -89,14 +90,14 @@ class Order:
             kalimat = f"Posisi SHORT senilai {saldo_short} USDT / {math.floor(kuantitas)} {self.aset} berhasil dibuka untuk {self.aset} pada harga {harga_masuk_short}"
         except Exception as e:
             print(e)
-            kalimat = f"Posisi SHORT tidak berhasil dibuka untuk {self.aset}"
+            kalimat = f"Posisi SHORT tidak berhasil dibuka untuk {self.aset}:\n{e}"
 
         print(kalimat)
 
         try:
             self.fungsi.kirim_email(
                 self.pengguna_email,
-                self.pengguna_email,
+                self.email_tujuan,
                 "STATUS TRIGGER BUKA SHORT",
                 kalimat,
                 self.kunci_email,
@@ -125,14 +126,14 @@ class Order:
             kalimat = f"Posisi LONG senilai {saldo_long} USDT / {math.floor(kuantitas)} {self.aset} berhasil ditutup untuk {self.aset}"
         except Exception as e:
             print(e)
-            kalimat = f"Posisi LONG tidak berhasil ditutup untuk {self.aset}"
+            kalimat = f"Posisi LONG tidak berhasil ditutup untuk {self.aset}:\n{e}"
 
         print(kalimat)
 
         try:
             self.fungsi.kirim_email(
                 self.pengguna_email,
-                self.pengguna_email,
+                self.email_tujuan,
                 "STATUS TRIGGER TUTUP LONG",
                 kalimat,
                 self.kunci_email,
@@ -161,14 +162,14 @@ class Order:
             kalimat = f"Posisi SHORT senilai {saldo_short} USDT / {math.floor(kuantitas)} {self.aset} berhasil ditutup untuk {self.aset}"
         except Exception as e:
             print(e)
-            kalimat = f"Posisi SHORT tidak berhasil ditutup untuk {self.aset}"
+            kalimat = f"Posisi SHORT tidak berhasil ditutup untuk {self.aset}:\n{e}"
 
         print(kalimat)
 
         try:
             self.fungsi.kirim_email(
                 self.pengguna_email,
-                self.pengguna_email,
+                self.email_tujuan,
                 "STATUS TRIGGER TUTUP SHORT",
                 kalimat,
                 self.kunci_email,
