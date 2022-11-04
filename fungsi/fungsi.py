@@ -24,11 +24,16 @@ class Fungsi:
     """
     Kelas Fungsi merupakan kelas yang berisi fungsi - fungsi dasar bagi program di luar fungsi perdagangan spesifik.
 
-    Atribut:
-        None
+    Atribut
+    -------
+    (None)
 
-    Metode:
-        kalibrasi_waktu(interval: str) -> float | None: Metode yang dipergunakan untuk melakukan kalibrasi waktu dari program dengan timeframe interval waktu penutupan harga perdagangan
+    Metode
+    ------
+    konverter_detik(interval: str, hari_dlm_bulan: int) -> int:
+        Metode yang dipergunakan untuk mengkonversi string menit, jam, hari, minggu dan bulan dalam nilai jumlah detik
+    kalibrasi_waktu(interval: str) -> float | None:
+        Metode yang dipergunakan untuk melakukan kalibrasi waktu dari program dengan timeframe interval waktu penutupan harga perdagangan
         kirim_email(dari: str, ke: str, judul: str, isi_pesan: str, kunci: str) -> None: Metode yang dipergunakan untuk mengirimkan email kepada pengguna jika terjadi kesalahan pada program secara beruntun atau saat terjadi transaksi
         konverter_offset(interval: str, offset_kosong: bool) -> DateOffset: Metode yang dipergunakan untuk melakukan offset datetime pada tabel pd.DataFrame terkait dengan strategi
         konverter_waktu(interval: str) -> Interval: Metode yang dipergunakan untuk mengkonversi string menjadi objek Interval yang dipergunakan oleh modul tvDatafeed
@@ -38,10 +43,13 @@ class Fungsi:
         """
         Metode inisiasi kelas Fungsi
 
-        Argumen:
-            (None)
-        Return:
-            (None)
+        Argumen
+        -------
+        (None)
+
+        Return
+        ------
+        (None)
         """
         pass
 
@@ -49,9 +57,17 @@ class Fungsi:
         """
         Metode untuk mengkonversi string 'menit', 'jam', 'hari', 'minggu' dan 'bulan' dalam jumlah detik
 
-        Argumen:
-            interval (str): string yang akan dikonversi menjadi detik int
-            hari_dlm_bulan (int): jumlah hari dalam bulan (jika interval='bulan') untuk dikonversi menjadi detik
+        Argumen
+        -------
+        interval (str):
+            string yang akan dikonversi menjadi detik int
+        hari_dlm_bulan (int):
+            jumlah hari dalam bulan (jika interval='bulan') untuk dikonversi menjadi detik
+
+        Return
+        ------
+        (int):
+            jumlah detik dari interval yang diberikan
         """
         # Memastikan nilai str dari interval adalah menit, jam, hari, minggu atau bulan
         assert interval == "menit" or "jam" or "hari" or "minggu" or "bulan"
@@ -84,12 +100,17 @@ class Fungsi:
         Metode ini akan melakukan kalibrasi waktu saat program berjalan supaya program dieksekusi pada timeframe yang sama dengan interval waktu yang diberikan untuk melakukan evaluasi strategi di awal timeframe yang baru.
         Metode ini mengembalikan nilai float yang merupakan hitung mundur (dalam detik) menuju penutupan harga pada interval waktu yang digunakan atau mengembalikan None dan melakukan print kesalahan jika interval waktu yang diberikan tidak sesuai atau terjadi kesalahan internal dalam metode ini.
 
-        Argumen:
-            interval (str): Interval waktu pertama (list[0]) yang digunakan dalam evaluasi strategi.
+        Argumen
+        -------
+        interval (str):
+            Interval waktu pertama (list[0]) yang digunakan dalam evaluasi strategi.
 
-        Return:
-            hitung_mundur (float): hitung mundur sampai evaluasi strategi dijalankan oleh program dalam detik.
-            (None): Print kesalahan format argumen atau kesalahan internal metode ini.
+        Return
+        ------
+        hitung_mundur (float):
+            hitung mundur sampai evaluasi strategi dijalankan oleh program dalam detik.
+        (None):
+            Print kesalahan format argumen atau kesalahan internal metode ini.
         """
         # Waktu saat metode dijalankan
         waktu_saat_ini = datetime.datetime.now()
@@ -153,15 +174,23 @@ class Fungsi:
         """
         Metode untuk mengirimkan email ke pengguna menggunakan server smtp gmail
 
-        Argumen:
-            dari (str): alamat email yang menjadi pengirim email
-            ke (str): alamat email yang menjadi tujuan email
-            judul (str): judul dari email
-            isi_pesan (str): isi pesan dari email
-            kunci (str): kunci autentikasi email google (App Password) yang bisa digenerate dari akun pengirim email, lebih lanjut merujuk kepada https://support.google.com/mail/answer/185833?hl=en
+        Argumen
+        -------
+        dari (str):
+            alamat email yang menjadi pengirim email
+        ke (str):
+            alamat email yang menjadi tujuan email
+        judul (str):
+            judul dari email
+        isi_pesan (str):
+            isi pesan dari email
+        kunci (str):
+            kunci autentikasi email google (App Password) yang bisa digenerate dari akun pengirim email, lebih lanjut merujuk kepada https://support.google.com/mail/answer/185833?hl=en
 
-        Return:
-            (None): email terkirim atau print kesalahan di console
+        Return
+        ------
+        (None):
+            email terkirim atau print kesalahan di console
         """
         pesan = MIMEMultipart("alternative")
         pesan["Subject"] = judul
@@ -188,11 +217,17 @@ class Fungsi:
         """
         Metode ini akan dipergunakan untuk meng-offset data datetime pada timeframe besar di pd.DataFrame untuk tampil berdampingan dengan datetime timeframe kecil dalam 1 baris sebagai bahan evaluasi strategi.
 
-        Argumen:
-            interval (str):
-            offset_kosong (bool): offset_kosong dipergunakan (True) jika interval waktu pada timeframe kecil dan besar adalah sama sehingga sebenarnya tidak perlu dilakukan offset pada timeframe besar. Jika interval waktu pada timeframe kecil dan besar tidak sama maka perlu dilakukan offset pada tabel datetime timeframe besar, sehingga baris timeframe besar dapat berdampingan dengan baris timeframe kecil pada interval waktu yang benar
-        Return:
-            (DateOffset): objek DateOffset pada pd.DataFrame untuk meng-offset timeframe besar dengan timeframe kecil
+        Argumen
+        -------
+        interval (str):
+            str interval waktu timeframe
+        offset_kosong (bool):
+            offset_kosong dipergunakan (True) jika interval waktu pada timeframe kecil dan besar adalah sama sehingga sebenarnya tidak perlu dilakukan offset pada timeframe besar. Jika interval waktu pada timeframe kecil dan besar tidak sama maka perlu dilakukan offset pada tabel datetime timeframe besar, sehingga baris timeframe besar dapat berdampingan dengan baris timeframe kecil pada interval waktu yang benar
+
+        Return
+        ------
+        (DateOffset):
+            objek DateOffset pada pd.DataFrame untuk meng-offset timeframe besar dengan timeframe kecil
         """
         if offset_kosong:
             match interval:
@@ -242,8 +277,15 @@ class Fungsi:
         """
         Metode untuk mengkonversi string interval waktu menjadi objek Interval yang diterima oleh modul tvDatafeed
 
-        Argumen:
-            interval (str):
+        Argumen
+        -------
+        interval (str):
+            str interval waktu yang akan dikonversi menjadi objek Interval tvDatafeed
+
+        Return
+        ------
+        (Interval):
+            Objek Interval pada modul tvDatafeed
         """
         # Memastikan interval adalah nilai str yang ditetapkan
         assert (

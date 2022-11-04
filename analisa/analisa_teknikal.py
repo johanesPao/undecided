@@ -21,29 +21,33 @@ class AnalisaTeknikal:
     Hampir keseluruhan metode dalam kelas AnalisaTeknikal akan menerima data OHLC (Open High Low Close) dalam format pd.DataFrame.
     Argumen backtest juga wajib ada dalam metode di kelas ini, karena metode di kelas ini akan mengembalikan nilai indikator teknikal untuk timeframe terakhir (latest/current) saja jika metode dipergunakan sebagai bagian dari implementasi live, namun akan mengembalikan data dalam jumlah yang besar jika diimplementasikan sebagai bagian dari proses backtesting strategi.
 
-    Atribut:
-        None
+    Atribut
+    -------
+    (None)
 
-    Metode:
-        stokastik():
-            Metode ini akan melakukan kalkulasi nilai Stochastic dari sekumpulan data yang diberikan.
-        moving_average():
-            Metode ini akan melakukan kalkulasi nilai Moving Average dari sekumpulan data yang diberikan.
-        parabolic_sar():
-            Metode ini akan melakukan kalkulasi nilai Parabolic SAR dari sekumpulan data yang diberikan.
+    Metode
+    ------
+    stokastik(data: pd.DataFrame, periode_k_cepat: int, periode_k_lambat: int, periode_d_lambat: int, backtest: bool, k_tinggi: str, k_rendah: str, k_tutup: str) -> pd.DataFrame:
+        Metode ini akan melakukan kalkulasi nilai Stochastic dari sekumpulan data yang diberikan.
+    moving_average():
+        Metode ini akan melakukan kalkulasi nilai Moving Average dari sekumpulan data yang diberikan.
+    parabolic_sar():
+        Metode ini akan melakukan kalkulasi nilai Parabolic SAR dari sekumpulan data yang diberikan.
 
-        ...UNTUK DITAMBAHKAN
+    ...UNTUK DITAMBAHKAN
     """
 
     def __init__(self) -> None:
         """
         Metode inisiasi kelas AnalisaTeknikal
 
-        Argumen:
-            None
+        Argumen
+        -------
+        (None)
 
-        Return:
-            None
+        Return
+        ------
+        (None)
         """
         pass
 
@@ -63,18 +67,29 @@ class AnalisaTeknikal:
         """
         Implementasi dari analisa teknikal Stochastic. Mengembalikan nilai stochastic terakhir atau keseluruhan dataframe jika backtest adalah True
 
-        Argumen:
-          data (pd.DataFrame): data dengan format pd.DataFrame yang memiliki kolom HLC
-          periode_k_cepat (int): jumlah periode yang dipergunakan untuk perhitungan k_cepat
-          periode_k_lambat (int): jumlah periode yang dipergunakan untuk perhitungan k_lambat
-          periode_d_lambat (int): jumlah periode yang dipergunakan untuk perhitungan d_lambat
-          backtest (bool): mengembalikan analisa untuk keperluan backtest atau live trading
-          k_tinggi (str): nama kolom yang mengandung data harga tertinggi
-          k_rendah (str): nama kolom yang mengandung data harga terendah
-          k_tutup (str): nama kolom yang mengandung data harga penutupan
+        Argumen
+        -------
+        data (pd.DataFrame):
+            data dengan format pd.DataFrame yang memiliki kolom HLC
+        periode_k_cepat (int):
+            jumlah periode yang dipergunakan untuk perhitungan k_cepat
+        periode_k_lambat (int):
+            jumlah periode yang dipergunakan untuk perhitungan k_lambat
+        periode_d_lambat (int):
+            jumlah periode yang dipergunakan untuk perhitungan d_lambat
+        backtest (bool):
+            mengembalikan analisa untuk keperluan backtest atau live trading
+        k_tinggi (str):
+            nama kolom yang mengandung data harga tertinggi
+        k_rendah (str):
+            nama kolom yang mengandung data harga terendah
+        k_tutup (str):
+            nama kolom yang mengandung data harga penutupan
 
-        Return:
-          Mengembalikan pd.DataFrame dengan format kolom k_lambat dan d_lambat terbaru atau keseluruhan dataframe dalam periode backtest yang dilakukan dengan format kolom waktu_penutupan, k_lambat dan d_lambat
+        Return
+        ------
+        (pd.DataFrame):
+            Mengembalikan pd.DataFrame dengan format kolom k_lambat dan d_lambat terbaru atau keseluruhan dataframe dalam periode backtest yang dilakukan dengan format kolom waktu_penutupan, k_lambat dan d_lambat
         """
         self.data = data
         self.p_k_cepat = periode_k_cepat
