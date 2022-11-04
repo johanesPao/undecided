@@ -17,18 +17,52 @@ __status__ = "Development"
 
 
 class InfoAkun:
+    """
+    Kelas InfoAkun merupakan penghubung antara program dengan API binance yang berkaitan dengan informasi akun pengguna
+
+
+    Atribut
+    -------
+    exchange: Client
+        Objek Client dari binance.Client
+
+    Metode
+    ------
+    akun_spot():
+        Mengembalikan informasi akun di pasar spot
+    akun_futures():
+        Mengembalikan informasi akun di pasar futures
+    """
+
     def __init__(self, exchange: Client) -> None:
+        """
+        Metode inisiasi kelas InfoAkun
+
+        Argumen:
+            exchange: Objek Client dari binance.Client
+
+        Return:
+            None
+        """
         self.exchange = exchange
-        pass
 
     def akun_spot(self) -> tuple:
+        """
+        Metode untuk mengembalikan informasi akun di pasar spot
+
+        Argumen:
+            None
+
+        Return:
+            (tuple): Mengembalikan data akun di pasar spot dalam bentuk tuple (makerCommision, takerCommision, buyerCommision, sellerCommision dan pd.DataFrame saldo_aset_spot)
+        """
         # AKUN SPOT
         spot = self.exchange.get_account()
 
         # SALDO SPOT
         saldo_aset_spot = pd.DataFrame(spot["balances"])
 
-        # konversi objek menjadi nilai numerik
+        # KONVERSI OBJEK MENJADI NILAI NUMERIK
         kolom_numerik = ["free", "locked"]
         saldo_aset_spot[kolom_numerik] = saldo_aset_spot[kolom_numerik].apply(
             pd.to_numeric, axis=1
@@ -38,7 +72,7 @@ class InfoAkun:
             > len(saldo_aset_spot.columns) - 2
         ]
 
-        # fee spot
+        # DATA FEE SPOT
         maker_commission = spot["makerCommission"]
         taker_commission = spot["takerCommission"]
         buyer_commission = spot["buyerCommission"]
@@ -53,6 +87,15 @@ class InfoAkun:
         )
 
     def akun_futures(self) -> tuple:
+        """
+        Metode untuk mengembalikan informasi akun di pasar futures
+
+        Argumen:
+            None
+
+        Return:
+            (tuple): Mengembalikan data akun di pasar futures dalam bentuk tuple (feeTier, total_saldo, saldo_tersedia, saldo_terpakai, laba_rugi_terbuka, saldo_plus_profit dan pd.DataFrame data_posisi_df)
+        """
         # AKUN FUTURES
         futures = self.exchange.futures_account()
         fee_tier = futures["feeTier"]
@@ -90,4 +133,13 @@ class InfoAkun:
         )
 
     def harga_koin_terakhir(self, simbol: str) -> float:
+        """
+        Metode untuk mengembalikan harga koin terakhir di pasar futures
+
+        Argumen:
+            simbol (str): Simbol koin yang ingin diketahui harga terakhirnya di pasar futures
+
+        Return:
+            (float): harga koin terakhir untuk simbol yang diberikan pada metode ini di pasar futures
+        """
         return float(self.exchange.futures_ticker(symbol=simbol)["lastPrice"])

@@ -7,11 +7,11 @@ import math
 from typing import List, Literal
 
 import pandas as pd
-from tvDatafeed import Interval
 
 from akun.akun import InfoAkun
 from analisa.analisa_teknikal import AnalisaTeknikal
 from baca_konfig import Inisiasi
+from fungsi.fungsi import Fungsi
 from model.model import Model
 from tindakan.tindakan import Order
 
@@ -64,6 +64,7 @@ class Strategi:
             )
         self.saldo_backtest = saldo_backtest
         self.leverage_backtest = leverage_backtest
+        self.fungsi = Fungsi()
         self.HOLD_TRADE = ""
 
     def jpao_niten_ichi_ryu_28_16_8(
@@ -113,76 +114,17 @@ class Strategi:
         self.data_stokastik = []
 
         try:
-            if self.interval[0] == self.interval[1]:
-                if "menit" in self.interval[0]:
-                    self.offset = pd.DateOffset(minutes=0)
-                if "jam" in self.interval[0]:
-                    self.offset = pd.DateOffset(hours=0)
-                if "hari" in self.interval[0]:
-                    self.offset = pd.DateOffset(days=0)
-                if "minggu" in self.interval[0]:
-                    self.offset = pd.DateOffset(weeks=0)
-                if "bulan" in self.interval[0]:
-                    self.offset = pd.DateOffset(months=0)
-            else:
-                match self.interval[1]:
-                    case "3 menit":
-                        self.offset = pd.DateOffset(minutes=3)
-                    case "5 menit":
-                        self.offset = pd.DateOffset(minutes=5)
-                    case "15 menit":
-                        self.offset = pd.DateOffset(minutes=15)
-                    case "45 menit":
-                        self.offset = pd.DateOffset(minutes=45)
-                    case "1 jam":
-                        self.offset = pd.DateOffset(hours=1)
-                    case "2 jam":
-                        self.offset = pd.DateOffset(hours=2)
-                    case "3 jam":
-                        self.offset = pd.DateOffset(hours=3)
-                    case "4 jam":
-                        self.offset = pd.DateOffset(hours=4)
-                    case "1 hari":
-                        self.offset = pd.DateOffset(days=1)
-                    case "1 minggu":
-                        self.offset = pd.DateOffset(weeks=1)
-                    case "1 bulan":
-                        self.offset = pd.DateOffset(months=1)
-                    case _:
-                        self.offset = pd.DateOffset(minutes=1)
+            self.offset = self.fungsi.konverter_offset(
+                self.interval[1],
+                offset_kosong=True if self.interval[0] == self.interval[1] else False,
+            )
         except:
             print(
                 "KESALAHAN: Kami tidak dapat membaca interval waktu yang diberikan, pastikan interval waktu dalam list dengan dua komponen dimana komponen kedua adalah timeframe yang lebih besar atau sama dengan timeframe kecil (komponen pertama)"
             )
 
         for waktu in self.interval:
-            match waktu:
-                case "1 menit":
-                    self.interval_data = Interval.in_1_minute
-                case "3 menit":
-                    self.interval_data = Interval.in_3_minute
-                case "5 menit":
-                    self.interval_data = Interval.in_5_minute
-                case "15 menit":
-                    self.interval_data = Interval.in_15_minute
-                case "30 menit":
-                    self.interval_data = Interval.in_30_minute
-                case "45 menit":
-                    self.interval_data = Interval.in_45_minute
-                case "1 jam":
-                    self.interval_data = Interval.in_1_hour
-                case "2 jam":
-                    self.interval_data = Interval.in_2_hour
-                case "3 jam":
-                    self.interval_data = Interval.in_3_hour
-                case "4 jam":
-                    self.interval_data = Interval.in_4_hour
-                case "1 hari":
-                    self.interval_data = Interval.in_daily
-                case "1 minggu":
-                    self.interval_data = Interval.in_weekly
-                case "1 bulan":
-                    self.interval_data = Interval.in_monthly
+            self.interval_data = self.fungsi.konverter_waktu(waktu)
 
             self.df = self.model.ambil_data_historis(
                 self.simbol_data, self.exchange, self.interval_data, self.jumlah_bar
@@ -258,8 +200,8 @@ class Strategi:
                 # jika ada posisi SHORT
                 elif "SHORT" in POSISI and harga_koin_terakhir < (harga_masuk_short - harga_masuk_short * 0.008 / leverage_short):  # type: ignore
                     nilai_tutup_posisi = float(
-                        nilai_usdt / harga_masuk_short * leverage_short
-                    )  # type: ignore
+                        nilai_usdt / harga_masuk_short * leverage_short  # type: ignore
+                    )
                     self.order.tutup_short(nilai_tutup_posisi)
             # jika variabel self.HOLD_TRADE == 'SHORT_LONG
             elif self.HOLD_TRADE == "SHORT_LONG":
@@ -277,8 +219,8 @@ class Strategi:
                 # jika ada posisi LONG
                 elif "LONG" in POSISI and harga_koin_terakhir > (harga_masuk_long + harga_masuk_long * 0.008 / leverage_long):  # type: ignore
                     nilai_tutup_posisi = float(
-                        nilai_usdt / harga_masuk_long * leverage_long
-                    )  # type: ignore
+                        nilai_usdt / harga_masuk_long * leverage_long  # type: ignore
+                    )
                     self.order.tutup_long(nilai_tutup_posisi)
 
         # FUNGSI SAAT BACKTEST
