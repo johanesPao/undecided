@@ -23,7 +23,54 @@ exchange = inisiasi_konektor.exchange()
 
 
 class Order:
+    """
+    Kelas Order digunakan untuk mengeksekusi transaksi beli dan jual pada exchange
+
+    Atribut
+    -------
+    inisiasi_konektor (Inisiasi):
+        kelas Inisiasi yang akan digunakan untuk menginisiasi koneksi dengan exchange Client
+    exchange (Client):
+        objek Client yang akan digunakan dalam melakukan transaksi ke exchange
+    info_akun (InfoAkun):
+        kelas InfoAkun yang akan digunakan dalam melakukan penarikan data mengenai akun pengguna di exchange
+    aset (str):
+        str aset yang digunakan dalam melakukan transaksi
+    pengguna_email (str):
+        str pengguna email yang digunakan untuk mengirimkan notifikasi email
+    kunci_email (str):
+        str kunci email yang digunakan untuk autentikasi dengan smtp server
+    email_tujuan (str):
+        str email tujuan yang akan menerima notifikasi email
+    fungsi (Fungsi):
+        kelas Fungsi yang akan digunakan dalam melakukan fungsi-fungsi dasar seperti mengirimkan email
+
+    Metode
+    ------
+    buka_long(kuantitas: float, leverage: int, tipe_order: str) -> None:
+        Metode ini akan melakukan eksekusi order untuk membuka posisi long dengan kuantitas, leverage dan tipe order ke API exchange
+    buka_short(kuantitas: float, leverage: int, tipe_order: str) -> None:
+        Metode ini akan melakukan eksekusi order untuk membuka posisi short dengan kuantitas, leverage dan tipe order ke API exchange
+    tutup_long(kuantitas: float, leverage: int, tipe_order: str) -> None:
+        Metode ini akan melakukan eksekusi order untuk menutup posisi long dengan kuantitas, leverage dan tipe order ke API exchange
+    tutup_short(kuantitas: float, leverage: int, tipe_order: str) -> None:
+        Metode ini akan melakukan eksekusi order untuk menutup posisi short dengan kuantitas, leverage dan tipe order ke API exchange
+    """
+
     def __init__(self, aset: str) -> None:
+        """
+        Metode inisiasi dari kelas Order
+
+        Argumen
+        -------
+        aset (str):
+            str aset yang digunakan dalam melakukan transaksi
+
+        Return
+        ------
+        (None):
+            Metode ini tidak mengembalikan nilai apapun selain melakukan inisiasi variabel
+        """
         self.inisiasi_konektor = Inisiasi()
         self.exchange = self.inisiasi_konektor.exchange()
         self.info_akun = InfoAkun(self.exchange)
@@ -36,6 +83,23 @@ class Order:
     def buka_long(
         self, kuantitas: float, leverage: int = 10, tipe_order: str = "MARKET"
     ) -> None:
+        """
+        Metode ini akan membuka posisi long di akun exchange
+
+        Argumen
+        -------
+        kuantitas (float):
+            float kuantitas aset yang akan dibeli (setelah dikalikan dengan leverage)
+        leverage (int):
+            int leverage yang digunakan dalam membuka posisi
+        tipe_order (str):
+            str tipe order yang dapat diterima oleh API Binance (LIMIT, MARKET, STOP_LOSS, STOP_LOSS_LIMIT, TAKE_PROFIT, TAKE_PROFIT_LIMIT, LIMIT_MAKER)
+
+        Return
+        ------
+        (None):
+            Metode ini tidak mengembalikan nilai apapun selain melakukan eksekusi order untuk membuka posisi long di akun dan mengirimkan notifikasi email
+        """
         try:
             self.exchange.futures_change_leverage(symbol=self.aset, leverage=leverage)
             self.exchange.futures_create_order(
@@ -73,6 +137,23 @@ class Order:
     def buka_short(
         self, kuantitas: float, leverage: int = 10, tipe_order: str = "MARKET"
     ) -> None:
+        """
+        Metode ini akan membuka posisi short di akun exchange
+
+        Argumen
+        -------
+        kuantitas (float):
+            float kuantitas aset yang akan dijual (setelah dikalikan dengan leverage)
+        leverage (int):
+            int leverage yang digunakan dalam membuka posisi
+        tipe_order (str):
+            str tipe order yang dapat diterima oleh API Binance (LIMIT, MARKET, STOP_LOSS, STOP_LOSS_LIMIT, TAKE_PROFIT, TAKE_PROFIT_LIMIT, LIMIT_MAKER)
+
+        Return
+        ------
+        (None):
+            Metode ini tidak mengembalikan nilai apapun selain melakukan eksekusi order untuk membuka posisi short di akun dan mengirimkan notifikasi email
+        """
         try:
             self.exchange.futures_change_leverage(symbol=self.aset, leverage=leverage)
             self.exchange.futures_create_order(
@@ -109,6 +190,23 @@ class Order:
     def tutup_long(
         self, kuantitas: float, leverage: int = 10, tipe_order: str = "MARKET"
     ) -> None:
+        """
+        Metode ini akan menutup posisi long di akun exchange
+
+        Argumen
+        -------
+        kuantitas (float):
+            float kuantitas aset yang akan dijual (setelah dikalikan dengan leverage)
+        leverage (int):
+            int leverage yang digunakan dalam menutu posisi
+        tipe_order (str):
+            str tipe order yang dapat diterima oleh API Binance (LIMIT, MARKET, STOP_LOSS, STOP_LOSS_LIMIT, TAKE_PROFIT, TAKE_PROFIT_LIMIT, LIMIT_MAKER)
+
+        Return
+        ------
+        (None):
+            Metode ini tidak mengembalikan nilai apapun selain melakukan eksekusi order untuk menutup posisi long di akun dan mengirimkan notifikasi email
+        """
         try:
             *_, df_saldo_futures = self.info_akun.akun_futures()
             df_long = df_saldo_futures[df_saldo_futures["positionSide"] == "LONG"]
@@ -145,6 +243,23 @@ class Order:
     def tutup_short(
         self, kuantitas: float, leverage: int = 10, tipe_order: str = "MARKET"
     ) -> None:
+        """
+        Metode ini akan menutup posisi short di akun exchange
+
+        Argumen
+        -------
+        kuantitas (float):
+            float kuantitas aset yang akan dibeli (setelah dikalikan dengan leverage)
+        leverage (int):
+            int leverage yang digunakan dalam menutup posisi
+        tipe_order (str):
+            str tipe order yang dapat diterima oleh API Binance (LIMIT, MARKET, STOP_LOSS, STOP_LOSS_LIMIT, TAKE_PROFIT, TAKE_PROFIT_LIMIT, LIMIT_MAKER)
+
+        Return
+        ------
+        (None):
+            Metode ini tidak mengembalikan nilai apapun selain melakukan eksekusi order untuk menutup posisi short di akun dan mengirimkan notifikasi email
+        """
         try:
             *_, df_saldo_futures = self.info_akun.akun_futures()
             df_short = df_saldo_futures[df_saldo_futures["positionSide"] == "SHORT"]
