@@ -115,10 +115,10 @@ class Order:
             harga_masuk_long = df_long.iloc[0]["entryPrice"]
             saldo_long = df_long.iloc[0]["isolatedWallet"]
 
-            kalimat = f"Posisi LONG senilai {saldo_long} USDT / {math.floor(kuantitas)} {self.aset} berhasil dibuka untuk {self.aset} pada harga {harga_masuk_long}"
+            kalimat = f"\nPosisi LONG senilai {saldo_long} USDT / {math.floor(kuantitas)} {self.aset} berhasil dibuka untuk {self.aset} pada harga {harga_masuk_long}"
         except Exception as e:
             print(e)
-            kalimat = f"Posisi LONG tidak berhasil dibuka untuk {self.aset}:\n{e}"
+            kalimat = f"\nPosisi LONG tidak berhasil dibuka untuk {self.aset}:\n{e}"
 
         print(kalimat)
 
@@ -132,7 +132,7 @@ class Order:
             )
         except Exception as e:
             print(e)
-            print("Terjadi kesalahan dalam mengirimkan notifikasi email")
+            print("\nTerjadi kesalahan dalam mengirimkan notifikasi email")
 
     def buka_short(
         self, kuantitas: float, leverage: int = 10, tipe_order: str = "MARKET"
@@ -168,10 +168,10 @@ class Order:
             harga_masuk_short = df_short.iloc[0]["entryPrice"]
             saldo_short = df_short.iloc[0]["isolatedWallet"]
 
-            kalimat = f"Posisi SHORT senilai {saldo_short} USDT / {math.floor(kuantitas)} {self.aset} berhasil dibuka untuk {self.aset} pada harga {harga_masuk_short}"
+            kalimat = f"\nPosisi SHORT senilai {saldo_short} USDT / {math.floor(kuantitas)} {self.aset} berhasil dibuka untuk {self.aset} pada harga {harga_masuk_short}"
         except Exception as e:
             print(e)
-            kalimat = f"Posisi SHORT tidak berhasil dibuka untuk {self.aset}:\n{e}"
+            kalimat = f"\nPosisi SHORT tidak berhasil dibuka untuk {self.aset}:\n{e}"
 
         print(kalimat)
 
@@ -185,7 +185,7 @@ class Order:
             )
         except Exception as e:
             print(e)
-            print("Terjadi kesalahan dalam mengirimkan notifikasi email")
+            print("\nTerjadi kesalahan dalam mengirimkan notifikasi email")
 
     def tutup_long(
         self, kuantitas: float, leverage: int = 10, tipe_order: str = "MARKET"
@@ -221,10 +221,10 @@ class Order:
                 quantity=kuantitas,
             )
 
-            kalimat = f"Posisi LONG senilai {saldo_long} USDT / {math.floor(kuantitas)} {self.aset} berhasil ditutup untuk {self.aset}"
+            kalimat = f"\nPosisi LONG senilai {saldo_long} USDT / {math.floor(kuantitas)} {self.aset} berhasil ditutup untuk {self.aset}"
         except Exception as e:
             print(e)
-            kalimat = f"Posisi LONG tidak berhasil ditutup untuk {self.aset}:\n{e}"
+            kalimat = f"\nPosisi LONG tidak berhasil ditutup untuk {self.aset}:\n{e}"
 
         print(kalimat)
 
@@ -238,7 +238,7 @@ class Order:
             )
         except Exception as e:
             print(e)
-            print("Terjadi kesalahan dalam mengirimkan notifikasi email")
+            print("\nTerjadi kesalahan dalam mengirimkan notifikasi email")
 
     def tutup_short(
         self, kuantitas: float, leverage: int = 10, tipe_order: str = "MARKET"
@@ -274,10 +274,10 @@ class Order:
                 quantity=kuantitas,
             )
 
-            kalimat = f"Posisi SHORT senilai {saldo_short} USDT / {math.floor(kuantitas)} {self.aset} berhasil ditutup untuk {self.aset}"
+            kalimat = f"\nPosisi SHORT senilai {saldo_short} USDT / {math.floor(kuantitas)} {self.aset} berhasil ditutup untuk {self.aset}"
         except Exception as e:
             print(e)
-            kalimat = f"Posisi SHORT tidak berhasil ditutup untuk {self.aset}:\n{e}"
+            kalimat = f"\nPosisi SHORT tidak berhasil ditutup untuk {self.aset}:\n{e}"
 
         print(kalimat)
 
@@ -291,4 +291,4 @@ class Order:
             )
         except Exception as e:
             print(e)
-            print("Terjadi kesalahan dalam mengirimkan notifikasi email")
+            print("\nTerjadi kesalahan dalam mengirimkan notifikasi email")

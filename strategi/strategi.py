@@ -610,7 +610,7 @@ class Strategi:
             self.MODE_SCALPING = "DIATAS MA" if harga_penutupan > ma else "DIBAWAH MA"
 
             print(
-                f"\nMODE STRATEGI: RIDE THE WAVE {Fore.RED if harga_penutupan <= ma else Fore.GREEN}[{self.MODE_SCALPING}]{Style.RESET_ALL}\n"
+                f"\nMODE STRATEGI: RIDE THE WAVE {Fore.RED if harga_penutupan <= ma else Fore.GREEN}[{self.MODE_SCALPING}]{Style.RESET_ALL}"
             )
 
             if self.MODE_SCALPING == "DIATAS MA":

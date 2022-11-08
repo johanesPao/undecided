@@ -80,6 +80,7 @@ class UI:
         sys.stdout.write(
             f"\r{kalimat_selesai_hitung_mundur}"
             + (" " * (self.ukuran_terminal - len(kalimat_selesai_hitung_mundur)))
+            + "\n"
         )
 
     def keluar(self) -> None:

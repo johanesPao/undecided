@@ -123,23 +123,24 @@ while True:
             "Laba/Rugi Posisi",
             "Saldo + Laba/Rugi",
         ]
+        # print subjudul futures
+        ui.subjudul("data akun futures:")
+
+        # print iterasi list data_akun_futures
+        for nomor_data in range(len(data_akun_futures)):
+            ui.label_nilai(
+                label_data_akun_futures[nomor_data],
+                data_akun_futures[nomor_data],
+                nomor_data == 4,
+            )
+
         if len(df_saldo_aset_futures) > 0:
-            # print subjudul futures
-            ui.subjudul("data akun futures:")
-
-            # print iterasi list data_akun_futures
-            for nomor_data in range(len(data_akun_futures)):
-                ui.label_nilai(
-                    label_data_akun_futures[nomor_data],
-                    data_akun_futures[nomor_data],
-                    nomor_data == 4,
-                )
-
             # print dataframe aset futures
             ui.spasi()
             ui.subjudul("posisi aset futures:")
             ui.print_dataframe_murni(df_saldo_aset_futures)
-            ui.garis_horizontal()
+
+        ui.garis_horizontal()
 
         # Kalibrasi waktu sebelum eksekusi jika loop awal program
         if INISIATOR_WAKTU:
