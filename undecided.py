@@ -163,8 +163,8 @@ while True:
         )
 
         # Eksekusi strategi
-        # strategi.jpao_niten_ichi_ryu_28_16_8(interval=INTERVAL, k_cepat=15, k_lambat=8, d_lambat=3)  # type: ignore
-        strategi.jpao_ride_the_wave(interval=INTERVAL)  # type: ignore
+        # strategi.jpao_niten_ichi_ryu_28_16_8(interval1=INTERVAL, k_cepat=15, k_lambat=8, d_lambat=3)  # type: ignore
+        strategi.jpao_ride_the_wave(interval=INTERVAL, periode_ma=150)  # type: ignore
 
         # Reset jumlah error b2eruntun
         JUMLAH_ERROR = 0

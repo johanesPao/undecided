@@ -598,6 +598,8 @@ class Strategi:
             ma = list_data[0].iloc[-1]["ma"]
             k_lambat = list_data[0].iloc[-1]["k_lambat"]
             d_lambat = list_data[0].iloc[-1]["d_lambat"]
+            k_lambat_dua_periode_sebelumnya = list_data[0].iloc[-2]["k_lambat"]
+            d_lambat_dua_periode_sebelumnya = list_data[0].iloc[-2]["d_lambat"]
             harga_penutupan = list_data[0].iloc[-1]["close"]
 
             print(f"\nHarga Penutupan terakhir: {harga_penutupan}")
@@ -614,7 +616,11 @@ class Strategi:
             )
 
             if self.MODE_SCALPING == "DIATAS MA":
-                if k_lambat > d_lambat:
+                if (
+                    k_lambat > d_lambat
+                    and k_lambat_dua_periode_sebelumnya
+                    <= d_lambat_dua_periode_sebelumnya
+                ):
                     if "SHORT" in POSISI:
                         nilai_tutup_posisi = math.ceil(float(nilai_usdt / harga_masuk_short * leverage_short))  # type: ignore
                         self.order.tutup_short(
@@ -629,7 +635,11 @@ class Strategi:
                             nilai_tutup_posisi, leverage=self.leverage
                         )
             elif self.MODE_SCALPING == "DIBAWAH MA":
-                if k_lambat <= d_lambat:
+                if (
+                    k_lambat <= d_lambat
+                    and k_lambat_dua_periode_sebelumnya
+                    > d_lambat_dua_periode_sebelumnya
+                ):
                     if "LONG" in POSISI:
                         nilai_tutup_posisi = math.ceil(float(nilai_usdt / harga_masuk_long * leverage_long))  # type: ignore
                         self.order.tutup_long(
