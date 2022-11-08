@@ -218,7 +218,7 @@ class Order:
                 type=tipe_order,
                 side="SELL",
                 positionSide="LONG",
-                quantity=math.ceil(kuantitas),
+                quantity=kuantitas,
             )
 
             kalimat = f"Posisi LONG senilai {saldo_long} USDT / {math.floor(kuantitas)} {self.aset} berhasil ditutup untuk {self.aset}"
@@ -271,7 +271,7 @@ class Order:
                 type=tipe_order,
                 side="BUY",
                 positionSide="SHORT",
-                quantity=math.ceil(kuantitas),
+                quantity=kuantitas,
             )
 
             kalimat = f"Posisi SHORT senilai {saldo_short} USDT / {math.floor(kuantitas)} {self.aset} berhasil ditutup untuk {self.aset}"

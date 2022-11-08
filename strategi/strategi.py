@@ -7,6 +7,7 @@ import math
 from typing import List, Literal
 
 import pandas as pd
+from colorama import Fore, Style, init
 
 from akun.akun import InfoAkun
 from analisa.analisa_teknikal import AnalisaTeknikal
@@ -22,6 +23,8 @@ __version__ = "1.0.0"
 __maintainer = "Johanes Indra Pradana Pao"
 __email__ = "johanes.pao@gmail.com"
 __status__ = "Development"
+
+init()
 
 
 class Strategi:
@@ -66,6 +69,7 @@ class Strategi:
         self.leverage_backtest = leverage_backtest
         self.fungsi = Fungsi()
         self.HOLD_TRADE = ""
+        self.MODE_SCALPING = ""
 
     def jpao_niten_ichi_ryu_28_16_8(
         self,
@@ -96,13 +100,9 @@ class Strategi:
         self.d_lambat = d_lambat
         self.dua = 2
 
-        print(
-            "PERINGATAN: STRATEGI INI MENGGUNAKAN INTERVAL WAKTU DALAM LIST BERJUMLAH DUA DAN KOMPONEN KEDUA HARUS LEBIH BESAR ATAU SAMA DENGAN KOMPONEN PERTAMA"
-        )
-
-        if len(self.interval) != 2:
+        if len(self.interval) != self.dua:
             return print(
-                "Strategi ini (strategi_stokastik_jpao) memerlukan dua interval waktu dalam list dan "
+                "STRATEGI INI (jpao_niten_ichi_ryu_28_16_8) MENGGUNAKAN INTERVAL WAKTU DALAM LIST BERJUMLAH DUA DAN KOMPONEN KEDUA HARUS LEBIH BESAR ATAU SAMA DENGAN KOMPONEN PERTAMA"
             )
 
         self.jumlah_bar = (
@@ -500,5 +500,262 @@ class Strategi:
 
         return self.data_stokastik
 
-    def jpao_kodachijutsu_26_18_8(self):
-        pass
+    def jpao_ride_the_wave(
+        self,
+        interval: List[
+            Literal[
+                "1 menit",
+                "3 menit",
+                "5 menit",
+                "15 menit",
+                "30 menit",
+                "45 menit",
+                "1 jam",
+                "2 jam",
+                "3 jam",
+                "4 jam",
+                "1 hari",
+                "1 minggu",
+                "1 bulan",
+            ]
+        ] = ["15 menit"],
+        periode_ma: int = 100,
+        k_cepat: int = 15,
+        k_lambat: int = 8,
+        d_lambat: int = 3,
+    ) -> None | list:
+        self.interval = interval
+        self.periode_ma = periode_ma
+        self.k_cepat = k_cepat
+        self.k_lambat = k_lambat
+        self.d_lambat = d_lambat
+
+        if len(self.interval) != 1:
+            return print(
+                "STRATEGI INI (jpao_ride_the_wave) MENGGUNAKAN INTERVAL WAKTU DALAM LIST BERJUMLAH SATU"
+            )
+
+        if self.periode_ma < self.k_cepat + self.k_lambat + self.d_lambat:  # type: ignore
+            return print(
+                "JUMLAH PARAMETER k_cepat, k_lambat dan d_lambat HARUS LEBIH KECIL DARI periode_ma"
+            )
+
+        self.jumlah_bar = (
+            self.jumlah_periode_backtest
+            if self.backtest
+            else self.periode_ma + self.k_cepat + self.k_lambat + self.d_lambat + 1
+        )
+
+        waktu = self.fungsi.konverter_waktu(self.interval[0])
+
+        self.data = []
+
+        self.df = self.model.ambil_data_historis(
+            self.simbol_data, self.exchange, waktu, self.jumlah_bar
+        )
+
+        self.df_stokastik = self.analisa_teknikal.stokastik(
+            self.df, self.k_cepat, self.k_lambat, self.d_lambat, backtest=True
+        )
+
+        self.df_ma = self.analisa_teknikal.moving_average(
+            self.df_stokastik, self.periode_ma, backtest=self.backtest
+        )
+
+        self.df_stokastik["ma"] = self.df_ma["ma"]
+        self.data.append(self.df_stokastik)
+
+        # FUNGSI SAAT LIVE
+        def live(list_data: list = self.data) -> str | None:
+            # VARIABEL DAN KONSTANTA
+            DATA_POSISI_FUTURES = self.posisi_futures
+            # cek posisi aset yang dipegang saat ini
+            POSISI = DATA_POSISI_FUTURES["positionSide"].unique().tolist()
+            if "SHORT" in POSISI:
+                data_short = DATA_POSISI_FUTURES[
+                    DATA_POSISI_FUTURES["positionSide"] == "SHORT"
+                ]
+                nilai_usdt = float(data_short.iloc[0]["isolatedWallet"])
+                harga_masuk_short = float(data_short.iloc[0]["entryPrice"])
+                leverage_short = float(data_short.iloc[0]["leverage"])
+            if "LONG" in POSISI:
+                data_long = DATA_POSISI_FUTURES[
+                    DATA_POSISI_FUTURES["positionSide"] == "LONG"
+                ]
+                data_long = DATA_POSISI_FUTURES[
+                    DATA_POSISI_FUTURES["positionSide"] == "LONG"
+                ]
+                nilai_usdt = float(data_long.iloc[0]["isolatedWallet"])
+                harga_masuk_long = float(data_long.iloc[0]["entryPrice"])
+                leverage_long = float(data_long.iloc[0]["leverage"])
+
+            USDT_AKUN = math.floor(self.total_saldo - 1)
+            harga_koin_terakhir = self.akun.harga_koin_terakhir(self.simbol)
+            nilai_buka_posisi = float(
+                math.floor(USDT_AKUN / 2 * self.leverage / harga_koin_terakhir)
+            )
+
+            ma = list_data[0].iloc[-1]["ma"]
+            k_lambat = list_data[0].iloc[-1]["k_lambat"]
+            d_lambat = list_data[0].iloc[-1]["d_lambat"]
+            harga_penutupan = list_data[0].iloc[-1]["close"]
+
+            print(f"\nHarga Penutupan terakhir: {harga_penutupan}")
+            print(
+                f"Moving Average terakhir: {Fore.RED if harga_penutupan <= ma else Fore.GREEN}{ma}{Style.RESET_ALL}"
+            )
+            print(f"K Lambat terakhir: {k_lambat}")
+            print(f"D Lambat terakhir: {d_lambat}")
+
+            self.MODE_SCALPING = "DIATAS MA" if harga_penutupan > ma else "DIBAWAH MA"
+
+            print(
+                f"\nMODE STRATEGI: RIDE THE WAVE {Fore.RED if harga_penutupan <= ma else Fore.GREEN}[{self.MODE_SCALPING}]{Style.RESET_ALL}\n"
+            )
+
+            if self.MODE_SCALPING == "DIATAS MA":
+                if k_lambat > d_lambat:
+                    if "SHORT" in POSISI:
+                        nilai_tutup_posisi = math.ceil(float(nilai_usdt / harga_masuk_short * leverage_short))  # type: ignore
+                        self.order.tutup_short(
+                            nilai_tutup_posisi, leverage=self.leverage
+                        )
+                    if "LONG" not in POSISI:
+                        self.order.buka_long(nilai_buka_posisi, leverage=self.leverage)
+                if k_lambat <= d_lambat:
+                    if "LONG" in POSISI:
+                        nilai_tutup_posisi = math.ceil(float(nilai_usdt / harga_masuk_long * leverage_long))  # type: ignore
+                        self.order.tutup_long(
+                            nilai_tutup_posisi, leverage=self.leverage
+                        )
+            elif self.MODE_SCALPING == "DIBAWAH MA":
+                if k_lambat <= d_lambat:
+                    if "LONG" in POSISI:
+                        nilai_tutup_posisi = math.ceil(float(nilai_usdt / harga_masuk_long * leverage_long))  # type: ignore
+                        self.order.tutup_long(
+                            nilai_tutup_posisi, leverage=self.leverage
+                        )
+                    if "SHORT" not in POSISI:
+                        self.order.buka_short(nilai_buka_posisi, leverage=self.leverage)
+                if k_lambat > d_lambat:
+                    if "SHORT" in POSISI:
+                        nilai_tutup_posisi = math.ceil(float(nilai_usdt / harga_masuk_short * leverage_short))  # type: ignore
+                        self.order.tutup_short(
+                            nilai_tutup_posisi, leverage=self.leverage
+                        )
+
+        # FUNGSI BACKTEST
+        def backtest(list_data: list = self.data) -> str:
+            # VARIABEL DAN KONSTANTA
+            SALDO = self.saldo_backtest
+            LEVERAGE = self.leverage_backtest
+            DATA = list_data
+
+            df_backtest = pd.DataFrame(DATA[0])
+
+            MODE_SCALPING = ""
+            posisi = []
+            harga_posisi = []
+            list_df_posisi = []
+            list_df_tindakan = []
+            list_df_harga_posisi = []
+            for baris in range(len(df_backtest)):
+                tindakan = []
+                harga = df_backtest.iloc[baris]["close"]
+                k_lambat = df_backtest.iloc[baris]["k_lambat"]
+                d_lambat = df_backtest.iloc[baris]["d_lambat"]
+                ma = df_backtest.iloc[baris]["ma"]
+
+                MODE_SCALPING = "DIATAS MA" if harga >= ma else "DIBAWAH MA"
+
+                if MODE_SCALPING == "DIATAS MA":
+                    if k_lambat > d_lambat:
+                        if "SHORT" in posisi:
+                            tindakan.append("TUTUP_SHORT")
+                            posisi.remove("SHORT")
+                            harga_posisi.clear()
+                        if "LONG" not in posisi:
+                            tindakan.append("BUKA_LONG")
+                            posisi.append("LONG")
+                            harga_posisi.append(harga)
+                    if k_lambat <= d_lambat:
+                        if "LONG" in posisi:
+                            tindakan.append("TUTUP_LONG")
+                            posisi.remove("LONG")
+                            harga_posisi.clear()
+                elif MODE_SCALPING == "DIBAWAH MA":
+                    if k_lambat <= d_lambat:
+                        if "LONG" in posisi:
+                            tindakan.append("TUTUP_LONG")
+                            posisi.remove("LONG")
+                            harga_posisi.clear()
+                        if "SHORT" not in posisi:
+                            tindakan.append("BUKA_SHORT")
+                            posisi.append("SHORT")
+                            harga_posisi.append(harga)
+                    if k_lambat > d_lambat:
+                        if "SHORT" in posisi:
+                            tindakan.append("TUTUP_SHORT")
+                            posisi.remove("SHORT")
+                            harga_posisi.clear()
+
+                list_df_tindakan.append(tindakan)
+                list_df_posisi.append(posisi.copy())
+                list_df_harga_posisi.append(harga_posisi.copy())
+
+            df_backtest["tindakan"] = list_df_tindakan
+            df_backtest["posisi"] = list_df_posisi
+            df_backtest["harga_posisi"] = list_df_harga_posisi
+            df_backtest.dropna(subset=["ma"], inplace=True)
+
+            # iterasi kolom untung_rugi
+            list_df_profit_dan_loss = []
+            list_df_saldo_tersedia = []
+            list_df_saldo_posisi = []
+            saldo_posisi = 0
+            for baris in range(len(df_backtest)):
+                profit_dan_loss = 0
+                if "TUTUP_LONG" in df_backtest.iloc[baris]["tindakan"]:
+                    harga_keluar = df_backtest.iloc[baris]["close"]
+                    harga_posisi = df_backtest.iloc[baris - 1]["harga_posisi"]
+                    profit_dan_loss = (
+                        harga_keluar - harga_posisi
+                    ) / harga_posisi * saldo_posisi * LEVERAGE - (
+                        0.008 * saldo_posisi * LEVERAGE
+                    )
+                    SALDO = SALDO + saldo_posisi + profit_dan_loss
+                    saldo_posisi = 0
+                if "TUTUP_SHORT" in df_backtest.iloc[baris]["tindakan"]:
+                    harga_keluar = df_backtest.iloc[baris]["close"]
+                    harga_posisi = df_backtest.iloc[baris - 1]["harga_posisi"]
+                    profit_dan_loss = (
+                        harga_posisi - harga_keluar
+                    ) / harga_posisi * saldo_posisi * LEVERAGE - (
+                        0.008 * saldo_posisi * LEVERAGE
+                    )
+                    SALDO = SALDO + saldo_posisi + profit_dan_loss
+                    saldo_posisi = 0
+                if (
+                    "BUKA_LONG" in df_backtest.iloc[baris]["tindakan"]
+                    or "BUKA_SHORT" in df_backtest.iloc[baris]["tindakan"]
+                ):
+                    saldo_posisi = 0.5 * SALDO
+                    SALDO = SALDO - saldo_posisi
+
+                list_df_saldo_tersedia.append(SALDO)
+                list_df_saldo_posisi.append(saldo_posisi)
+                list_df_profit_dan_loss.append(profit_dan_loss)
+
+            df_backtest["saldo_tersedia"] = list_df_saldo_tersedia
+            df_backtest["saldo_posisi"] = list_df_saldo_posisi
+            df_backtest["profit_dan_loss"] = list_df_profit_dan_loss
+
+            print(df_backtest.to_string())
+
+            return f'Profit dan Loss menggunakan strategi ini: {float(sum(df_backtest["profit_dan_loss"]))} dollar'
+
+        # jika live stream strategi
+        if not self.backtest:
+            live()
+        else:
+            print(backtest())

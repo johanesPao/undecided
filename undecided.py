@@ -23,7 +23,7 @@ __status__ = "Development"
 # KONSTANTA
 MODE_BACKTEST = False
 PERIODE_BACKTEST = 1000
-INTERVAL = ["1 menit", "5 menit"]
+INTERVAL = ["1 menit"]
 # VARIABEL ASET
 ASET_DATA = "MATICUSDTPERP"
 ASET = "MATICUSDT"
@@ -105,26 +105,25 @@ while True:
             ui.garis_horizontal()
 
         # Tampilkan data futures jika terdapat saldo atau posisi pada futures
+        # urut ulang data akun futures dalam list
+        data_akun_futures = [
+            fee_tier,
+            round(saldo_tersedia, 2),
+            round(saldo_terpakai, 2),
+            round(total_saldo, 2),
+            round(laba_rugi_terbuka, 2),
+            round(saldo_plus_profit, 2),
+        ]
+        # assign label data akun futures
+        label_data_akun_futures = [
+            "Fee Tier",
+            "Saldo Tersedia",
+            "Saldo Terpakai",
+            "Saldo Total",
+            "Laba/Rugi Posisi",
+            "Saldo + Laba/Rugi",
+        ]
         if len(df_saldo_aset_futures) > 0:
-            # urut ulang data akun futures dalam list
-            data_akun_futures = [
-                fee_tier,
-                round(saldo_tersedia, 2),
-                round(saldo_terpakai, 2),
-                round(total_saldo, 2),
-                round(laba_rugi_terbuka, 2),
-                round(saldo_plus_profit, 2),
-            ]
-            # assign label data akun futures
-            label_data_akun_futures = [
-                "Fee Tier",
-                "Saldo Tersedia",
-                "Saldo Terpakai",
-                "Saldo Total",
-                "Laba/Rugi Posisi",
-                "Saldo + Laba/Rugi",
-            ]
-
             # print subjudul futures
             ui.subjudul("data akun futures:")
 
@@ -163,7 +162,8 @@ while True:
         )
 
         # Eksekusi strategi
-        strategi.jpao_niten_ichi_ryu_28_16_8(interval=INTERVAL, k_cepat=15, k_lambat=8, d_lambat=3)  # type: ignore
+        # strategi.jpao_niten_ichi_ryu_28_16_8(interval=INTERVAL, k_cepat=15, k_lambat=8, d_lambat=3)  # type: ignore
+        strategi.jpao_ride_the_wave(interval=INTERVAL)  # type: ignore
 
         # Reset jumlah error b2eruntun
         JUMLAH_ERROR = 0

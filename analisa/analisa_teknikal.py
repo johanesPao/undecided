@@ -141,8 +141,37 @@ class AnalisaTeknikal:
         return self.df
 
     # MOVING AVERAGE
-    def moving_average(self):
-        pass
+    def moving_average(
+        self,
+        data: pd.DataFrame,
+        periode: int = 100,
+        k_tutup: str = "close",
+        backtest: bool = False,
+    ) -> pd.DataFrame:
+        self.data = data
+        self.periode = periode
+        self.k_tutup = k_tutup
+        self.backtest = backtest
+
+        self.df = self.data.copy()
+
+        # Slicing dataframe
+        tutup = self.df[k_tutup]
+
+        # Menambahkan kolom 'ma' dengan nilai rata - rata k_tutup selama periode 'ma'
+        self.df["ma"] = tutup.rolling(self.periode).mean()
+
+        # Jika bukan backtest, kembalikan baris terakhir
+        if not self.backtest:
+            self.df = self.df[[k_tutup, "ma"]].iloc[:, :]
+        else:
+            self.df = self.df[[k_tutup, "ma"]].iloc[:, :]
+
+        # Membuang data dengan nilai NaN pada kolom ma
+        self.df.dropna(subset=[k_tutup, "ma"], inplace=True)
+
+        # Mengembalikan dataframe
+        return self.df
 
     # PARABOLIC SAR
     def parabolic_sar(self):
