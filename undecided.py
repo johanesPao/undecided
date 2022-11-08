@@ -23,12 +23,12 @@ __status__ = "Development"
 # KONSTANTA
 MODE_BACKTEST = False
 PERIODE_BACKTEST = 1000
-INTERVAL = ["45 menit", "1 hari"]
+INTERVAL = ["1 menit", "5 menit"]
 # VARIABEL ASET
 ASET_DATA = "MATICUSDTPERP"
 ASET = "MATICUSDT"
 EXCHANGE = "BINANCE"
-LEVERAGE = 3
+LEVERAGE = 30
 INISIATOR_WAKTU = True
 JUMLAH_ERROR = 0
 
@@ -38,7 +38,7 @@ info_akun = InfoAkun(konektor_exchange)
 
 pengguna_email = Konfigurasi().Email["USERNAME"]
 kunci_email = Konfigurasi().Email["KUNCI"]
-email_tujuan = 'kripto.jpao@gmail.com'
+email_tujuan = "kripto.jpao@gmail.com"
 
 ui = UI()
 fungsi = Fungsi()
@@ -163,7 +163,7 @@ while True:
         )
 
         # Eksekusi strategi
-        strategi.jpao_niten_ichi_ryu_28_16_8(interval=INTERVAL)  # type: ignore
+        strategi.jpao_niten_ichi_ryu_28_16_8(interval=INTERVAL, k_cepat=15, k_lambat=8, d_lambat=3)  # type: ignore
 
         # Reset jumlah error b2eruntun
         JUMLAH_ERROR = 0

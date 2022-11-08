@@ -202,7 +202,7 @@ class Strategi:
                     nilai_tutup_posisi = float(
                         nilai_usdt / harga_masuk_short * leverage_short  # type: ignore
                     )
-                    self.order.tutup_short(nilai_tutup_posisi)
+                    self.order.tutup_short(nilai_tutup_posisi, leverage=self.leverage)
             # jika variabel self.HOLD_TRADE == 'SHORT_LONG
             elif self.HOLD_TRADE == "SHORT_LONG":
                 # jika tidak ada posisi SHORT
@@ -221,7 +221,7 @@ class Strategi:
                     nilai_tutup_posisi = float(
                         nilai_usdt / harga_masuk_long * leverage_long  # type: ignore
                     )
-                    self.order.tutup_long(nilai_tutup_posisi)
+                    self.order.tutup_long(nilai_tutup_posisi, leverage=self.leverage)
 
         # FUNGSI SAAT BACKTEST
         def backtest(list_df_stokastik) -> str:
