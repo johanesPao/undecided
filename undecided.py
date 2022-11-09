@@ -31,7 +31,6 @@ EXCHANGE = "BINANCE"
 LEVERAGE = 15
 INISIATOR_WAKTU = True
 JUMLAH_ERROR = 0
-
 inisiasi_konektor = Inisiasi()
 konektor_exchange = inisiasi_konektor.exchange()
 info_akun = InfoAkun(konektor_exchange)

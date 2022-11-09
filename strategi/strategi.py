@@ -185,13 +185,21 @@ class Strategi:
 
             # set self.HOLD_TRADE sesuai kondisi pada timeframe besar
             self.HOLD_TRADE = (
-                "LONG_SHORT"
-                if k_lambat_tf_besar >= d_lambat_tf_besar
-                and k_lambat_tf_besar_sebelumnya < d_lambat_tf_besar_sebelumnya
-                else "SHORT_LONG"
-                if k_lambat_tf_besar < d_lambat_tf_besar
-                and k_lambat_tf_besar_sebelumnya >= d_lambat_tf_besar_sebelumnya
-                else "MENUNGGU_PERMULAAN_TREN"
+                (
+                    "LONG_SHORT"
+                    if k_lambat_tf_besar >= d_lambat_tf_besar
+                    else "SHORT_LONG"
+                )
+                if len(POSISI != 0)
+                else (
+                    "LONG_SHORT"
+                    if k_lambat_tf_besar >= d_lambat_tf_besar
+                    and k_lambat_tf_besar_sebelumnya < d_lambat_tf_besar_sebelumnya
+                    else "SHORT_LONG"
+                    if k_lambat_tf_besar < d_lambat_tf_besar
+                    and k_lambat_tf_besar_sebelumnya >= d_lambat_tf_besar_sebelumnya
+                    else "MENUNGGU_PERMULAAN_TREND"
+                )
             )
 
             if self.interval[0] != self.interval[1]:
