@@ -190,7 +190,7 @@ class Strategi:
                     if k_lambat_tf_besar >= d_lambat_tf_besar
                     else "SHORT_LONG"
                 )
-                if len(POSISI != 0)
+                if len(POSISI) != 0
                 else (
                     "LONG_SHORT"
                     if k_lambat_tf_besar >= d_lambat_tf_besar
