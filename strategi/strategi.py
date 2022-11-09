@@ -184,18 +184,26 @@ class Strategi:
                 "LONG_SHORT" if k_lambat_tf_besar >= d_lambat_tf_besar else "SHORT_LONG"
             )
 
-            print(
-                f"k_lambat pada TF kecil: {Fore.GREEN if k_lambat_tf_kecil > d_lambat_tf_kecil else Fore.RED}{k_lambat_tf_kecil}{Style.RESET_ALL}"
-            )
-            print(
-                f"d_lambat pada TF kecil: {Fore.GREEN if k_lambat_tf_kecil > d_lambat_tf_kecil else Fore.RED}{d_lambat_tf_kecil}{Style.RESET_ALL}"
-            )
-            print(
-                f"k_lambat pada TF besar: {Fore.GREEN if k_lambat_tf_besar > d_lambat_tf_besar else Fore.RED}{k_lambat_tf_besar}{Style.RESET_ALL}"
-            )
-            print(
-                f"d_lambat pada TF besar: {Fore.GREEN if k_lambat_tf_besar > d_lambat_tf_besar else Fore.RED}{d_lambat_tf_besar}{Style.RESET_ALL}"
-            )
+            if self.interval[0] != self.interval[1]:
+                print(
+                    f"k_lambat pada TF kecil: {Fore.GREEN if k_lambat_tf_kecil > d_lambat_tf_kecil else Fore.RED}{round(k_lambat_tf_kecil, 4)}{Style.RESET_ALL}"
+                )
+                print(
+                    f"d_lambat pada TF kecil: {Fore.GREEN if k_lambat_tf_kecil > d_lambat_tf_kecil else Fore.RED}{round(d_lambat_tf_kecil, 4)}{Style.RESET_ALL}"
+                )
+                print(
+                    f"k_lambat pada TF besar: {Fore.GREEN if k_lambat_tf_besar > d_lambat_tf_besar else Fore.RED}{round(k_lambat_tf_besar, 4)}{Style.RESET_ALL}"
+                )
+                print(
+                    f"d_lambat pada TF besar: {Fore.GREEN if k_lambat_tf_besar > d_lambat_tf_besar else Fore.RED}{round(d_lambat_tf_besar, 4)}{Style.RESET_ALL}"
+                )
+            else:
+                print(
+                    f"k_lambat: {Fore.GREEN if k_lambat_tf_kecil > d_lambat_tf_kecil else Fore.RED}{round(k_lambat_tf_kecil, 4)}{Style.RESET_ALL}"
+                )
+                print(
+                    f"d_lambat: {Fore.GREEN if k_lambat_tf_kecil > d_lambat_tf_kecil else Fore.RED}{round(d_lambat_tf_kecil, 4)}{Style.RESET_ALL}"
+                )
             print(
                 f"\nMODE STRATEGI: [{Fore.GREEN if self.HOLD_TRADE == 'LONG_SHORT' else Fore.RED}{self.HOLD_TRADE}{Style.RESET_ALL}]"
             )
