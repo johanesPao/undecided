@@ -17,9 +17,9 @@ ASET_DATA = "MATICUSDTPERP"
 ASET = "MATICUSDT"
 EXCHANGE = "BINANCE"
 
-k_cepat = 24
-k_lambat = 20
-d_lambat = 8
+k_cepat = 8
+k_lambat = 11
+d_lambat = 2
 
 # Inisiasi kelas strategi
 strategi_backtest = Strategi(
@@ -27,14 +27,14 @@ strategi_backtest = Strategi(
     ASET,
     EXCHANGE,
     backtest=True,
-    jumlah_periode_backtest=720 + k_cepat + k_lambat + d_lambat,
+    jumlah_periode_backtest=192 + k_cepat + k_lambat + d_lambat,
     saldo_backtest=20,
     leverage_backtest=15,
 )
 
 # Eksekusi strategi dalam fungsi backtest kelas Strategi
 hasil_strategi = strategi_backtest.jpao_niten_ichi_ryu_28_16_8(
-    interval=["1 menit", "1 menit"],
+    interval=["15 menit", "15 menit"],
     k_cepat=k_cepat,
     k_lambat=k_lambat,
     d_lambat=d_lambat,

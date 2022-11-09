@@ -130,7 +130,7 @@ class AnalisaTeknikal:
         # Jika bukan backtest, kembalikan kolom k_lambat dan d_lambat dari baris terakhir data
         # Dengan perubahan data API endpoint ke tradingview, baris terakhir akan menghasilkan nilai yang berjalan dan belum close, ambil data pada urutan baris kedua terakhir saja (dalam kasus backtest false) atau sampai dengan dua baris terakhir saja (dalam kasus backtest true)
         if not self.backtest:
-            self.df = self.df[[k_tutup, "k_lambat", "d_lambat"]].iloc[-2:-1, :]
+            self.df = self.df[[k_tutup, "k_lambat", "d_lambat"]].iloc[-3:-1, :]
         else:
             self.df = self.df[[k_tutup, "k_lambat", "d_lambat"]].iloc[:-1, :]
 

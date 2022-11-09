@@ -176,8 +176,12 @@ class Strategi:
             # untuk evaluasi state strategi
             k_lambat_tf_kecil = list_df_stokastik[0].iloc[-1]["k_lambat"]
             d_lambat_tf_kecil = list_df_stokastik[0].iloc[-1]["d_lambat"]
+            k_lambat_tf_kecil_sebelumnya = list_df_stokastik[0].iloc[-2]["k_lambat"]
+            d_lambat_tf_kecil_sebelumnya = list_df_stokastik[0].iloc[-2]["d_lambat"]
             k_lambat_tf_besar = list_df_stokastik[1].iloc[-1]["k_lambat"]
             d_lambat_tf_besar = list_df_stokastik[1].iloc[-1]["d_lambat"]
+            k_lambat_tf_besar_sebelumnya = list_df_stokastik[1].iloc[-2]["k_lambat"]
+            d_lambat_tf_besar_sebelumnya = list_df_stokastik[1].iloc[-2]["d_lambat"]
 
             # set self.HOLD_TRADE sesuai kondisi pada timeframe besar
             self.HOLD_TRADE = (
@@ -215,12 +219,18 @@ class Strategi:
                 # print("BUKA_LONG")
                 # jangan memaksakan diri untuk membuka posisi LONG
                 # jika timeframe kecil tidak mendukung
-                if "LONG" not in POSISI and k_lambat_tf_kecil >= d_lambat_tf_kecil:
+                if "LONG" not in POSISI and (
+                    k_lambat_tf_kecil >= d_lambat_tf_kecil
+                    and k_lambat_tf_kecil_sebelumnya < d_lambat_tf_kecil_sebelumnya
+                ):
                     self.kuantitas_long_nir = self.order.buka_long(
                         kuantitas_koin, leverage=self.leverage
                     )
                 # jika k_lambat < d_lambat pada timeframe kecil
-                if k_lambat_tf_kecil < d_lambat_tf_kecil:
+                if (
+                    k_lambat_tf_kecil < d_lambat_tf_kecil
+                    and k_lambat_tf_kecil_sebelumnya >= d_lambat_tf_kecil_sebelumnya
+                ):
                     # jika tidak ada posisi SHORT
                     if "SHORT" not in POSISI:
                         self.kuantitas_short_nir = self.order.buka_short(
@@ -238,12 +248,18 @@ class Strategi:
                 # print("BUKA_SHORT")
                 # jangan memaksakan diri untuk membuka posisi SHORT
                 # jika timeframe kecil tidak mendukung
-                if "SHORT" not in POSISI and k_lambat_tf_kecil < d_lambat_tf_kecil:
+                if "SHORT" not in POSISI and (
+                    k_lambat_tf_kecil < d_lambat_tf_kecil
+                    and k_lambat_tf_kecil_sebelumnya >= d_lambat_tf_kecil_sebelumnya
+                ):
                     self.kuantitas_short_nir = self.order.buka_short(
                         kuantitas_koin, leverage=self.leverage
                     )
                 # jika k_lambat >= d_lambat pada timeframe kecil
-                if k_lambat_tf_kecil >= d_lambat_tf_kecil:
+                if (
+                    k_lambat_tf_kecil >= d_lambat_tf_kecil
+                    and k_lambat_tf_kecil_sebelumnya < d_lambat_tf_kecil_sebelumnya
+                ):
                     # jika tidak ada posisi LONG
                     if "LONG" not in POSISI:
                         self.kuantitas_long_nir = self.order.buka_long(
