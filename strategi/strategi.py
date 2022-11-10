@@ -688,12 +688,12 @@ class Strategi:
             )
 
             if self.MODE_SCALPING == "DIATAS_MA":
+                if "SHORT" in POSISI and self.kuantitas_short_rtw > 0:
+                    self.order.tutup_short(
+                        self.kuantitas_short_rtw, leverage=self.leverage
+                    )
+                    self.kuantitas_short_rtw = 0
                 if k_lambat > d_lambat and k_lambat_sebelumnya <= d_lambat_sebelumnya:
-                    if "SHORT" in POSISI and self.kuantitas_short_rtw > 0:
-                        self.order.tutup_short(
-                            self.kuantitas_short_rtw, leverage=self.leverage
-                        )
-                        self.kuantitas_short_rtw = 0
                     if "LONG" not in POSISI:
                         self.kuantitas_long_rtw = self.order.buka_long(
                             kuantitas_koin, leverage=self.leverage
@@ -705,12 +705,12 @@ class Strategi:
                         )
                         self.kuantitas_long_rtw = 0
             elif self.MODE_SCALPING == "DIBAWAH_MA":
+                if "LONG" in POSISI and self.kuantitas_long_rtw > 0:
+                    self.order.tutup_long(
+                        self.kuantitas_long_rtw, leverage=self.leverage
+                    )
+                    self.kuantitas_long_rtw = 0
                 if k_lambat <= d_lambat and k_lambat_sebelumnya > d_lambat_sebelumnya:
-                    if "LONG" in POSISI and self.kuantitas_long_rtw > 0:
-                        self.order.tutup_long(
-                            self.kuantitas_long_rtw, leverage=self.leverage
-                        )
-                        self.kuantitas_long_rtw = 0
                     if "SHORT" not in POSISI:
                         self.kuantitas_short_rtw = self.order.buka_short(
                             kuantitas_koin, leverage=self.leverage
@@ -749,11 +749,13 @@ class Strategi:
                 MODE_SCALPING = "DIATAS MA" if harga >= ma else "DIBAWAH MA"
 
                 if MODE_SCALPING == "DIATAS MA":
-                    if k_lambat > d_lambat and k_lambat_sebelumnya <= d_lambat_sebelumnya:  # type: ignore
-                        if "SHORT" in posisi:
-                            tindakan.append("TUTUP_SHORT")
-                            posisi.remove("SHORT")
-                            harga_posisi.clear()
+                    if "SHORT" in posisi:
+                        tindakan.append("TUTUP_SHORT")
+                        posisi.remove("SHORT")
+                        harga_posisi.clear()
+                    if (
+                        k_lambat > d_lambat
+                    ):  # and k_lambat_sebelumnya <= d_lambat_sebelumnya:  # type: ignore
                         if "LONG" not in posisi:
                             tindakan.append("BUKA_LONG")
                             posisi.append("LONG")
@@ -764,11 +766,13 @@ class Strategi:
                             posisi.remove("LONG")
                             harga_posisi.clear()
                 elif MODE_SCALPING == "DIBAWAH MA":
-                    if k_lambat <= d_lambat and k_lambat_sebelumnya > d_lambat_sebelumnya:  # type: ignore
-                        if "LONG" in posisi:
-                            tindakan.append("TUTUP_LONG")
-                            posisi.remove("LONG")
-                            harga_posisi.clear()
+                    if "LONG" in posisi:
+                        tindakan.append("TUTUP_LONG")
+                        posisi.remove("LONG")
+                        harga_posisi.clear()
+                    if (
+                        k_lambat <= d_lambat
+                    ):  # and k_lambat_sebelumnya > d_lambat_sebelumnya:  # type: ignore
                         if "SHORT" not in posisi:
                             tindakan.append("BUKA_SHORT")
                             posisi.append("SHORT")

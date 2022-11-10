@@ -28,7 +28,7 @@ INTERVAL = ["1 menit"]
 ASET_DATA = "MATICUSDTPERP"
 ASET = "MATICUSDT"
 EXCHANGE = "BINANCE"
-LEVERAGE = 10
+LEVERAGE = 15
 INISIATOR_WAKTU = True
 JUMLAH_ERROR = 0
 inisiasi_konektor = Inisiasi()
@@ -163,7 +163,7 @@ while True:
 
         # Eksekusi strategi
         # strategi.jpao_niten_ichi_ryu_28_16_8(interval=INTERVAL, k_cepat=120, k_lambat=160, d_lambat=20)  # type: ignore
-        strategi.jpao_ride_the_wave(interval=INTERVAL, periode_ma=200, k_cepat=120, k_lambat=140, d_lambat=20)  # type: ignore
+        strategi.jpao_ride_the_wave(interval=INTERVAL, periode_ma=400, k_cepat=60, k_lambat=70, d_lambat=30)  # type: ignore
 
         # Reset jumlah error b2eruntun
         JUMLAH_ERROR = 0
