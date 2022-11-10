@@ -222,6 +222,7 @@ class Strategi:
                 print(
                     f"d_lambat: {Fore.GREEN if k_lambat_tf_kecil > d_lambat_tf_kecil else Fore.RED}{round(d_lambat_tf_kecil, 4)}{Style.RESET_ALL}"
                 )
+            print(f"\nHARGA {self.simbol} TERAKHIR: {round(harga_koin_terakhir, 4)}")
             print(
                 f"\nMODE STRATEGI: [{Fore.GREEN if self.HOLD_TRADE == 'LONG_SHORT' else Fore.RED}{self.HOLD_TRADE}{Style.RESET_ALL}]"
             )
