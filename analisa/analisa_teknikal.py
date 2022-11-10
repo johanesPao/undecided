@@ -168,7 +168,7 @@ class AnalisaTeknikal:
             self.df = self.df[[k_tutup, "ma"]].iloc[:, :]
 
         # Membuang data dengan nilai NaN pada kolom ma
-        self.df.dropna(subset=[k_tutup, "ma"], inplace=True)
+        # self.df.dropna(subset=[k_tutup, "ma"], inplace=True)
 
         # Mengembalikan dataframe
         return self.df
