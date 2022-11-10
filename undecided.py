@@ -181,11 +181,8 @@ while True:
         JUMLAH_ERROR += 1
         if JUMLAH_ERROR % 10 == 0:
             print("Terjadi 10 kesalahan berturut - turut...")
-            fungsi.kirim_email(
-                pengguna_email,
-                email_tujuan,
-                f"KESALAHAN PADA {ui.judul()}",
-                f"Terjadi kesalahan beruntun yang menyebabkan script tidak dapat melanjutkan pekerjaannya, mohon cek script pada master-server:\n{e}",
-                kunci_email,
+            fungsi.kirim_bot_telegram(
+                judul=f"KESALAHAN PADA {ui.judul()}",
+                isi_pesan=f"Terjadi kesalahan beruntun yang menyebabkan script tidak dapat melanjutkan pekerjaannya, mohon cek script pada master-server:\n{e}",
             )
         time.sleep(1)

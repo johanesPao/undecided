@@ -7,6 +7,7 @@ import smtplib
 import time
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+import telegram_send
 
 from pandas import DateOffset
 from tvDatafeed import Interval
@@ -210,6 +211,9 @@ class Fungsi:
             email.quit()
         except Exception as e:
             print(f"Terjadi kesalahan dalam pengiriman email:\n{e}")
+
+    def kirim_bot_telegram(self, judul: str, isi_pesan: str) -> None:
+        telegram_send.send(messages=[f"{judul}\n\n{isi_pesan}"])
 
     def konverter_offset(
         self, interval: str, offset_kosong: bool = False

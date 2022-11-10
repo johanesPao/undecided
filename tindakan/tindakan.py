@@ -115,20 +115,17 @@ class Order:
 
             kalimat = f"\nPosisi LONG senilai {saldo_long} USDT / {round(kuantitas)} {self.aset} berhasil dibuka untuk {self.aset} pada harga {harga_masuk_long}"
             try:
-                self.fungsi.kirim_email(
-                    self.pengguna_email,
-                    self.email_tujuan,
-                    "STATUS TRIGGER BUKA LONG",
-                    kalimat,
-                    self.kunci_email,
+                self.fungsi.kirim_bot_telegram(
+                    judul="STATUS TRIGGER BUKA LONG", isi_pesan=kalimat
                 )
             except Exception as e:
                 print(e)
-                print("\nTerjadi kesalahan dalam mengirimkan notifikasi email")
+                print("\nTerjadi kesalahan dalam mengirimkan notifikasi telegram")
             print(kalimat)
             return round(kuantitas)
         except Exception as e:
-            print(f"\nPosisi LONG tidak berhasil dibuka untuk {self.aset}:\n{e}")
+            kalimat = f"Posisi LONG tidak berhasil dibuka untuk {self.aset}:\n{e}"
+            self.fungsi.kirim_bot_telegram(judul="LONG GAGAL DIBUKA", isi_pesan=kalimat)
 
     def buka_short(
         self, kuantitas: float, leverage: int = 10, tipe_order: str = "MARKET"
@@ -166,21 +163,19 @@ class Order:
 
             kalimat = f"\nPosisi SHORT senilai {saldo_short} USDT / {round(kuantitas)} {self.aset} berhasil dibuka untuk {self.aset} pada harga {harga_masuk_short}"
             try:
-                self.fungsi.kirim_email(
-                    self.pengguna_email,
-                    self.email_tujuan,
-                    "STATUS TRIGGER BUKA SHORT",
-                    kalimat,
-                    self.kunci_email,
+                self.fungsi.kirim_bot_telegram(
+                    judul="STATUS TRIGGER BUKA SHORT", isi_pesan=kalimat
                 )
             except Exception as e:
                 print(e)
-                print("\nTerjadi kesalahan dalam mengirimkan notifikasi email")
+                print("\nTerjadi kesalahan dalam mengirimkan notifikasi telegram")
             print(kalimat)
             return round(kuantitas)
         except Exception as e:
-            print(f"\nPosisi SHORT tidak berhasil dibuka untuk {self.aset}:\n{e}")
-            return None
+            kalimat = f"Posisi SHORT tidak berhasil dibuka untuk {self.aset}:\n{e}"
+            self.fungsi.kirim_bot_telegram(
+                judul="SHORT GAGAL DIBUKA", isi_pesan=kalimat
+            )
 
     def tutup_long(
         self, kuantitas: float, leverage: int = 10, tipe_order: str = "MARKET"
@@ -218,19 +213,19 @@ class Order:
 
             kalimat = f"\nPosisi LONG senilai {saldo_long} USDT / {round(kuantitas)} {self.aset} berhasil ditutup untuk {self.aset}"
             try:
-                self.fungsi.kirim_email(
-                    self.pengguna_email,
-                    self.email_tujuan,
-                    "STATUS TRIGGER TUTUP LONG",
-                    kalimat,
-                    self.kunci_email,
+                self.fungsi.kirim_bot_telegram(
+                    judul="STATUS TRIGGER TUTUP LONG", isi_pesan=kalimat
                 )
             except Exception as e:
-                print("\nTerjadi kesalahan dalam mengirimkan notifikasi email")
+                print(e)
+                print("\nTerjadi kesalahan dalam mengirimkan notifikasi telegram")
             print(kalimat)
+            return round(kuantitas)
         except Exception as e:
-            print("\nPosisi LONG tidak berhasil ditutup untuk {self.aset}:\n{e}")
-
+            kalimat = f"Posisi LONG tidak berhasil ditutup untuk {self.aset}:\n{e}"
+            self.fungsi.kirim_bot_telegram(
+                judul="LONG GAGAL DITUTUP", isi_pesan=kalimat
+            )
 
     def tutup_short(
         self, kuantitas: float, leverage: int = 10, tipe_order: str = "MARKET"
@@ -268,16 +263,16 @@ class Order:
 
             kalimat = f"\nPosisi SHORT senilai {saldo_short} USDT / {round(kuantitas)} {self.aset} berhasil ditutup untuk {self.aset}"
             try:
-                self.fungsi.kirim_email(
-                    self.pengguna_email,
-                    self.email_tujuan,
-                    "STATUS TRIGGER TUTUP SHORT",
-                    kalimat,
-                    self.kunci_email,
+                self.fungsi.kirim_bot_telegram(
+                    judul="STATUS TRIGGER TUTUP SHORT", isi_pesan=kalimat
                 )
             except Exception as e:
-                print("\nTerjadi kesalahan dalam mengirimkan notifikasi email")
+                print(e)
+                print("\nTerjadi kesalahan dalam mengirimkan notifikasi telegram")
             print(kalimat)
+            return round(kuantitas)
         except Exception as e:
-            print(f"\nPosisi SHORT tidak berhasil ditutup untuk {self.aset}:\n{e}")
-
+            kalimat = f"Posisi SHORT tidak berhasil ditutup untuk {self.aset}:\n{e}"
+            self.fungsi.kirim_bot_telegram(
+                judul="SHORT GAGAL DITUTUP", isi_pesan=kalimat
+            )
