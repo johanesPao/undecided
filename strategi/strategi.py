@@ -681,29 +681,13 @@ class Strategi:
                 f"D Lambat terakhir: {Fore.GREEN if k_lambat > d_lambat else Fore.RED}{round(d_lambat, 4)}{Style.RESET_ALL}"
             )
 
-            self.MODE_SCALPING = (
-                ("DIATAS_MA" if harga_penutupan > ma else "DIBAWAH_MA")
-                if len(POSISI) == 1
-                else (
-                    (
-                        "DIATAS_MA"
-                        if k_lambat > d_lambat
-                        and k_lambat_sebelumnya <= d_lambat_sebelumnya
-                        and harga_penutupan > ma
-                        else "DIBAWAH_MA"
-                        if k_lambat <= d_lambat
-                        and k_lambat_sebelumnya > d_lambat_sebelumnya
-                        and harga_penutupan <= ma
-                        else "MENUNGGU_PERMULAAN_TREND"
-                    )
-                )
-            )
+            self.MODE_SCALPING = "DIATAS_MA" if harga_penutupan > ma else "DIBAWAH_MA"
 
             print(
                 f"\nMODE STRATEGI: RIDE THE WAVE {Fore.RED if harga_penutupan <= ma else Fore.GREEN}[{self.MODE_SCALPING}]{Style.RESET_ALL}"
             )
 
-            if self.MODE_SCALPING == "DIATAS MA":
+            if self.MODE_SCALPING == "DIATAS_MA":
                 if k_lambat > d_lambat and k_lambat_sebelumnya <= d_lambat_sebelumnya:
                     if "SHORT" in POSISI and self.kuantitas_short_rtw > 0:
                         self.order.tutup_short(
@@ -720,7 +704,7 @@ class Strategi:
                             self.kuantitas_long_rtw, leverage=self.leverage
                         )
                         self.kuantitas_long_rtw = 0
-            elif self.MODE_SCALPING == "DIBAWAH MA":
+            elif self.MODE_SCALPING == "DIBAWAH_MA":
                 if k_lambat <= d_lambat and k_lambat_sebelumnya > d_lambat_sebelumnya:
                     if "LONG" in POSISI and self.kuantitas_long_rtw > 0:
                         self.order.tutup_long(
