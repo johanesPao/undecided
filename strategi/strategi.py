@@ -599,10 +599,10 @@ class Strategi:
                 "STRATEGI INI (jpao_ride_the_wave) MENGGUNAKAN INTERVAL WAKTU DALAM LIST BERJUMLAH SATU"
             )
 
-        if self.periode_ma < self.k_cepat + self.k_lambat + self.d_lambat:  # type: ignore
-            return print(
-                "JUMLAH PARAMETER k_cepat, k_lambat dan d_lambat HARUS LEBIH KECIL DARI periode_ma"
-            )
+        # if self.periode_ma < self.k_cepat + self.k_lambat + self.d_lambat:  # type: ignore
+        #     return print(
+        #         "JUMLAH PARAMETER k_cepat, k_lambat dan d_lambat HARUS LEBIH KECIL DARI periode_ma"
+        #     )
 
         self.jumlah_bar = (
             self.jumlah_periode_backtest

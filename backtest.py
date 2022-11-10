@@ -23,7 +23,7 @@ EXCHANGE = "BINANCE"
 # d_lambat = 20
 
 # RTW
-periode_ma = 400
+periode_ma = 50
 k_cepat = 8
 k_lambat = 10
 d_lambat = 3
@@ -35,7 +35,7 @@ strategi_backtest = Strategi(
     EXCHANGE,
     backtest=True,
     jumlah_periode_backtest=1440 + k_cepat + k_lambat + d_lambat,
-    saldo_backtest=20,
+    saldo_backtest=9.4,
     leverage_backtest=30,
 )
 
