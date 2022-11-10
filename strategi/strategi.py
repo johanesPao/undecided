@@ -693,7 +693,9 @@ class Strategi:
                         self.kuantitas_short_rtw, leverage=self.leverage
                     )
                     self.kuantitas_short_rtw = 0
-                if k_lambat > d_lambat and k_lambat_sebelumnya <= d_lambat_sebelumnya:
+                if (
+                    k_lambat > d_lambat
+                ):  # and k_lambat_sebelumnya <= d_lambat_sebelumnya:
                     if "LONG" not in POSISI:
                         self.kuantitas_long_rtw = self.order.buka_long(
                             kuantitas_koin, leverage=self.leverage
@@ -710,7 +712,9 @@ class Strategi:
                         self.kuantitas_long_rtw, leverage=self.leverage
                     )
                     self.kuantitas_long_rtw = 0
-                if k_lambat <= d_lambat and k_lambat_sebelumnya > d_lambat_sebelumnya:
+                if (
+                    k_lambat <= d_lambat
+                ):  # and k_lambat_sebelumnya > d_lambat_sebelumnya:
                     if "SHORT" not in POSISI:
                         self.kuantitas_short_rtw = self.order.buka_short(
                             kuantitas_koin, leverage=self.leverage
