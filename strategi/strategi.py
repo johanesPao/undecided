@@ -697,7 +697,7 @@ class Strategi:
                 f"\nMODE STRATEGI: \nRIDE THE WAVE {Fore.RED if harga_penutupan <= ma else Fore.GREEN}[{self.MODE_SCALPING}]{Style.RESET_ALL}"
             )
             if self.mode_laju_stokastik:
-                print(f"LAJU STOKASTIK {Fore.RED if laju_stokastik == 'UP' else Fore.GREEN}[{laju_stokastik}]{Style.RESET_ALL}") # type: ignore
+                print(f"LAJU STOKASTIK {Fore.RED if laju_stokastik == 'DOWN' else Fore.GREEN}[{laju_stokastik}]{Style.RESET_ALL}")  # type: ignore
 
             if not self.mode_laju_stokastik:
                 if self.MODE_SCALPING == "DIATAS_MA":
