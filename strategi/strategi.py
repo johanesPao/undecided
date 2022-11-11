@@ -587,12 +587,14 @@ class Strategi:
         k_cepat: int = 15,
         k_lambat: int = 8,
         d_lambat: int = 3,
+        mode_laju_stokastik: bool = False,
     ) -> None | list:
         self.interval = interval
         self.periode_ma = periode_ma
         self.k_cepat = k_cepat
         self.k_lambat = k_lambat
         self.d_lambat = d_lambat
+        self.mode_laju_stokastik = mode_laju_stokastik
 
         if len(self.interval) != 1:
             return print(
@@ -643,7 +645,7 @@ class Strategi:
                 harga_masuk_short = float(data_short.iloc[0]["entryPrice"])
                 leverage_short = float(data_short.iloc[0]["leverage"])
                 self.kuantitas_short_rtw = round(
-                    (nilai_usdt_short + 0.5) * leverage_short / harga_masuk_short
+                    nilai_usdt_short * leverage_short / harga_masuk_short
                 )
             if "LONG" in POSISI:
                 data_long = DATA_POSISI_FUTURES[
@@ -656,10 +658,10 @@ class Strategi:
                 harga_masuk_long = float(data_long.iloc[0]["entryPrice"])
                 leverage_long = float(data_long.iloc[0]["leverage"])
                 self.kuantitas_long_rtw = round(
-                    (nilai_usdt_long + 0.5) * leverage_long / harga_masuk_long
+                    nilai_usdt_long * leverage_long / harga_masuk_long
                 )
 
-            USDT_AKUN = math.floor(self.saldo_tersedia + self.saldo_terpakai) - 1
+            USDT_AKUN = math.floor(self.saldo_tersedia + self.saldo_terpakai)
             harga_koin_terakhir = self.akun.harga_koin_terakhir(self.simbol)
             kuantitas_koin = float(USDT_AKUN / 2 * self.leverage / harga_koin_terakhir)
 
@@ -669,6 +671,14 @@ class Strategi:
             k_lambat_sebelumnya = list_data[0].iloc[-2]["k_lambat"]
             d_lambat_sebelumnya = list_data[0].iloc[-2]["d_lambat"]
             harga_penutupan = list_data[0].iloc[-1]["close"]
+            if self.mode_laju_stokastik:
+                laju_stokastik = (
+                    "UP"
+                    if (k_lambat - d_lambat)
+                    - (k_lambat_sebelumnya - d_lambat_sebelumnya)
+                    >= 0
+                    else "DOWN"
+                )
 
             print(f"\nHarga Penutupan terakhir: {harga_penutupan}")
             print(
@@ -684,47 +694,89 @@ class Strategi:
             self.MODE_SCALPING = "DIATAS_MA" if harga_penutupan > ma else "DIBAWAH_MA"
 
             print(
-                f"\nMODE STRATEGI: RIDE THE WAVE {Fore.RED if harga_penutupan <= ma else Fore.GREEN}[{self.MODE_SCALPING}]{Style.RESET_ALL}"
+                f"\nMODE STRATEGI: \nRIDE THE WAVE {Fore.RED if harga_penutupan <= ma else Fore.GREEN}[{self.MODE_SCALPING}]{Style.RESET_ALL}"
             )
+            if self.mode_laju_stokastik:
+                print(f"LAJU STOKASTIK {Fore.RED if laju_stokastik == 'UP' else Fore.GREEN}[{laju_stokastik}]{Style.RESET_ALL}") # type: ignore
 
-            if self.MODE_SCALPING == "DIATAS_MA":
-                if "SHORT" in POSISI and self.kuantitas_short_rtw > 0:
-                    self.order.tutup_short(
-                        self.kuantitas_short_rtw, leverage=self.leverage
-                    )
-                    self.kuantitas_short_rtw = 0
-                if (
-                    k_lambat > d_lambat
-                ):  # and k_lambat_sebelumnya <= d_lambat_sebelumnya:
-                    if "LONG" not in POSISI:
-                        self.kuantitas_long_rtw = self.order.buka_long(
-                            kuantitas_koin, leverage=self.leverage
+            if not self.mode_laju_stokastik:
+                if self.MODE_SCALPING == "DIATAS_MA":
+                    if "SHORT" in POSISI and self.kuantitas_short_rtw > 0:
+                        self.order.tutup_short(
+                            self.kuantitas_short_rtw, leverage=self.leverage
                         )
-                elif k_lambat <= d_lambat:
+                        self.kuantitas_short_rtw = 0
+                    if (
+                        k_lambat > d_lambat
+                    ):  # and k_lambat_sebelumnya <= d_lambat_sebelumnya:
+                        if "LONG" not in POSISI:
+                            self.kuantitas_long_rtw = self.order.buka_long(
+                                kuantitas_koin, leverage=self.leverage
+                            )
+                    elif k_lambat <= d_lambat:
+                        if "LONG" in POSISI and self.kuantitas_long_rtw > 0:
+                            self.order.tutup_long(
+                                self.kuantitas_long_rtw, leverage=self.leverage
+                            )
+                            self.kuantitas_long_rtw = 0
+                elif self.MODE_SCALPING == "DIBAWAH_MA":
                     if "LONG" in POSISI and self.kuantitas_long_rtw > 0:
                         self.order.tutup_long(
                             self.kuantitas_long_rtw, leverage=self.leverage
                         )
                         self.kuantitas_long_rtw = 0
-            elif self.MODE_SCALPING == "DIBAWAH_MA":
-                if "LONG" in POSISI and self.kuantitas_long_rtw > 0:
-                    self.order.tutup_long(
-                        self.kuantitas_long_rtw, leverage=self.leverage
-                    )
-                    self.kuantitas_long_rtw = 0
-                if (
-                    k_lambat <= d_lambat
-                ):  # and k_lambat_sebelumnya > d_lambat_sebelumnya:
-                    if "SHORT" not in POSISI:
-                        self.kuantitas_short_rtw = self.order.buka_short(
-                            kuantitas_koin, leverage=self.leverage
-                        )
-                elif k_lambat > d_lambat:
-                    if "SHORT" in POSISI:
+                    if (
+                        k_lambat <= d_lambat
+                    ):  # and k_lambat_sebelumnya > d_lambat_sebelumnya:
+                        if "SHORT" not in POSISI:
+                            self.kuantitas_short_rtw = self.order.buka_short(
+                                kuantitas_koin, leverage=self.leverage
+                            )
+                    elif k_lambat > d_lambat:
+                        if "SHORT" in POSISI:
+                            self.order.tutup_short(
+                                self.kuantitas_short_rtw, leverage=self.leverage
+                            )
+                            self.kuantitas_short_rtw = 0
+            else:
+                if self.MODE_SCALPING == "DIATAS_MA":
+                    # cek apakah masih ada short
+                    if "SHORT" in POSISI and self.kuantitas_short_rtw > 0:
                         self.order.tutup_short(
                             self.kuantitas_short_rtw, leverage=self.leverage
                         )
                         self.kuantitas_short_rtw = 0
+                    # hanya trade long DIATAS_MA jika laju_stokastik UP
+                    if laju_stokastik == "UP":  # type: ignore
+                        if "LONG" not in POSISI:
+                            self.kuantitas_long_rtw = self.order.buka_long(
+                                kuantitas_koin, leverage=self.leverage
+                            )
+                    else:
+                        if "LONG" in POSISI and self.kuantitas_long_rtw > 0:
+                            self.order.tutup_long(
+                                self.kuantitas_long_rtw, leverage=self.leverage
+                            )
+                            self.kuantitas_long_rtw = 0
+                elif self.MODE_SCALPING == "DIBAWAH_MA":
+                    # cek apakah masih ada long
+                    if "LONG" in POSISI and self.kuantitas_long_rtw > 0:
+                        self.order.tutup_long(
+                            self.kuantitas_long_rtw, leverage=self.leverage
+                        )
+                        self.kuantitas_long_rtw = 0
+                    # hanya trade short DIBAWAH_MA jika laju_stokastik DOWN
+                    if laju_stokastik == "DOWN":  # type: ignore
+                        if "SHORT" not in POSISI:
+                            self.kuantitas_short_rtw = self.order.buka_short(
+                                kuantitas_koin, leverage=self.leverage
+                            )
+                    else:
+                        if "SHORT" in POSISI:
+                            self.order.tutup_short(
+                                self.kuantitas_short_rtw, leverage=self.leverage
+                            )
+                            self.kuantitas_short_rtw = 0
 
         # FUNGSI BACKTEST
         def backtest(list_data: list = self.data) -> str:
@@ -738,9 +790,13 @@ class Strategi:
             MODE_SCALPING = ""
             posisi = []
             harga_posisi = []
+            laju_stokastik = []
+            pergerakan_stokastik = []
             list_df_posisi = []
             list_df_tindakan = []
             list_df_harga_posisi = []
+            list_df_laju_stokastik = []
+            list_df_pergerakan_stokastik = []
             for baris in range(len(df_backtest)):
                 tindakan = []
                 harga = df_backtest.iloc[baris]["close"]
@@ -749,48 +805,98 @@ class Strategi:
                 k_lambat_sebelumnya = df_backtest.iloc[baris - 1]["k_lambat"]
                 d_lambat_sebelumnya = df_backtest.iloc[baris - 1]["d_lambat"]
                 ma = df_backtest.iloc[baris]["ma"]
+                delta_stokastik = k_lambat - d_lambat
+                delta_stokastik_sebelumnya = k_lambat_sebelumnya - d_lambat_sebelumnya
+                laju_stokastik.append(delta_stokastik - delta_stokastik_sebelumnya)
+                pergerakan_stokastik.append(
+                    "UP"
+                ) if delta_stokastik - delta_stokastik_sebelumnya >= 0 else pergerakan_stokastik.append(
+                    "DOWN"
+                )
 
                 MODE_SCALPING = "DIATAS MA" if harga >= ma else "DIBAWAH MA"
 
-                if MODE_SCALPING == "DIATAS MA":
-                    if "SHORT" in posisi:
-                        tindakan.append("TUTUP_SHORT")
-                        posisi.remove("SHORT")
-                        harga_posisi.clear()
-                    if (
-                        k_lambat > d_lambat
-                    ):  # and k_lambat_sebelumnya <= d_lambat_sebelumnya:  # type: ignore
-                        if "LONG" not in posisi:
-                            tindakan.append("BUKA_LONG")
-                            posisi.append("LONG")
-                            harga_posisi.append(harga)
-                    if k_lambat <= d_lambat:
-                        if "LONG" in posisi:
-                            tindakan.append("TUTUP_LONG")
-                            posisi.remove("LONG")
-                            harga_posisi.clear()
-                elif MODE_SCALPING == "DIBAWAH MA":
-                    if "LONG" in posisi:
-                        tindakan.append("TUTUP_LONG")
-                        posisi.remove("LONG")
-                        harga_posisi.clear()
-                    if (
-                        k_lambat <= d_lambat
-                    ):  # and k_lambat_sebelumnya > d_lambat_sebelumnya:  # type: ignore
-                        if "SHORT" not in posisi:
-                            tindakan.append("BUKA_SHORT")
-                            posisi.append("SHORT")
-                            harga_posisi.append(harga)
-                    if k_lambat > d_lambat:
+                if not self.mode_laju_stokastik:
+                    if MODE_SCALPING == "DIATAS MA":
                         if "SHORT" in posisi:
                             tindakan.append("TUTUP_SHORT")
                             posisi.remove("SHORT")
                             harga_posisi.clear()
+                        if (
+                            k_lambat > d_lambat
+                        ):  # and k_lambat_sebelumnya <= d_lambat_sebelumnya:  # type: ignore
+                            if "LONG" not in posisi:
+                                tindakan.append("BUKA_LONG")
+                                posisi.append("LONG")
+                                harga_posisi.append(harga)
+                        if k_lambat <= d_lambat:
+                            if "LONG" in posisi:
+                                tindakan.append("TUTUP_LONG")
+                                posisi.remove("LONG")
+                                harga_posisi.clear()
+                    elif MODE_SCALPING == "DIBAWAH MA":
+                        if "LONG" in posisi:
+                            tindakan.append("TUTUP_LONG")
+                            posisi.remove("LONG")
+                            harga_posisi.clear()
+                        if (
+                            k_lambat <= d_lambat
+                        ):  # and k_lambat_sebelumnya > d_lambat_sebelumnya:  # type: ignore
+                            if "SHORT" not in posisi:
+                                tindakan.append("BUKA_SHORT")
+                                posisi.append("SHORT")
+                                harga_posisi.append(harga)
+                        if k_lambat > d_lambat:
+                            if "SHORT" in posisi:
+                                tindakan.append("TUTUP_SHORT")
+                                posisi.remove("SHORT")
+                                harga_posisi.clear()
+                else:
+                    if self.MODE_SCALPING == "DIATAS_MA":
+                        # cek apakah masih ada short
+                        if "SHORT" in posisi:
+                            tindakan.append("TUTUP_SHORT")
+                            posisi.remove("SHORT")
+                            harga_posisi.clear()
+                        # trade DIATAS_MA hanya saat pergerakan_stokastik UP
+                        if pergerakan_stokastik[0] == "UP":
+                            if "LONG" not in posisi:
+                                tindakan.append("BUKA_LONG")
+                                posisi.append("LONG")
+                                harga_posisi.append(harga)
+                        else:
+                            if "LONG" in posisi:
+                                tindakan.append("TUTUP_LONG")
+                                posisi.remove("LONG")
+                                harga_posisi.clear()
+                    else:
+                        # cek apakah masih ada long
+                        if "LONG" in posisi:
+                            tindakan.append("TUTUP_LONG")
+                            posisi.remove("LONG")
+                            harga_posisi.clear()
+                        # trade DIBAWAH_MA hanya saat pergerakan_stokastik DOWN
+                        if pergerakan_stokastik[0] == "DOWN":
+                            if "SHORT" not in posisi:
+                                tindakan.append("BUKA_SHORT")
+                                posisi.append("SHORT")
+                                harga_posisi.append(harga)
+                        else:
+                            if "SHORT" in posisi:
+                                tindakan.append("TUTUP_SHORT")
+                                posisi.remove("SHORT")
+                                harga_posisi.clear()
 
+                list_df_laju_stokastik.append(laju_stokastik.copy())
+                list_df_pergerakan_stokastik.append(pergerakan_stokastik.copy())
+                laju_stokastik.clear()
+                pergerakan_stokastik.clear()
                 list_df_tindakan.append(tindakan)
                 list_df_posisi.append(posisi.copy())
                 list_df_harga_posisi.append(harga_posisi.copy())
 
+            df_backtest["laju_stokastik"] = list_df_laju_stokastik
+            df_backtest["pergerakan_stokastik"] = list_df_pergerakan_stokastik
             df_backtest["tindakan"] = list_df_tindakan
             df_backtest["posisi"] = list_df_posisi
             df_backtest["harga_posisi"] = list_df_harga_posisi

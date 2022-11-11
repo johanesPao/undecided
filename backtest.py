@@ -23,10 +23,10 @@ EXCHANGE = "BINANCE"
 # d_lambat = 20
 
 # RTW
-periode_ma = 50
-k_cepat = 8
-k_lambat = 10
-d_lambat = 3
+periode_ma = 200
+k_cepat = 21
+k_lambat = 7
+d_lambat = 7
 
 # Inisiasi kelas strategi
 strategi_backtest = Strategi(
@@ -34,9 +34,9 @@ strategi_backtest = Strategi(
     ASET,
     EXCHANGE,
     backtest=True,
-    jumlah_periode_backtest=1440 + k_cepat + k_lambat + d_lambat,
-    saldo_backtest=9.4,
-    leverage_backtest=30,
+    jumlah_periode_backtest=4320 + k_cepat + k_lambat + d_lambat,
+    saldo_backtest=4.8,
+    leverage_backtest=15,
 )
 
 # Eksekusi strategi dalam fungsi backtest kelas Strategi
@@ -53,4 +53,5 @@ hasil_strategi = strategi_backtest.jpao_ride_the_wave(
     k_cepat=k_cepat,
     k_lambat=k_lambat,
     d_lambat=d_lambat,
+    mode_laju_stokastik=True,
 )
