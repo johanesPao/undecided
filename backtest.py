@@ -25,8 +25,8 @@ EXCHANGE = "BINANCE"
 # RTW
 periode_ma = 200
 k_cepat = 21
-k_lambat = 7
-d_lambat = 7
+k_lambat = 10
+d_lambat = 10
 
 # Inisiasi kelas strategi
 strategi_backtest = Strategi(
@@ -34,7 +34,7 @@ strategi_backtest = Strategi(
     ASET,
     EXCHANGE,
     backtest=True,
-    jumlah_periode_backtest=4320 + k_cepat + k_lambat + d_lambat,
+    jumlah_periode_backtest=1440 + k_cepat + k_lambat + d_lambat,
     saldo_backtest=4.8,
     leverage_backtest=15,
 )

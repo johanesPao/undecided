@@ -814,10 +814,10 @@ class Strategi:
                     "DOWN"
                 )
 
-                MODE_SCALPING = "DIATAS MA" if harga >= ma else "DIBAWAH MA"
+                MODE_SCALPING = "DIATAS_MA" if harga >= ma else "DIBAWAH_MA"
 
                 if not self.mode_laju_stokastik:
-                    if MODE_SCALPING == "DIATAS MA":
+                    if MODE_SCALPING == "DIATAS_MA":
                         if "SHORT" in posisi:
                             tindakan.append("TUTUP_SHORT")
                             posisi.remove("SHORT")
@@ -834,7 +834,7 @@ class Strategi:
                                 tindakan.append("TUTUP_LONG")
                                 posisi.remove("LONG")
                                 harga_posisi.clear()
-                    elif MODE_SCALPING == "DIBAWAH MA":
+                    elif MODE_SCALPING == "DIBAWAH_MA":
                         if "LONG" in posisi:
                             tindakan.append("TUTUP_LONG")
                             posisi.remove("LONG")
@@ -852,7 +852,7 @@ class Strategi:
                                 posisi.remove("SHORT")
                                 harga_posisi.clear()
                 else:
-                    if self.MODE_SCALPING == "DIATAS_MA":
+                    if MODE_SCALPING == "DIATAS_MA":
                         # cek apakah masih ada short
                         if "SHORT" in posisi:
                             tindakan.append("TUTUP_SHORT")
