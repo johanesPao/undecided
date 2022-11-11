@@ -3,6 +3,7 @@ Script untuk kelas Akun
 Script untuk melakukan penarikan data akun di exchange
 """
 
+import datetime as dt
 import numpy as np
 import pandas as pd
 from binance import Client
@@ -158,3 +159,33 @@ class InfoAkun:
             harga koin terakhir untuk simbol yang diberikan pada metode ini di pasar futures
         """
         return float(self.exchange.futures_ticker(symbol=simbol)["lastPrice"])
+
+    def harga_pnl_transaksi_terakhir(self, simbol: str, limit: int = 20) -> tuple:
+        df_transaksi = pd.DataFrame(
+            self.exchange.futures_account_trades(symbol=simbol, limit=limit)
+        )
+
+        df_transaksi["realizedPnl"] = df_transaksi["realizedPnl"].astype(float)
+        df_transaksi["commission"] = df_transaksi["commission"].astype(float)
+        df_transaksi["price"] = df_transaksi["price"].astype(float)
+        df_transaksi["qty"] = df_transaksi["qty"].astype(int)
+        df_transaksi["time"] = (
+            pd.to_datetime(df_transaksi["time"], unit="ms")
+            .dt.tz_localize("UTC")
+            .dt.tz_convert("Asia/Jakarta")
+        )
+
+        df_transaksi["pnl_setelah_komisi"] = (
+            df_transaksi["realizedPnl"] - df_transaksi["commission"]
+        )
+        df_transaksi["nilai_total"] = df_transaksi["price"] * df_transaksi["qty"]
+        df_ringkasan = df_transaksi.groupby(["orderId"]).aggregate(
+            {"pnl_setelah_komisi": "sum", "nilai_total": "sum", "qty": "sum"}
+        )
+        df_ringkasan["harga"] = df_ringkasan["nilai_total"] / df_ringkasan["qty"]
+
+        return round(
+            df_ringkasan.iloc[-1:, :]["harga"].values[0], 5  # type: ignore
+        ), round(
+            df_ringkasan.iloc[-1:, :]["pnl_setelah_komisi"].values[0], 5  # type: ignore
+        )

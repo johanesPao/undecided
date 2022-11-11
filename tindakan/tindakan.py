@@ -113,10 +113,12 @@ class Order:
             harga_masuk_long = df_long.iloc[0]["entryPrice"]
             saldo_long = df_long.iloc[0]["isolatedWallet"]
 
-            kalimat = f"\nPosisi LONG senilai {saldo_long} USDT / {round(kuantitas)} {self.aset} berhasil dibuka untuk {self.aset} pada harga {harga_masuk_long}"
+            *_, pnl = self.info_akun.harga_pnl_transaksi_terakhir(simbol=self.aset)
+
+            kalimat = f"\nPosisi LONG senilai {saldo_long} USDT / {round(kuantitas)} {self.aset} berhasil dibuka untuk {self.aset} pada harga {harga_masuk_long} USDT dengan biaya komisi {pnl} USDT"
             try:
                 self.fungsi.kirim_bot_telegram(
-                    judul="STATUS TRIGGER BUKA LONG", isi_pesan=kalimat
+                    judul="POSISI LONG DIBUKA", isi_pesan=kalimat
                 )
             except Exception as e:
                 print(e)
@@ -161,10 +163,12 @@ class Order:
             harga_masuk_short = df_short.iloc[0]["entryPrice"]
             saldo_short = df_short.iloc[0]["isolatedWallet"]
 
-            kalimat = f"\nPosisi SHORT senilai {saldo_short} USDT / {round(kuantitas)} {self.aset} berhasil dibuka untuk {self.aset} pada harga {harga_masuk_short}"
+            *_, pnl = self.info_akun.harga_pnl_transaksi_terakhir(simbol=self.aset)
+
+            kalimat = f"\nPosisi SHORT senilai {saldo_short} USDT / {round(kuantitas)} {self.aset} berhasil dibuka untuk {self.aset} pada harga {harga_masuk_short} USDT dengan biaya komisi {pnl} USDT"
             try:
                 self.fungsi.kirim_bot_telegram(
-                    judul="STATUS TRIGGER BUKA SHORT", isi_pesan=kalimat
+                    judul="POSISI SHORT DIBUKA", isi_pesan=kalimat
                 )
             except Exception as e:
                 print(e)
@@ -211,16 +215,19 @@ class Order:
                 quantity=round(kuantitas),
             )
 
-            kalimat = f"\nPosisi LONG senilai {saldo_long} USDT / {round(kuantitas)} {self.aset} berhasil ditutup untuk {self.aset}"
+            harga_tutup_posisi, pnl = self.info_akun.harga_pnl_transaksi_terakhir(
+                simbol=self.aset
+            )
+
+            kalimat = f"\nPosisi LONG senilai {saldo_long} USDT / {round(kuantitas)} {self.aset} berhasil ditutup untuk {self.aset} pada harga {harga_tutup_posisi} dan profit/loss sebesar {pnl} USDT (sudah dipotong komisi)"
             try:
                 self.fungsi.kirim_bot_telegram(
-                    judul="STATUS TRIGGER TUTUP LONG", isi_pesan=kalimat
+                    judul="POSISI LONG DITUTUP", isi_pesan=kalimat
                 )
             except Exception as e:
                 print(e)
                 print("\nTerjadi kesalahan dalam mengirimkan notifikasi telegram")
             print(kalimat)
-            return round(kuantitas)
         except Exception as e:
             kalimat = f"Posisi LONG tidak berhasil ditutup untuk {self.aset}:\n{e}"
             self.fungsi.kirim_bot_telegram(
@@ -261,16 +268,20 @@ class Order:
                 quantity=round(kuantitas),
             )
 
-            kalimat = f"\nPosisi SHORT senilai {saldo_short} USDT / {round(kuantitas)} {self.aset} berhasil ditutup untuk {self.aset}"
+            harga_tutup_posisi, pnl = self.info_akun.harga_pnl_transaksi_terakhir(
+                simbol=self.aset
+            )
+
+            kalimat = f"\nPosisi SHORT senilai {saldo_short} USDT / {round(kuantitas)} {self.aset} berhasil ditutup untuk {self.aset} pada harga {harga_tutup_posisi} dan profit/loss sebesar {pnl} USDT (sudah dipotong komisi)"
+
             try:
                 self.fungsi.kirim_bot_telegram(
-                    judul="STATUS TRIGGER TUTUP SHORT", isi_pesan=kalimat
+                    judul="POSISI SHORT DITUTUP", isi_pesan=kalimat
                 )
             except Exception as e:
                 print(e)
                 print("\nTerjadi kesalahan dalam mengirimkan notifikasi telegram")
             print(kalimat)
-            return round(kuantitas)
         except Exception as e:
             kalimat = f"Posisi SHORT tidak berhasil ditutup untuk {self.aset}:\n{e}"
             self.fungsi.kirim_bot_telegram(

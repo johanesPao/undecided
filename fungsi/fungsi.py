@@ -7,8 +7,8 @@ import smtplib
 import time
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-import telegram_send
 
+import telegram_send
 from pandas import DateOffset
 from tvDatafeed import Interval
 
