@@ -3,6 +3,7 @@ Script untuk kelas AnalisaTeknikal
 Definisikan logika dari metode analisa teknikal untuk dipergunakan pada script strategi.py
 """
 
+import numpy as np
 import pandas as pd
 
 __author__ = "Johanes Indra Pradana Pao"
@@ -156,7 +157,7 @@ class AnalisaTeknikal:
         self.df = self.data.copy()
 
         # Slicing dataframe
-        tutup = self.df[k_tutup]
+        tutup = self.df[self.k_tutup]
 
         # Menambahkan kolom 'ma' dengan nilai rata - rata k_tutup selama periode 'ma'
         self.df["ma"] = tutup.rolling(self.periode).mean()
@@ -176,3 +177,49 @@ class AnalisaTeknikal:
     # PARABOLIC SAR
     def parabolic_sar(self):
         pass
+
+    # EXPONENTIAL MOVING AVERAGE
+    def ema(
+        self,
+        data: pd.DataFrame,
+        periode: int = 200,
+        k_tutup: str = "close",
+        smoothing: int = 2,
+        backtest: bool = False,
+    ) -> pd.DataFrame:
+        self.data = data
+        self.periode = periode
+        self.k_tutup = k_tutup
+        self.smoothing = smoothing
+        self.backtest = backtest
+
+        self.df = self.data.copy()
+
+        # Slicing dataframe
+        tutup = self.df[self.k_tutup]
+
+        # multiplier ema
+        multiplier = self.smoothing / (1 + self.periode)
+
+        # buat list ema
+        ema = []
+
+        for baris in range(len(self.df)):
+            # di bawah periode ema
+            if baris < periode:
+                ema.append(np.nan)
+            # ema pertama
+            elif baris == periode:
+                ema.append(sum(self.df.iloc[: baris + 1][self.k_tutup]) / periode)
+            # ema kedua dan seterusnya
+            else:
+                ema.append(
+                    (self.df.iloc[baris][self.k_tutup] * multiplier)
+                    + (ema[-1] * (1 - multiplier))
+                )
+
+        self.df["ema"] = ema
+
+        self.df.dropna(subset=["ema"], inplace=True)
+
+        return self.df
