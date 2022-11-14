@@ -1007,8 +1007,6 @@ class Strategi:
             self.df, self.periode_ema, "close", self.smoothing, backtest=self.backtest
         )
 
-        print(self.df_ema)
-
         self.data.append(self.df_ema)
 
         # FUGNSI SAAT LIVE
@@ -1051,35 +1049,45 @@ class Strategi:
             harga_penutupan_sebelumnya = list_data[0].iloc[-1]["close"]
 
             MODE_EMA = (
-                "DIATAS_EMA"
-                if harga_penutupan > ema_smooth
-                else "DIBAWAH_EMA"
+                (
+                    "DIATAS_EMA_POSISI_0"
+                    if harga_penutupan > ema_smooth
+                    else "DIBAWAH_EMA"
+                )
                 if len(POSISI) != 0
-                else "MENUNGGU_TREND"
-                if (
-                    harga_penutupan_sebelumnya <= ema_smooth_sebelumnya
-                    and harga_penutupan <= ema_smooth
-                )
-                or (
-                    harga_penutupan_sebelumnya > ema_smooth_sebelumnya
+                else (
+                    "MENUNGGU_TREND"
+                    if (
+                        harga_penutupan_sebelumnya <= ema_smooth_sebelumnya
+                        and harga_penutupan <= ema_smooth
+                    )
+                    or (
+                        harga_penutupan_sebelumnya > ema_smooth_sebelumnya
+                        and harga_penutupan > ema_smooth
+                    )
+                    else "DIATAS_EMA"
+                    if harga_penutupan_sebelumnya <= ema_smooth_sebelumnya
                     and harga_penutupan > ema_smooth
+                    else "DIBAWAH_EMA"
                 )
-                else "DIATAS_EMA"
-                if harga_penutupan_sebelumnya <= ema_smooth_sebelumnya
-                and harga_penutupan > ema_smooth
-                else "DIBAWAH_EMA"
             )
 
-            print(f"\nHarga Penutupan terakhir: {harga_penutupan}")
+            print(
+                f"\nHarga Penutupan sebelumnya: {Fore.GREEN if harga_penutupan_sebelumnya > ema_smooth_sebelumnya else Fore.RED}{harga_penutupan_sebelumnya}{Style.RESET_ALL}"
+            )
+            print(
+                f"Harga Penutupan terakhir: {Fore.GREEN if harga_penutupan > ema_smooth else Fore.RED}{harga_penutupan}{Style.RESET_ALL}"
+            )
+            print(
+                f"\nSmooth Exponential Moving Average sebelumnya: {Fore.RED if harga_penutupan <= ema_smooth else Fore.GREEN}{round(ema_smooth_sebelumnya, 4)}{Style.RESET_ALL}"
+            )
             print(
                 f"Smooth Exponential Moving Average terakhir: {Fore.RED if harga_penutupan <= ema_smooth else Fore.GREEN}{round(ema_smooth, 4)}{Style.RESET_ALL}"
             )
 
             print(
-                f"\nMODE STRATEGI: \nRIDE THE EMA {Fore.RED if harga_penutupan <= ema_smooth else Fore.GREEN}[{self.MODE_SCALPING}]{Style.RESET_ALL}"
+                f"\nMODE STRATEGI: \nRIDE THE EMA {Fore.RED if harga_penutupan <= ema_smooth else Fore.GREEN}[{MODE_EMA}]{Style.RESET_ALL}"
             )
-
-            print(f"MODE EMA {Fore.RED if MODE_EMA == 'DIBAWAH_EMA' else Fore.YELLOW if MODE_EMA == 'MENUNGGU_TREND' else Fore.GREEN}[{MODE_EMA}]{Style.RESET_ALL}")  # type: ignore
 
             if MODE_EMA != "MENUNGGU_TREND":
                 if MODE_EMA == "DIATAS_EMA":

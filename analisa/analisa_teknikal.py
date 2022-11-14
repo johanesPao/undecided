@@ -195,9 +195,6 @@ class AnalisaTeknikal:
 
         self.df = self.data.copy()
 
-        # Slicing dataframe
-        tutup = self.df[self.k_tutup]
-
         # multiplier ema
         multiplier = 2 / (1 + self.periode)
 
@@ -222,12 +219,12 @@ class AnalisaTeknikal:
 
         # ema smoothing menggunakan simple ma
         self.df["ema_smooth"] = self.df["ema"].rolling(self.smoothing).mean()
-        
+
         # ema backtest atau live
         if not self.backtest:
-            self.df = self.df[[k_tutup, 'ema', 'ema_smooth']].iloc[-3:-1, :]
+            self.df = self.df[[k_tutup, "ema", "ema_smooth"]].iloc[-3:-1, :]
         else:
-            self.df = self.df[[k_tutup, 'ema', 'ema_smooth']].iloc[:-1, :]
+            self.df = self.df[[k_tutup, "ema", "ema_smooth"]].iloc[:-1, :]
 
         self.df.dropna(subset=["ema", "ema_smooth"], inplace=True)
 
