@@ -1043,10 +1043,10 @@ class Strategi:
             harga_koin_terakhir = self.akun.harga_koin_terakhir(self.simbol)
             kuantitas_koin = float(USDT_AKUN * self.leverage / harga_koin_terakhir)
 
-            ema_smooth = list_data[0].iloc[0]["ema_smooth"]
-            ema_smooth_sebelumnya = list_data[0].iloc[-1]["ema_smooth"]
-            harga_penutupan = list_data[0].iloc[0]["close"]
-            harga_penutupan_sebelumnya = list_data[0].iloc[-1]["close"]
+            ema_smooth = list_data[0].iloc[-1]["ema_smooth"]
+            ema_smooth_sebelumnya = list_data[0].iloc[-2]["ema_smooth"]
+            harga_penutupan = list_data[0].iloc[-1]["close"]
+            harga_penutupan_sebelumnya = list_data[0].iloc[-2]["close"]
 
             MODE_EMA = (
                 (
