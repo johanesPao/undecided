@@ -184,7 +184,7 @@ class AnalisaTeknikal:
         data: pd.DataFrame,
         periode: int = 200,
         k_tutup: str = "close",
-        smoothing: int = 2,
+        smoothing: int = 20,
         backtest: bool = False,
     ) -> pd.DataFrame:
         self.data = data
@@ -199,7 +199,7 @@ class AnalisaTeknikal:
         tutup = self.df[self.k_tutup]
 
         # multiplier ema
-        multiplier = self.smoothing / (1 + self.periode)
+        multiplier = 2 / (1 + self.periode)
 
         # buat list ema
         ema = []
@@ -220,6 +220,15 @@ class AnalisaTeknikal:
 
         self.df["ema"] = ema
 
-        self.df.dropna(subset=["ema"], inplace=True)
+        # ema smoothing menggunakan simple ma
+        self.df["ema_smooth"] = self.df["ema"].rolling(self.smoothing).mean()
+        
+        # ema backtest atau live
+        if not self.backtest:
+            self.df = self.df[[k_tutup, 'ema', 'ema_smooth']].iloc[-3:-1, :]
+        else:
+            self.df = self.df[[k_tutup, 'ema', 'ema_smooth']].iloc[:-1, :]
+
+        self.df.dropna(subset=["ema", "ema_smooth"], inplace=True)
 
         return self.df

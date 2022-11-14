@@ -74,6 +74,8 @@ class Strategi:
         self.MODE_SCALPING = ""
         self.kuantitas_long_rtw = 0
         self.kuantitas_short_rtw = 0
+        self.kuantitas_long_rte = 0
+        self.kuantitas_short_rte = 0
 
     def jpao_niten_ichi_ryu_28_16_8(
         self,
@@ -934,6 +936,285 @@ class Strategi:
                     or "BUKA_SHORT" in df_backtest.iloc[baris]["tindakan"]
                 ):
                     saldo_posisi = 0.5 * SALDO
+                    SALDO = SALDO - saldo_posisi
+
+                list_df_saldo_tersedia.append(SALDO)
+                list_df_saldo_posisi.append(saldo_posisi)
+                list_df_profit_dan_loss.append(profit_dan_loss)
+
+            df_backtest["saldo_tersedia"] = list_df_saldo_tersedia
+            df_backtest["saldo_posisi"] = list_df_saldo_posisi
+            df_backtest["profit_dan_loss"] = list_df_profit_dan_loss
+
+            print(df_backtest.to_string())
+
+            return f'Profit dan Loss menggunakan strategi ini: {float(sum(df_backtest["profit_dan_loss"]))} dollar'  # type: ignore
+
+        # jika live stream strategi
+        if not self.backtest:
+            live()
+        else:
+            print(backtest())
+
+    def jpao_ride_the_ema(
+        self,
+        interval: List[
+            Literal[
+                "1 menit",
+                "3 menit",
+                "5 menit",
+                "15 menit",
+                "30 menit",
+                "45 menit",
+                "1 jam",
+                "2 jam",
+                "3 jam",
+                "4 jam",
+                "1 hari",
+                "1 minggu",
+                "1 bulan",
+            ]
+        ] = ["5 menit"],
+        periode_ema: int = 200,
+        smoothing: int = 2,
+    ) -> None | list:
+        self.interval = interval
+        self.periode_ema = periode_ema
+        # nilai EMA baru menunjukkan nilai yang benar saat data historikal adalah 3 kali periode ema
+        self.periode_ema_mod = self.periode_ema * 3
+        self.smoothing = smoothing
+
+        if len(self.interval) != 1:
+            return print(
+                "STRATEGI INI (jpao_ride_the_ema) MENGGUNAKAN INTERVAL WAKTU DALAM LIST BERJUMLAH SATU"
+            )
+
+        self.jumlah_bar = (
+            self.jumlah_periode_backtest + self.periode_ema_mod
+            if self.backtest
+            else self.periode_ema_mod
+        )
+
+        waktu = self.fungsi.konverter_waktu(self.interval[0])
+
+        self.data = []
+
+        self.df = self.model.ambil_data_historis(
+            self.simbol_data, self.exchange, waktu, self.jumlah_bar
+        )
+
+        self.df_ema = self.analisa_teknikal.ema(
+            self.df, self.periode_ema, "close", self.smoothing, backtest=self.backtest
+        )
+
+        print(self.df_ema)
+
+        self.data.append(self.df_ema)
+
+        # FUGNSI SAAT LIVE
+        def live(list_data: list = self.data) -> str | None:
+            # VARIABEL DAN KONSTANTA
+            DATA_POSISI_FUTURES = self.posisi_futures
+            # cek posisi yang dipegang saat ini
+            POSISI = DATA_POSISI_FUTURES["positionSide"].unique().tolist()
+            if "SHORT" in POSISI:
+                data_short = DATA_POSISI_FUTURES[
+                    DATA_POSISI_FUTURES["positionSide"] == "SHORT"
+                ]
+                nilai_usdt_short = float(data_short.iloc[0]["isolatedWallet"])
+                harga_masuk_short = float(data_short.iloc[0]["entryPrice"])
+                leverage_short = float(data_short.iloc[0]["leverage"])
+                self.kuantitas_short_rte = round(
+                    nilai_usdt_short * leverage_short / harga_masuk_short
+                )
+            if "LONG" in POSISI:
+                data_long = DATA_POSISI_FUTURES[
+                    DATA_POSISI_FUTURES["positionSide"] == "LONG"
+                ]
+                data_long = DATA_POSISI_FUTURES[
+                    DATA_POSISI_FUTURES["positionSide"] == "LONG"
+                ]
+                nilai_usdt_long = float(data_long.iloc[0]["isolatedWallet"])
+                harga_masuk_long = float(data_long.iloc[0]["entryPrice"])
+                leverage_long = float(data_long.iloc[0]["leverage"])
+                self.kuantitas_long_rte = round(
+                    nilai_usdt_long * leverage_long / harga_masuk_long
+                )
+
+            USDT_AKUN = math.floor(self.saldo_tersedia + self.saldo_terpakai)
+            harga_koin_terakhir = self.akun.harga_koin_terakhir(self.simbol)
+            kuantitas_koin = float(USDT_AKUN * self.leverage / harga_koin_terakhir)
+
+            ema_smooth = list_data[0].iloc[0]["ema_smooth"]
+            ema_smooth_sebelumnya = list_data[0].iloc[-1]["ema_smooth"]
+            harga_penutupan = list_data[0].iloc[0]["close"]
+            harga_penutupan_sebelumnya = list_data[0].iloc[-1]["close"]
+
+            MODE_EMA = (
+                "DIATAS_EMA"
+                if harga_penutupan > ema_smooth
+                else "DIBAWAH_EMA"
+                if len(POSISI) != 0
+                else "MENUNGGU_TREND"
+                if (
+                    harga_penutupan_sebelumnya <= ema_smooth_sebelumnya
+                    and harga_penutupan <= ema_smooth
+                )
+                or (
+                    harga_penutupan_sebelumnya > ema_smooth_sebelumnya
+                    and harga_penutupan > ema_smooth
+                )
+                else "DIATAS_EMA"
+                if harga_penutupan_sebelumnya <= ema_smooth_sebelumnya
+                and harga_penutupan > ema_smooth
+                else "DIBAWAH_EMA"
+            )
+
+            print(f"\nHarga Penutupan terakhir: {harga_penutupan}")
+            print(
+                f"Smooth Exponential Moving Average terakhir: {Fore.RED if harga_penutupan <= ema_smooth else Fore.GREEN}{round(ema_smooth, 4)}{Style.RESET_ALL}"
+            )
+
+            print(
+                f"\nMODE STRATEGI: \nRIDE THE EMA {Fore.RED if harga_penutupan <= ema_smooth else Fore.GREEN}[{self.MODE_SCALPING}]{Style.RESET_ALL}"
+            )
+
+            print(f"MODE EMA {Fore.RED if MODE_EMA == 'DIBAWAH_EMA' else Fore.YELLOW if MODE_EMA == 'MENUNGGU_TREND' else Fore.GREEN}[{MODE_EMA}]{Style.RESET_ALL}")  # type: ignore
+
+            if MODE_EMA != "MENUNGGU_TREND":
+                if MODE_EMA == "DIATAS_EMA":
+                    # cek posisi short dan tutup
+                    if "SHORT" in POSISI and self.kuantitas_short_rte > 0:
+                        self.order.tutup_short(
+                            self.kuantitas_short_rte, leverage=self.leverage
+                        )
+                        self.kuantitas_short_rte = 0
+                    if "LONG" not in POSISI:
+                        self.kuantitas_long_rte = self.order.buka_long(
+                            kuantitas_koin, leverage=self.leverage
+                        )
+                else:
+                    # cek posisi long dan tutup
+                    if "LONG" in POSISI and self.kuantitas_long_rte > 0:
+                        self.order.tutup_long(
+                            self.kuantitas_long_rte, leverage=self.leverage
+                        )
+                        self.kuantitas_long_rte = 0
+                    if "SHORT" not in POSISI:
+                        self.kuantitas_short_rte = self.order.buka_short(
+                            self.kuantitas_short_rte, leverage=self.leverage
+                        )
+
+        # FUNGSI BACKTEST
+        def backtest(list_data: list = self.data) -> str:
+            # VARIABEL DAN KONSTANTA
+            SALDO = self.saldo_backtest
+            LEVERAGE = self.leverage_backtest
+            DATA = list_data
+
+            df_backtest = pd.DataFrame(DATA[0])
+
+            MODE_EMA = ""
+            posisi = []
+            harga_posisi = []
+            list_df_posisi = []
+            list_df_tindakan = []
+            list_df_harga_posisi = []
+            list_df_mode_ema = []
+            for baris in range(len(df_backtest)):
+                if baris < 2:
+                    list_df_mode_ema.append(["MENUNGGU_TREND"])
+                    list_df_tindakan.append([])
+                    list_df_posisi.append([])
+                    list_df_harga_posisi.append([])
+                else:
+                    tindakan = []
+                    mode_ema = []
+                    harga = df_backtest.iloc[baris]["close"]
+                    ema_smooth = df_backtest.iloc[baris]["ema_smooth"]
+                    harga_sebelumnya = df_backtest.iloc[baris - 1]["close"]
+                    ema_smooth_sebelumnya = df_backtest.iloc[baris - 1]["close"]
+
+                    MODE_EMA = (
+                        "DIATAS_EMA"
+                        if harga > ema_smooth
+                        else "DIBAWAH_EMA"
+                        if len(posisi) != 0
+                        else "DIATAS_EMA"
+                        if harga > ema_smooth
+                        and harga_sebelumnya <= ema_smooth_sebelumnya
+                        else "DIBAWAH_EMA"
+                        if harga <= ema_smooth
+                        and harga_sebelumnya > ema_smooth_sebelumnya
+                        else "MENUNGGU_TREND"
+                    )
+
+                    if MODE_EMA != "MENUNGGU_TREND":
+                        if MODE_EMA == "DIATAS_EMA":
+                            if "SHORT" in posisi:
+                                tindakan.append("TUTUP_SHORT")
+                                posisi.remove("SHORT")
+                                harga_posisi.clear()
+                            if "LONG" not in posisi:
+                                tindakan.append("BUKA_LONG")
+                                posisi.append("LONG")
+                                harga_posisi.append(harga)
+                            mode_ema.append(MODE_EMA)
+                        elif MODE_EMA == "DIBAWAH_EMA":
+                            if "LONG" in posisi:
+                                tindakan.append("TUTUP_LONG")
+                                posisi.remove("LONG")
+                                harga_posisi.clear()
+                            if "SHORT" not in posisi:
+                                tindakan.append("BUKA_SHORT")
+                                posisi.append("SHORT")
+                                harga_posisi.append(harga)
+                            mode_ema.append(MODE_EMA)
+                    else:
+                        mode_ema.append(MODE_EMA)
+
+                    list_df_mode_ema.append(mode_ema.copy())
+                    list_df_tindakan.append(tindakan)
+                    list_df_posisi.append(posisi.copy())
+                    list_df_harga_posisi.append(harga_posisi.copy())
+
+            df_backtest["mode_ema"] = list_df_mode_ema
+            df_backtest["tindakan"] = list_df_tindakan
+            df_backtest["posisi"] = list_df_posisi
+            df_backtest["harga_posisi"] = list_df_harga_posisi
+
+            # iterasi kolom untung dan rugi
+            list_df_profit_dan_loss = []
+            list_df_saldo_tersedia = []
+            list_df_saldo_posisi = []
+            saldo_posisi = 0
+            for baris in range(len(df_backtest)):
+                profit_dan_loss = 0
+                if "TUTUP_LONG" in df_backtest.iloc[baris]["tindakan"]:
+                    harga_keluar = df_backtest.iloc[baris]["close"]
+                    harga_posisi = df_backtest.iloc[baris - 1]["harga_posisi"]
+                    profit_dan_loss = (
+                        harga_keluar - harga_posisi
+                    ) / harga_posisi * saldo_posisi * LEVERAGE - (
+                        0.008 * saldo_posisi / LEVERAGE
+                    )
+                    SALDO = SALDO + saldo_posisi + profit_dan_loss
+                    saldo_posisi = 0
+                if "TUTUP_SHORT" in df_backtest.iloc[baris]["tindakan"]:
+                    harga_keluar = df_backtest.iloc[baris]["close"]
+                    harga_posisi = df_backtest.iloc[baris - 1]["harga_posisi"]
+                    profit_dan_loss = (
+                        harga_posisi - harga_keluar
+                    ) / harga_posisi * saldo_posisi * LEVERAGE - (
+                        0.008 * saldo_posisi / LEVERAGE
+                    )
+                    SALDO = SALDO + saldo_posisi + profit_dan_loss
+                    saldo_posisi = 0
+                if (
+                    "BUKA_LONG" in df_backtest.iloc[baris]["tindakan"]
+                    or "BUKA_SHORT" in df_backtest.iloc[baris]["tindakan"]
+                ):
+                    saldo_posisi = SALDO
                     SALDO = SALDO - saldo_posisi
 
                 list_df_saldo_tersedia.append(SALDO)
