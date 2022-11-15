@@ -1043,46 +1043,48 @@ class Strategi:
             harga_koin_terakhir = self.akun.harga_koin_terakhir(self.simbol)
             kuantitas_koin = float(USDT_AKUN * self.leverage / harga_koin_terakhir)
 
+            ema = list_data[0].iloc[-1]["ema"]
+            ema_sebelumnya = list_data[0].iloc[-2]["ema"]
             ema_smooth = list_data[0].iloc[-1]["ema_smooth"]
             ema_smooth_sebelumnya = list_data[0].iloc[-2]["ema_smooth"]
             harga_penutupan = list_data[0].iloc[-1]["close"]
             harga_penutupan_sebelumnya = list_data[0].iloc[-2]["close"]
 
             MODE_EMA = (
-                ("DIATAS_EMA" if harga_penutupan > ema_smooth else "DIBAWAH_EMA")
+                ("DIATAS_EMA" if harga_penutupan > ema else "DIBAWAH_EMA")
                 if len(POSISI) != 0
                 else (
                     "MENUNGGU_TREND"
                     if (
-                        harga_penutupan_sebelumnya <= ema_smooth_sebelumnya
-                        and harga_penutupan <= ema_smooth
+                        harga_penutupan_sebelumnya <= ema_sebelumnya
+                        and harga_penutupan <= ema
                     )
                     or (
-                        harga_penutupan_sebelumnya > ema_smooth_sebelumnya
-                        and harga_penutupan > ema_smooth
+                        harga_penutupan_sebelumnya > ema_sebelumnya
+                        and harga_penutupan > ema
                     )
                     else "DIATAS_EMA"
-                    if harga_penutupan_sebelumnya <= ema_smooth_sebelumnya
-                    and harga_penutupan > ema_smooth
+                    if harga_penutupan_sebelumnya <= ema_sebelumnya
+                    and harga_penutupan > ema
                     else "DIBAWAH_EMA"
                 )
             )
 
             print(
-                f"Harga Penutupan sebelumnya: {Fore.GREEN if harga_penutupan_sebelumnya > ema_smooth_sebelumnya else Fore.RED}{harga_penutupan_sebelumnya}{Style.RESET_ALL}"
+                f"Harga Penutupan sebelumnya: {Fore.GREEN if harga_penutupan_sebelumnya > ema_sebelumnya else Fore.RED}{harga_penutupan_sebelumnya}{Style.RESET_ALL}"
             )
             print(
-                f"Harga Penutupan terakhir: {Fore.GREEN if harga_penutupan > ema_smooth else Fore.RED}{harga_penutupan}{Style.RESET_ALL}"
+                f"Harga Penutupan terakhir: {Fore.GREEN if harga_penutupan > ema else Fore.RED}{harga_penutupan}{Style.RESET_ALL}"
             )
             print(
-                f"\nSmooth Exponential Moving Average sebelumnya: {Fore.RED if harga_penutupan <= ema_smooth else Fore.GREEN}{round(ema_smooth_sebelumnya, 4)}{Style.RESET_ALL}"
+                f"\nExponential Moving Average sebelumnya: {Fore.RED if harga_penutupan_sebelumnya <= ema_sebelumnya else Fore.GREEN}{round(ema_sebelumnya, 4)}{Style.RESET_ALL}"
             )
             print(
-                f"Smooth Exponential Moving Average terakhir: {Fore.RED if harga_penutupan <= ema_smooth else Fore.GREEN}{round(ema_smooth, 4)}{Style.RESET_ALL}"
+                f"Exponential Moving Average terakhir: {Fore.RED if harga_penutupan <= ema else Fore.GREEN}{round(ema, 4)}{Style.RESET_ALL}"
             )
 
             print(
-                f"\nMODE STRATEGI: \nRIDE THE EMA {Fore.RED if harga_penutupan <= ema_smooth else Fore.GREEN}[{MODE_EMA}]{Style.RESET_ALL}"
+                f"\nMODE STRATEGI: \nRIDE THE EMA {Fore.RED if harga_penutupan <= ema else Fore.GREEN}[{MODE_EMA}]{Style.RESET_ALL}"
             )
 
             if MODE_EMA != "MENUNGGU_TREND":
@@ -1136,20 +1138,20 @@ class Strategi:
                     mode_ema = []
                     harga = df_backtest.iloc[baris]["close"]
                     ema_smooth = df_backtest.iloc[baris]["ema_smooth"]
+                    ema = df_backtest.iloc[baris]["ema"]
                     harga_sebelumnya = df_backtest.iloc[baris - 1]["close"]
                     ema_smooth_sebelumnya = df_backtest.iloc[baris - 1]["close"]
+                    ema_sebelumnya = df_backtest.iloc[baris - 1]["ema"]
 
                     MODE_EMA = (
                         "DIATAS_EMA"
-                        if harga > ema_smooth
+                        if harga > ema
                         else "DIBAWAH_EMA"
                         if len(posisi) != 0
                         else "DIATAS_EMA"
-                        if harga > ema_smooth
-                        and harga_sebelumnya <= ema_smooth_sebelumnya
+                        if harga > ema and harga_sebelumnya <= ema_sebelumnya
                         else "DIBAWAH_EMA"
-                        if harga <= ema_smooth
-                        and harga_sebelumnya > ema_smooth_sebelumnya
+                        if harga <= ema and harga_sebelumnya > ema_sebelumnya
                         else "MENUNGGU_TREND"
                     )
 

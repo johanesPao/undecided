@@ -39,8 +39,8 @@ strategi_backtest = Strategi(
     EXCHANGE,
     backtest=True,
     jumlah_periode_backtest=288,
-    saldo_backtest=1,
-    leverage_backtest=15,
+    saldo_backtest=29,
+    leverage_backtest=20,
 )
 
 # Eksekusi strategi dalam fungsi backtest kelas Strategi
