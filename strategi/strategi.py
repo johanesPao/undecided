@@ -1039,7 +1039,7 @@ class Strategi:
                     nilai_usdt_long * leverage_long / harga_masuk_long
                 )
 
-            USDT_AKUN = math.floor(self.saldo_tersedia + self.saldo_terpakai)
+            USDT_AKUN = self.saldo_tersedia * 0.9
             harga_koin_terakhir = self.akun.harga_koin_terakhir(self.simbol)
             kuantitas_koin = float(USDT_AKUN * self.leverage / harga_koin_terakhir)
 
@@ -1049,11 +1049,7 @@ class Strategi:
             harga_penutupan_sebelumnya = list_data[0].iloc[-2]["close"]
 
             MODE_EMA = (
-                (
-                    "DIATAS_EMA_POSISI_0"
-                    if harga_penutupan > ema_smooth
-                    else "DIBAWAH_EMA"
-                )
+                ("DIATAS_EMA" if harga_penutupan > ema_smooth else "DIBAWAH_EMA")
                 if len(POSISI) != 0
                 else (
                     "MENUNGGU_TREND"
@@ -1073,7 +1069,7 @@ class Strategi:
             )
 
             print(
-                f"\nHarga Penutupan sebelumnya: {Fore.GREEN if harga_penutupan_sebelumnya > ema_smooth_sebelumnya else Fore.RED}{harga_penutupan_sebelumnya}{Style.RESET_ALL}"
+                f"Harga Penutupan sebelumnya: {Fore.GREEN if harga_penutupan_sebelumnya > ema_smooth_sebelumnya else Fore.RED}{harga_penutupan_sebelumnya}{Style.RESET_ALL}"
             )
             print(
                 f"Harga Penutupan terakhir: {Fore.GREEN if harga_penutupan > ema_smooth else Fore.RED}{harga_penutupan}{Style.RESET_ALL}"
