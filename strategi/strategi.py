@@ -1138,16 +1138,16 @@ class Strategi:
                     f"Harga Penutupan terakhir: {Fore.GREEN if harga_penutupan > ema_cepat else Fore.RED}{harga_penutupan}{Style.RESET_ALL}"  # type: ignore
                 )
                 print(
-                    f"\nEMA [-2]: {Fore.RED if ema_cepat_sebelumnya <= ema_sebelumnya else Fore.GREEN}{round(ema_sebelumnya, 4)}{Style.RESET_ALL}"  # type: ignore
+                    f"\nEMA [-2]\t\t: {Fore.RED if ema_cepat_sebelumnya <= ema_sebelumnya else Fore.GREEN}{round(ema_sebelumnya, 4)}{Style.RESET_ALL}"  # type: ignore
                 )
                 print(
-                    f"EMA Cepat [-2]: {Fore.RED if ema_cepat_sebelumnya <= ema_sebelumnya else Fore.GREEN}{round(ema_cepat_sebelumnya, 4)}{Style.RESET_ALL}"  # type: ignore
+                    f"EMA Cepat [-2]\t\t: {Fore.RED if ema_cepat_sebelumnya <= ema_sebelumnya else Fore.GREEN}{round(ema_cepat_sebelumnya, 4)}{Style.RESET_ALL}"  # type: ignore
                 )
                 print(
-                    f"EMA [-1]: {Fore.RED if ema_cepat <= ema else Fore.GREEN}{round(ema, 4)}{Style.RESET_ALL}"  # type: ignore
+                    f"EMA [-1]\t\t: {Fore.RED if ema_cepat <= ema else Fore.GREEN}{round(ema, 4)}{Style.RESET_ALL}"  # type: ignore
                 )
                 print(
-                    f"EMA Cepat [-1]: {Fore.RED if ema_cepat <= ema else Fore.GREEN}{round(ema_cepat, 4)}{Style.RESET_ALL}"  # type:ignore
+                    f"EMA Cepat [-1]\t\t: {Fore.RED if ema_cepat <= ema else Fore.GREEN}{round(ema_cepat, 4)}{Style.RESET_ALL}"  # type:ignore
                 )
 
                 print(

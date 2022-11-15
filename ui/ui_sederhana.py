@@ -48,7 +48,7 @@ class UI:
             else f"{Fore.CYAN}{nilai}"
         )
 
-        print(f"{label}: {wrapper_nilai}{Style.RESET_ALL}")
+        print(f"{label:18}:{wrapper_nilai.rjust(17, ' ')}{Style.RESET_ALL}")
 
     def print_dataframe_murni(self, df: pd.DataFrame) -> None:
         print(df)
