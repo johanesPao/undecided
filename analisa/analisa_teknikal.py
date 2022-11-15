@@ -182,50 +182,83 @@ class AnalisaTeknikal:
     def ema(
         self,
         data: pd.DataFrame,
-        periode: int = 200,
+        periode: int = 50,
         k_tutup: str = "close",
         smoothing: int = 20,
+        dual_ema: bool = False,
+        periode_ema_cepat: int = 37,
         backtest: bool = False,
     ) -> pd.DataFrame:
         self.data = data
         self.periode = periode
+        self.dual_ema = dual_ema
+        if self.dual_ema:
+            self.periode_ema_cepat = periode_ema_cepat
         self.k_tutup = k_tutup
         self.smoothing = smoothing
         self.backtest = backtest
 
         self.df = self.data.copy()
 
-        # multiplier ema
-        multiplier = 2 / (1 + self.periode)
+        def olah_ema(data: pd.DataFrame, periode: int, k_tutup: str) -> list:
+            # multiplier ema
+            multiplier = 2 / (1 + periode)
 
-        # buat list ema
-        ema = []
+            # buat list ema
+            ema = []
 
-        for baris in range(len(self.df)):
-            # di bawah periode ema
-            if baris < periode:
-                ema.append(np.nan)
-            # ema pertama
-            elif baris == periode:
-                ema.append(sum(self.df.iloc[: baris + 1][self.k_tutup]) / periode)
-            # ema kedua dan seterusnya
-            else:
-                ema.append(
-                    (self.df.iloc[baris][self.k_tutup] * multiplier)
-                    + (ema[-1] * (1 - multiplier))
-                )
+            for baris in range(len(data)):
+                # di bawah periode ema
+                if baris < periode:
+                    ema.append(np.nan)
+                # ema pertama
+                elif baris == periode:
+                    ema.append(sum(data.iloc[: baris + 1][k_tutup]) / periode)
+                # ema kedua dan seterusnya
+                else:
+                    ema.append(
+                        (data.iloc[baris][k_tutup] * multiplier)
+                        + (ema[-1] * (1 - multiplier))
+                    )
+            # kembalikan list ema
+            return ema
+
+        ema = olah_ema(self.df, self.periode, self.k_tutup)
+        if self.dual_ema:
+            ema_cepat = olah_ema(self.df, self.periode_ema_cepat, self.k_tutup)
 
         self.df["ema"] = ema
+        if self.dual_ema:
+            self.df["ema_cepat"] = ema_cepat  # type: ignore
 
         # ema smoothing menggunakan simple ma
         self.df["ema_smooth"] = self.df["ema"].rolling(self.smoothing).mean()
 
+        # ema cepat smoothing
+        if self.dual_ema:
+            self.df["ema_cepat_smooth"] = (
+                self.df["ema_cepat"].rolling(self.smoothing).mean()
+            )
+
+        # kolom yang dikembalikan
+        kolom_kembali = (
+            [self.k_tutup, "ema", "ema_smooth"]
+            if not self.dual_ema
+            else [self.k_tutup, "ema", "ema_cepat", "ema_smooth", "ema_cepat_smooth"]
+        )
+
         # ema backtest atau live
         if not self.backtest:
-            self.df = self.df[[k_tutup, "ema", "ema_smooth"]].iloc[-3:-1, :]
+            self.df = self.df[kolom_kembali].iloc[-3:-1, :]
         else:
-            self.df = self.df[[k_tutup, "ema", "ema_smooth"]].iloc[:-1, :]
+            self.df = self.df[kolom_kembali].iloc[:-1, :]
 
-        self.df.dropna(subset=["ema", "ema_smooth"], inplace=True)
+        # filter kolom dengan Nan
+        kolom_filter = (
+            ["ema, ema_smooth"]
+            if not self.dual_ema
+            else ["ema", "ema_cepat", "ema_smooth", "ema_cepat_smooth"]
+        )
+        self.df.dropna(subset=kolom_filter, inplace=True)
 
         return self.df

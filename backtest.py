@@ -29,8 +29,10 @@ EXCHANGE = "BINANCE"
 # d_lambat = 10
 
 # RTE
-periode_ema = 200
-smoothing = 20
+periode_ema = 50
+periode_ema_cepat = 37
+dual_ema = True
+smoothing = 5
 
 # Inisiasi kelas strategi
 strategi_backtest = Strategi(
@@ -38,7 +40,7 @@ strategi_backtest = Strategi(
     ASET,
     EXCHANGE,
     backtest=True,
-    jumlah_periode_backtest=288,
+    jumlah_periode_backtest=864,
     saldo_backtest=29,
     leverage_backtest=20,
 )
@@ -61,5 +63,9 @@ strategi_backtest = Strategi(
 # )
 
 hasil_strategi = strategi_backtest.jpao_ride_the_ema(
-    interval=["5 menit"], periode_ema=periode_ema, smoothing=smoothing
+    interval=["5 menit"],
+    periode_ema=periode_ema,
+    smoothing=smoothing,
+    dual_ema=dual_ema,
+    periode_ema_cepat=periode_ema_cepat,
 )
