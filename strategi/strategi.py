@@ -1138,20 +1138,20 @@ class Strategi:
                     f"Harga Penutupan terakhir: {Fore.GREEN if harga_penutupan > ema_cepat else Fore.RED}{harga_penutupan}{Style.RESET_ALL}"  # type: ignore
                 )
                 print(
-                    f"\nEMA sebelumnya: {Fore.RED if ema_sebelumnya <= ema_cepat_sebelumnya else Fore.GREEN}{round(ema_sebelumnya, 4)}{Style.RESET_ALL}"  # type: ignore
+                    f"\nEMA [-2]: {Fore.RED if ema_cepat_sebelumnya <= ema_sebelumnya else Fore.GREEN}{round(ema_sebelumnya, 4)}{Style.RESET_ALL}"  # type: ignore
                 )
                 print(
-                    f"EMA terakhir: {Fore.RED if ema <= ema_cepat else Fore.GREEN}{round(ema, 4)}{Style.RESET_ALL}"  # type: ignore
+                    f"EMA Cepat [-2]: {Fore.RED if ema_cepat_sebelumnya <= ema_sebelumnya else Fore.GREEN}{round(ema_cepat_sebelumnya, 4)}{Style.RESET_ALL}"  # type: ignore
                 )
                 print(
-                    f"EMA Cepat sebelumnya: {Fore.RED if ema_cepat_sebelumnya <= ema_sebelumnya else Fore.GREEN}{round(ema_cepat_sebelumnya, 4)}{Style.RESET_ALL}"  # type: ignore
+                    f"EMA [-1]: {Fore.RED if ema_cepat <= ema else Fore.GREEN}{round(ema, 4)}{Style.RESET_ALL}"  # type: ignore
                 )
                 print(
-                    f"EMA Cepat terakhir: {Fore.RED if ema_cepat <= ema else Fore.GREEN}{round(ema_cepat, 4)}{Style.RESET_ALL}"  # type:ignore
+                    f"EMA Cepat [-1]: {Fore.RED if ema_cepat <= ema else Fore.GREEN}{round(ema_cepat, 4)}{Style.RESET_ALL}"  # type:ignore
                 )
 
                 print(
-                    f"\nMODE STRATEGI: \nRIDE THE EMA {Fore.RED if ema_cepat <= ema else Fore.GREEN}[{MODE_EMA}]{Style.RESET_ALL}"  # type: ignore
+                    f"\nMODE STRATEGI: \nRIDE THE EMA - DUAL EMA {Fore.RED if ema_cepat <= ema else Fore.GREEN}[{MODE_EMA}]{Style.RESET_ALL}"  # type: ignore
                 )
 
             if not self.dual_ema:
