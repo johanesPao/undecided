@@ -1063,9 +1063,9 @@ class Strategi:
                     nilai_usdt_long * leverage_long / harga_masuk_long
                 )
 
-            USDT_AKUN = self.saldo_tersedia * 0.9
+            USDT_AKUN = (self.saldo_tersedia + self.saldo_terpakai) * 0.9
             harga_koin_terakhir = self.akun.harga_koin_terakhir(self.simbol)
-            kuantitas_koin = float(USDT_AKUN * self.leverage / harga_koin_terakhir)
+            kuantitas_koin = float(5 * self.leverage / harga_koin_terakhir)
 
             ema = list_data[0].iloc[-1]["ema"]
             ema_sebelumnya = list_data[0].iloc[-2]["ema"]
@@ -1111,7 +1111,7 @@ class Strategi:
                         or (ema_cepat_sebelumnya > ema_sebelumnya and ema_cepat > ema)  # type: ignore
                         else "EMA_NAIK"
                         if ema_cepat_sebelumnya <= ema_sebelumnya and ema_cepat > ema  # type: ignore
-                        else "EMA_NAIK"
+                        else "EMA_TURUN"
                     )
                 )
             )
@@ -1176,7 +1176,7 @@ class Strategi:
                             self.kuantitas_long_rte = 0
                         if "SHORT" not in POSISI:
                             self.kuantitas_short_rte = self.order.buka_short(
-                                self.kuantitas_short_rte, leverage=self.leverage
+                                kuantitas_koin, leverage=self.leverage
                             )
             else:
                 if MODE_EMA != "MENUNGGU_TREND":
