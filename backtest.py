@@ -33,6 +33,10 @@ periode_ema = 50
 periode_ema_cepat = 37
 dual_ema = True
 smoothing = 5
+demastoch = False
+k_cepat = 50
+k_lambat = 400
+d_lambat = 100
 
 # Inisiasi kelas strategi
 strategi_backtest = Strategi(
@@ -40,8 +44,8 @@ strategi_backtest = Strategi(
     ASET,
     EXCHANGE,
     backtest=True,
-    jumlah_periode_backtest=864,
-    saldo_backtest=29,
+    jumlah_periode_backtest=4032,
+    saldo_backtest=60,
     leverage_backtest=20,
 )
 
@@ -68,4 +72,8 @@ hasil_strategi = strategi_backtest.jpao_ride_the_ema(
     smoothing=smoothing,
     dual_ema=dual_ema,
     periode_ema_cepat=periode_ema_cepat,
+    demastoch=demastoch,
+    k_cepat=k_cepat,
+    k_lambat=k_lambat,
+    d_lambat=d_lambat,
 )
