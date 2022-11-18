@@ -1114,7 +1114,7 @@ class Strategi:
                     nilai_usdt_long * leverage_long / harga_masuk_long
                 )
 
-            USDT_AKUN = 12.5
+            USDT_AKUN = 10
             harga_koin_terakhir = self.akun.harga_koin_terakhir(self.simbol)
             kuantitas_koin = float(USDT_AKUN * self.leverage / harga_koin_terakhir)
 
@@ -1437,8 +1437,17 @@ class Strategi:
                     if not self.demastoch:
                         if MODE_RTE != "MENUNGGU_TREND":  # type: ignore
                             if MODE_RTE == "RTE_NAIK":  # type: ignore
-                                if "SHORT" in posisi and harga_sebelumnya < (
-                                    harga_short - harga_sebelumnya * 0.008 / LEVERAGE
+                                if (
+                                    "SHORT" in posisi
+                                    and harga_sebelumnya
+                                    < (
+                                        harga_short
+                                        - harga_sebelumnya * 0.008 / LEVERAGE
+                                    )
+                                    and (
+                                        ema_cepat_sebelumnya <= ema_sebelumnya  # type: ignore
+                                        and ema_cepat > ema  # type: ignore
+                                    )
                                 ):
                                     tindakan.append("TUTUP_SHORT")
                                     posisi.remove("SHORT")
@@ -1450,9 +1459,15 @@ class Strategi:
                                 mode_ema.append(MODE_EMA)
                                 mode_rte.append(MODE_RTE)  # type: ignore
                             if MODE_RTE == "RTE_TURUN":  # type: ignore
-                                if "LONG" in posisi and harga_sebelumnya > (
-                                    harga_long + harga_sebelumnya * 0.008 / LEVERAGE
-                                ):
+                                if (
+                                    "LONG" in posisi
+                                    and harga_sebelumnya
+                                    > (harga_long + harga_sebelumnya * 0.008 / LEVERAGE)
+                                    and (
+                                        ema_cepat_sebelumnya > ema_sebelumnya  # type: ignore
+                                        and ema_cepat <= ema  # type: ignore
+                                    )
+                                ):  # type: ignore
                                     tindakan.append("TUTUP_LONG")
                                     posisi.remove("LONG")
                                     harga_long.clear()
