@@ -163,7 +163,7 @@ while True:
 
         # Eksekusi strategi
         # strategi.jpao_niten_ichi_ryu_28_16_8(interval=INTERVAL, k_cepat=120, k_lambat=160, d_lambat=20)  # type: ignore
-        strategi.jpao_ride_the_ema(interval=INTERVAL, periode_ema=24, smoothing=5, dual_ema=True, periode_ema_cepat=8)  # type: ignore
+        strategi.jpao_ride_the_ema(interval=INTERVAL, periode_ema=9, smoothing=5, dual_ema=True, periode_ema_cepat=7)  # type: ignore
 
         # Reset jumlah error b2eruntun
         JUMLAH_ERROR = 0
