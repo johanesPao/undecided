@@ -124,6 +124,7 @@ class InfoAkun:
             [
                 "symbol",
                 "positionSide",
+                "positionAmt",
                 "leverage",
                 "isolated",
                 "initialMargin",

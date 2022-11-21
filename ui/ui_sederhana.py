@@ -40,7 +40,12 @@ class UI:
         print("")
 
     def label_nilai(
-        self, label: str = "Label", nilai: int = 0, penting: bool = False
+        self,
+        label: str = "Label",
+        nilai: int | float = 0,
+        penting: bool = False,
+        spasi_label: int = 18,
+        spasi_nilai: int = 17,
     ) -> None:
         wrapper_nilai = (
             f"{Fore.GREEN if nilai >= 0 else Fore.RED}{nilai}"
@@ -48,7 +53,9 @@ class UI:
             else f"{Fore.CYAN}{nilai}"
         )
 
-        print(f"{label:18}:{wrapper_nilai.rjust(17, ' ')}{Style.RESET_ALL}")
+        print(
+            f"{label:{spasi_label}}:{wrapper_nilai.rjust(spasi_nilai, ' ')}{Style.RESET_ALL}"
+        )
 
     def print_dataframe_murni(self, df: pd.DataFrame) -> None:
         print(df)

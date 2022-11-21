@@ -29,8 +29,8 @@ EXCHANGE = "BINANCE"
 # d_lambat = 10
 
 # RTE
-periode_ema = 50
-periode_ema_cepat = 37
+periode_ema = 24
+periode_ema_cepat = 8
 dual_ema = True
 smoothing = 5
 demastoch = False
@@ -44,7 +44,7 @@ strategi_backtest = Strategi(
     ASET,
     EXCHANGE,
     backtest=True,
-    jumlah_periode_backtest=4032,
+    jumlah_periode_backtest=864,
     saldo_backtest=60,
     leverage_backtest=20,
 )

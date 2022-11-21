@@ -15,6 +15,7 @@ from baca_konfig import Inisiasi
 from fungsi.fungsi import Fungsi
 from model.model import Model
 from tindakan.tindakan import Order
+from ui.ui_sederhana import UI
 
 __author__ = "Johanes Indra Pradana Pao"
 __copyright__ = "Copyright 2022, Undecided"
@@ -60,6 +61,8 @@ class Strategi:
         self.exchange = exchange
         self.leverage = leverage
         self.backtest = backtest
+        if not self.backtest:
+            self.ui = UI()
         self.jumlah_periode_backtest = jumlah_periode_backtest
         if self.backtest and self.jumlah_periode_backtest <= 0:
             raise ValueError(
@@ -465,9 +468,7 @@ class Strategi:
                     if "MARGIN_CALL_SHORT" in df_backtest.iloc[baris]["tindakan"]:
                         harga_keluar = df_backtest.iloc[baris]["close_tf_kecil"]
                         harga_short = df_backtest.iloc[baris - 1]["harga_short"]
-                        profit_dan_loss = -saldo_short - (
-                            saldo_short * 0.01 / LEVERAGE
-                        )
+                        profit_dan_loss = -saldo_short - (saldo_short * 0.01 / LEVERAGE)
                         SALDO = SALDO + saldo_short + profit_dan_loss
                         saldo_short = 0
                     if "MARGIN_CALL_LONG" in df_backtest.iloc[baris]["tindakan"]:
@@ -996,7 +997,7 @@ class Strategi:
             self.periode_ema_cepat = periode_ema_cepat
         # nilai EMA baru menunjukkan nilai yang benar saat data historikal adalah minimal 600 periode
         self.multiplier = math.ceil(
-            600 / self.periode_ema
+            800 / self.periode_ema
             if not self.dual_ema
             else max(self.periode_ema, self.periode_ema_cepat)
         )
@@ -1092,27 +1093,18 @@ class Strategi:
                 data_short = DATA_POSISI_FUTURES[
                     DATA_POSISI_FUTURES["positionSide"] == "SHORT"
                 ]
-                nilai_usdt_short = float(data_short.iloc[0]["isolatedWallet"])
                 harga_masuk_short = float(data_short.iloc[0]["entryPrice"])
-                leverage_short = float(data_short.iloc[0]["leverage"])
-                self.kuantitas_short_rte = round(
-                    nilai_usdt_short * leverage_short / harga_masuk_short
-                )
+                # kuantitas short yang perlu ditutup
+                self.kuantitas_short_rte = abs(int(data_short.iloc[0]["positionAmt"]))
             if "LONG" in POSISI:
                 data_long = DATA_POSISI_FUTURES[
                     DATA_POSISI_FUTURES["positionSide"] == "LONG"
                 ]
-                data_long = DATA_POSISI_FUTURES[
-                    DATA_POSISI_FUTURES["positionSide"] == "LONG"
-                ]
-                nilai_usdt_long = float(data_long.iloc[0]["isolatedWallet"])
                 harga_masuk_long = float(data_long.iloc[0]["entryPrice"])
-                leverage_long = float(data_long.iloc[0]["leverage"])
-                self.kuantitas_long_rte = round(
-                    nilai_usdt_long * leverage_long / harga_masuk_long
-                )
+                # kuantitas long yang perlu ditutup
+                self.kuantitas_long_rte = int(data_long.iloc[0]["positionAmt"])
 
-            USDT_AKUN = 10
+            USDT_AKUN = 5
             harga_koin_terakhir = self.akun.harga_koin_terakhir(self.simbol)
             kuantitas_koin = float(USDT_AKUN * self.leverage / harga_koin_terakhir)
 
@@ -1182,24 +1174,33 @@ class Strategi:
                 )
             else:
                 if not self.demastoch:
-                    print(
-                        f"Harga Penutupan terakhir: {Fore.GREEN if harga_penutupan_terakhir > ema_cepat else Fore.RED}{harga_penutupan_terakhir}{Style.RESET_ALL}"  # type: ignore
+                    self.ui.label_nilai(
+                        label="Harga Penutupan terakhir",
+                        nilai=harga_penutupan_terakhir,
+                        spasi_label=35,
                     )
                     print(f"\nSebelumnya:")
-                    print(
-                        f"Exponential Moving Average\t\t: {Fore.RED if ema_cepat_sebelumnya <= ema_sebelumnya else Fore.GREEN}{round(ema_sebelumnya, 4)}{Style.RESET_ALL}"  # type: ignore
+                    self.ui.label_nilai(
+                        label="Exponential Moving Average",
+                        nilai=round(ema_sebelumnya, 6),
+                        spasi_label=35,
                     )
-                    print(
-                        f"Exponential Moving Average [Cepat]\t\t: {Fore.RED if ema_cepat_sebelumnya <= ema_sebelumnya else Fore.GREEN}{round(ema_cepat_sebelumnya, 4)}{Style.RESET_ALL}"  # type: ignore
+                    self.ui.label_nilai(
+                        label="Exponential Moving Average [Cepat]",
+                        nilai=round(ema_cepat_sebelumnya, 6),  # type: ignore
+                        spasi_label=35,
                     )
                     print(f"\nTerakhir:")
-                    print(
-                        f"Exponential Moving Average\t\t: {Fore.RED if ema_cepat <= ema else Fore.GREEN}{round(ema, 4)}{Style.RESET_ALL}"  # type: ignore
+                    self.ui.label_nilai(
+                        label="Exponential Moving Average",
+                        nilai=round(ema, 6),
+                        spasi_label=35,
                     )
-                    print(
-                        f"Exponential Moving Average [Cepat]\t\t: {Fore.RED if ema_cepat <= ema else Fore.GREEN}{round(ema_cepat, 4)}{Style.RESET_ALL}"  # type:ignore
+                    self.ui.label_nilai(
+                        label="Exponential Moving Average [Cepat]",
+                        nilai=round(ema_cepat, 6),  # type: ignore
+                        spasi_label=35,
                     )
-
                     print(
                         f"\nMODE STRATEGI: \nRIDE THE EMA - DUAL EMA {Fore.RED if ema_cepat <= ema else Fore.GREEN}[{MODE_EMA}]{Style.RESET_ALL}"  # type: ignore
                     )
@@ -1254,7 +1255,9 @@ class Strategi:
                 if MODE_EMA != "MENUNGGU_TREND":
                     if MODE_EMA == "EMA_NAIK":
                         # cek posisi short dan tutup
-                        if "SHORT" in POSISI and self.kuantitas_short_rte > 0 and harga_penutupan_terakhir < (harga_masuk_short - harga_penutupan_terakhir * 0.01 / self.leverage):  # type: ignore
+                        if (
+                            "SHORT" in POSISI and self.kuantitas_short_rte > 0
+                        ):  # and harga_penutupan_terakhir < (harga_masuk_short - harga_penutupan_terakhir * 0.01 / self.leverage):  # type: ignore
                             self.order.tutup_short(
                                 self.kuantitas_short_rte, leverage=self.leverage
                             )
@@ -1265,7 +1268,9 @@ class Strategi:
                             )
                     else:
                         # cek posisi long dan tutup
-                        if "LONG" in POSISI and self.kuantitas_long_rte > 0 and harga_penutupan_terakhir > (harga_masuk_long + harga_penutupan_terakhir * 0.01 / self.leverage):  # type: ignore
+                        if (
+                            "LONG" in POSISI and self.kuantitas_long_rte > 0
+                        ):  # and harga_penutupan_terakhir > (harga_masuk_long + harga_penutupan_terakhir * 0.01 / self.leverage):  # type: ignore
                             self.order.tutup_long(
                                 self.kuantitas_long_rte, leverage=self.leverage
                             )
@@ -1437,9 +1442,9 @@ class Strategi:
                     if not self.demastoch:
                         if MODE_RTE != "MENUNGGU_TREND":  # type: ignore
                             if MODE_RTE == "RTE_NAIK":  # type: ignore
-                                if "SHORT" in posisi and harga_sebelumnya < (
-                                    harga_short - harga_sebelumnya * 0.01 / LEVERAGE
-                                ):
+                                if "SHORT" in posisi:  # and harga_sebelumnya < (
+                                    # harga_short - harga_sebelumnya * 0.01 / LEVERAGE
+                                    # ):
                                     tindakan.append("TUTUP_SHORT")
                                     posisi.remove("SHORT")
                                     harga_short.clear()
@@ -1450,9 +1455,9 @@ class Strategi:
                                 mode_ema.append(MODE_EMA)
                                 mode_rte.append(MODE_RTE)  # type: ignore
                             if MODE_RTE == "RTE_TURUN":  # type: ignore
-                                if "LONG" in posisi and harga_sebelumnya > (
-                                    harga_long + harga_sebelumnya * 0.01 / LEVERAGE
-                                ):  # type: ignore
+                                if "LONG" in posisi:  # and harga_sebelumnya > (
+                                    # harga_long + harga_sebelumnya * 0.01 / LEVERAGE
+                                    # ):  # type: ignore
                                     tindakan.append("TUTUP_LONG")
                                     posisi.remove("LONG")
                                     harga_long.clear()
@@ -1469,7 +1474,7 @@ class Strategi:
                         if MODE_RTE != "MENUNGGU_TREND":  # type: ignore
                             if MODE_RTE == "RTE_NAIK":  # type: ignore
                                 if "SHORT" in posisi and harga_sebelumnya < (
-                                    harga_short - harga_sebelumnya * 0.01 / LEVERAGE
+                                    harga_short - harga_sebelumnya * 0.016 / LEVERAGE
                                 ):
                                     tindakan.append("TUTUP_SHORT")
                                     posisi.remove("SHORT")
@@ -1483,7 +1488,7 @@ class Strategi:
                                 mode_rte.append(MODE_RTE)  # type: ignore
                             if MODE_RTE == "RTE_TURUN":  # type: ignore
                                 if "LONG" in posisi and harga_sebelumnya > (
-                                    harga_long + harga_sebelumnya * 0.01 / LEVERAGE
+                                    harga_long + harga_sebelumnya * 0.016 / LEVERAGE
                                 ):
                                     tindakan.append("TUTUP_LONG")
                                     posisi.remove("LONG")
@@ -1499,13 +1504,13 @@ class Strategi:
                             # cek posisi dan tutup
                             if len(posisi) != 0:
                                 if "LONG" in posisi and harga_sebelumnya > (
-                                    harga_long + harga_sebelumnya * 0.01 / LEVERAGE
+                                    harga_long + harga_sebelumnya * 0.016 / LEVERAGE
                                 ):
                                     tindakan.append("TUTUP_LONG")
                                     posisi.remove("LONG")
                                     harga_long.clear()
                                 elif "SHORT" in posisi and harga_sebelumnya < (
-                                    harga_short - harga_sebelumnya * 0.01 / LEVERAGE
+                                    harga_short - harga_sebelumnya * 0.016 / LEVERAGE
                                 ):
                                     tindakan.append("TUTUP_SHORT")
                                     posisi.remove("SHORT")
@@ -1547,7 +1552,7 @@ class Strategi:
                     profit_dan_loss = (
                         harga_keluar - harga_long
                     ) / harga_long * saldo_long * LEVERAGE - (
-                        0.01 * saldo_long / LEVERAGE
+                        0.016 * saldo_long / LEVERAGE
                     )
                     SALDO = SALDO + saldo_long + profit_dan_loss
                     saldo_long = 0
@@ -1557,28 +1562,28 @@ class Strategi:
                     profit_dan_loss = (
                         harga_short - harga_keluar
                     ) / harga_short * saldo_short * LEVERAGE - (
-                        0.01 * saldo_short / LEVERAGE
+                        0.016 * saldo_short / LEVERAGE
                     )
                     SALDO = SALDO + saldo_short + profit_dan_loss
                     saldo_short = 0
                 if "MARGIN_CALL_SHORT" in df_backtest.iloc[baris]["tindakan"]:
                     harga_keluar = df_backtest.iloc[baris - 1]["close"]
                     harga_short = df_backtest.iloc[baris - 1]["harga_short"]
-                    profit_dan_loss = -saldo_short - (saldo_short * 0.01 / LEVERAGE)
+                    profit_dan_loss = -saldo_short - (saldo_short * 0.016 / LEVERAGE)
                     SALDO = SALDO + saldo_short + profit_dan_loss
                     saldo_short = 0
                 if "MARGIN_CALL_LONG" in df_backtest.iloc[baris]["tindakan"]:
                     harga_keluar = df_backtest.iloc[baris - 1]["close"]
                     harga_long = df_backtest.iloc[baris - 1]["harga_long"]
-                    profit_dan_loss = -saldo_long - (saldo_long * 0.01 / LEVERAGE)
+                    profit_dan_loss = -saldo_long - (saldo_long * 0.016 / LEVERAGE)
                     SALDO = SALDO + saldo_long + profit_dan_loss
                     saldo_long = 0
                 if "BUKA_LONG" in df_backtest.iloc[baris]["tindakan"]:
-                    saldo_long = min(SALDO, 15)
+                    saldo_long = min(SALDO, 5)
                     # saldo_long = SALDO / 2
                     SALDO = SALDO - saldo_long
                 if "BUKA_SHORT" in df_backtest.iloc[baris]["tindakan"]:
-                    saldo_short = min(SALDO, 15)
+                    saldo_short = min(SALDO, 5)
                     # saldo_short = SALDO / 2
                     SALDO = SALDO - saldo_short
 
