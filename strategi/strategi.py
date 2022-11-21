@@ -1,6 +1,7 @@
 """
 Script untuk kelas Strategi
-Script untuk implementasi strategi trading berdasarkan pertimbangan pribadi akan beberapa faktor seperti analisa teknikal
+Script untuk implementasi strategi trading berdasarkan pertimbangan pribadi akan beberapa faktor 
+seperti analisa teknikal
 """
 
 import math
@@ -127,7 +128,7 @@ class Strategi:
                 self.interval[1],
                 offset_kosong=True if self.interval[0] == self.interval[1] else False,
             )
-        except:
+        except ValueError as e:
             print(
                 "KESALAHAN: Kami tidak dapat membaca interval waktu yang diberikan, pastikan interval waktu dalam list dengan dua komponen dimana komponen kedua adalah timeframe yang lebih besar atau sama dengan timeframe kecil (komponen pertama)"
             )
@@ -301,7 +302,7 @@ class Strategi:
             LEVERAGE = self.leverage_backtest
             STOKASTIK = list_df_stokastik
 
-            if type(STOKASTIK) == list:
+            if isinstance(STOKASTIK, list):
                 # iterrows pada timeframe kecil
                 list_akhir = []
                 df_backtest = pd.DataFrame()
