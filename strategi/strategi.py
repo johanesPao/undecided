@@ -998,7 +998,7 @@ class Strategi:
             self.periode_ema_cepat = periode_ema_cepat
         # nilai EMA baru menunjukkan nilai yang benar saat data historikal adalah minimal 600 periode
         self.multiplier = math.ceil(
-            800 / self.periode_ema
+            5000 / self.periode_ema
             if not self.dual_ema
             else max(self.periode_ema, self.periode_ema_cepat)
         )
@@ -1109,7 +1109,7 @@ class Strategi:
             harga_koin_terakhir = self.akun.harga_koin_terakhir(self.simbol)
             kuantitas_koin = float(USDT_AKUN * self.leverage / harga_koin_terakhir)
 
-            ema = list_data[0].iloc[-1]["ema"]
+            ema = list_data[0].iloc[-1]["ema"] - 0.000110
             ema_sebelumnya = list_data[0].iloc[-2]["ema"]
 
             if self.dual_ema:
