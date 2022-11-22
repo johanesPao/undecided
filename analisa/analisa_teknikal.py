@@ -184,8 +184,8 @@ class AnalisaTeknikal:
         data: pd.DataFrame,
         periode: int = 50,
         k_tutup: str = "close",
-        k_tinggi: str = 'high',
-        k_rendah: str = 'low',
+        k_tinggi: str = "high",
+        k_rendah: str = "low",
         smoothing: int = 20,
         dual_ema: bool = False,
         periode_ema_cepat: int = 37,
@@ -248,7 +248,15 @@ class AnalisaTeknikal:
         kolom_kembali = (
             [self.k_tinggi, self.k_rendah, self.k_tutup, "ema", "ema_smooth"]
             if not self.dual_ema
-            else [self.k_tinggi, self.k_rendah, self.k_tutup, "ema", "ema_cepat", "ema_smooth", "ema_cepat_smooth"]
+            else [
+                self.k_tinggi,
+                self.k_rendah,
+                self.k_tutup,
+                "ema",
+                "ema_cepat",
+                "ema_smooth",
+                "ema_cepat_smooth",
+            ]
         )
 
         # ema backtest atau live
@@ -259,7 +267,7 @@ class AnalisaTeknikal:
 
         # filter kolom dengan Nan
         kolom_filter = (
-            ["ema, ema_smooth"]
+            ["ema", "ema_smooth"]
             if not self.dual_ema
             else ["ema", "ema_cepat", "ema_smooth", "ema_cepat_smooth"]
         )

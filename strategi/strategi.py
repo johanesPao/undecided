@@ -1105,11 +1105,11 @@ class Strategi:
                 # kuantitas long yang perlu ditutup
                 self.kuantitas_long_rte = int(data_long.iloc[0]["positionAmt"])
 
-            USDT_AKUN = 5
+            USDT_AKUN = 2
             harga_koin_terakhir = self.akun.harga_koin_terakhir(self.simbol)
             kuantitas_koin = float(USDT_AKUN * self.leverage / harga_koin_terakhir)
 
-            ema = list_data[0].iloc[-1]["ema"] - 0.000110
+            ema = list_data[0].iloc[-1]["ema"]  # - 0.000110
             ema_sebelumnya = list_data[0].iloc[-2]["ema"]
 
             if self.dual_ema:
@@ -1324,6 +1324,8 @@ class Strategi:
                     ema = df_backtest.iloc[baris]["ema"]
                     harga_sebelumnya = df_backtest.iloc[baris - 1]["close"]
                     ema_sebelumnya = df_backtest.iloc[baris - 1]["ema"]
+                    ema_smooth = df_backtest.iloc[baris]["ema_smooth"]
+                    ema_smooth_sebelumnya = df_backtest.iloc[baris - 1]["ema_smooth"]
                     if self.dual_ema:
                         ema_cepat = df_backtest.iloc[baris]["ema_cepat"]
                         ema_cepat_sebelumnya = df_backtest.iloc[baris - 1]["ema_cepat"]
@@ -1351,7 +1353,11 @@ class Strategi:
                         harga_short.clear()
 
                     MODE_EMA = (
-                        ("DIATAS_EMA" if harga > ema else "DIBAWAH_EMA")
+                        (
+                            "DIATAS_EMA"
+                            if ema > ema_smooth
+                            else "DIBAWAH_EMA"
+                        )
                         if not self.dual_ema
                         else (
                             "EMA_NAIK"
@@ -1363,7 +1369,7 @@ class Strategi:
                     MODE_EMA_SEBELUMNYA = (
                         (
                             "DIATAS_EMA"
-                            if harga_sebelumnya > ema_sebelumnya
+                            if ema_sebelumnya > ema_smooth_sebelumnya
                             else "DIBAWAH_EMA"
                         )
                         if not self.dual_ema
@@ -1443,9 +1449,9 @@ class Strategi:
                     if not self.demastoch:
                         if MODE_RTE != "MENUNGGU_TREND":  # type: ignore
                             if MODE_RTE == "RTE_NAIK":  # type: ignore
-                                if "SHORT" in posisi:  # and harga_sebelumnya < (
-                                    # harga_short - harga_sebelumnya * 0.01 / LEVERAGE
-                                    # ):
+                                if "SHORT" in posisi and harga_sebelumnya < (
+                                    harga_short - harga_sebelumnya * 0.031 / LEVERAGE
+                                    ):
                                     tindakan.append("TUTUP_SHORT")
                                     posisi.remove("SHORT")
                                     harga_short.clear()
@@ -1456,9 +1462,9 @@ class Strategi:
                                 mode_ema.append(MODE_EMA)
                                 mode_rte.append(MODE_RTE)  # type: ignore
                             if MODE_RTE == "RTE_TURUN":  # type: ignore
-                                if "LONG" in posisi:  # and harga_sebelumnya > (
-                                    # harga_long + harga_sebelumnya * 0.01 / LEVERAGE
-                                    # ):  # type: ignore
+                                if "LONG" in posisi and harga_sebelumnya > (
+                                    harga_long + harga_sebelumnya * 0.031 / LEVERAGE
+                                    ):  # type: ignore
                                     tindakan.append("TUTUP_LONG")
                                     posisi.remove("LONG")
                                     harga_long.clear()
@@ -1552,9 +1558,7 @@ class Strategi:
                     harga_long = df_backtest.iloc[baris - 1]["harga_long"]
                     profit_dan_loss = (
                         harga_keluar - harga_long
-                    ) / harga_long * saldo_long * LEVERAGE - (
-                        0.016 * saldo_long / LEVERAGE
-                    )
+                    ) / harga_long * saldo_long * LEVERAGE - (0.031 * saldo_long)
                     SALDO = SALDO + saldo_long + profit_dan_loss
                     saldo_long = 0
                 if "TUTUP_SHORT" in df_backtest.iloc[baris]["tindakan"]:
@@ -1562,29 +1566,27 @@ class Strategi:
                     harga_short = df_backtest.iloc[baris - 1]["harga_short"]
                     profit_dan_loss = (
                         harga_short - harga_keluar
-                    ) / harga_short * saldo_short * LEVERAGE - (
-                        0.016 * saldo_short / LEVERAGE
-                    )
+                    ) / harga_short * saldo_short * LEVERAGE - (0.031 * saldo_short)
                     SALDO = SALDO + saldo_short + profit_dan_loss
                     saldo_short = 0
                 if "MARGIN_CALL_SHORT" in df_backtest.iloc[baris]["tindakan"]:
                     harga_keluar = df_backtest.iloc[baris - 1]["close"]
                     harga_short = df_backtest.iloc[baris - 1]["harga_short"]
-                    profit_dan_loss = -saldo_short - (saldo_short * 0.016 / LEVERAGE)
+                    profit_dan_loss = -saldo_short - (saldo_short * 0.031)
                     SALDO = SALDO + saldo_short + profit_dan_loss
                     saldo_short = 0
                 if "MARGIN_CALL_LONG" in df_backtest.iloc[baris]["tindakan"]:
                     harga_keluar = df_backtest.iloc[baris - 1]["close"]
                     harga_long = df_backtest.iloc[baris - 1]["harga_long"]
-                    profit_dan_loss = -saldo_long - (saldo_long * 0.016 / LEVERAGE)
+                    profit_dan_loss = -saldo_long - (saldo_long * 0.031)
                     SALDO = SALDO + saldo_long + profit_dan_loss
                     saldo_long = 0
                 if "BUKA_LONG" in df_backtest.iloc[baris]["tindakan"]:
-                    saldo_long = min(SALDO, 5)
+                    saldo_long = min(SALDO, 2)
                     # saldo_long = SALDO / 2
                     SALDO = SALDO - saldo_long
                 if "BUKA_SHORT" in df_backtest.iloc[baris]["tindakan"]:
-                    saldo_short = min(SALDO, 5)
+                    saldo_short = min(SALDO, 2)
                     # saldo_short = SALDO / 2
                     SALDO = SALDO - saldo_short
 
