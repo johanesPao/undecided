@@ -131,12 +131,18 @@ class AnalisaTeknikal:
         # Jika bukan backtest, kembalikan kolom k_lambat dan d_lambat dari baris terakhir data
         # Dengan perubahan data API endpoint ke tradingview, baris terakhir akan menghasilkan nilai yang berjalan dan belum close, ambil data pada urutan baris kedua terakhir saja (dalam kasus backtest false) atau sampai dengan dua baris terakhir saja (dalam kasus backtest true)
         if not self.backtest:
-            self.df = self.df[[k_tutup, "k_lambat", "d_lambat"]].iloc[-3:-1, :]
+            self.df = self.df[
+                [k_tinggi, k_rendah, k_tutup, "k_lambat", "d_lambat"]
+            ].iloc[-3:-1, :]
         else:
-            self.df = self.df[[k_tutup, "k_lambat", "d_lambat"]].iloc[:-1, :]
+            self.df = self.df[
+                [k_tinggi, k_rendah, k_tutup, "k_lambat", "d_lambat"]
+            ].iloc[:-1, :]
 
         # Membuang data dengan nilai NaN pada kolom k_lambat atau d_lambat
-        self.df.dropna(subset=[k_tutup, "k_lambat", "d_lambat"], inplace=True)
+        self.df.dropna(
+            subset=[k_tinggi, k_rendah, k_tutup, "k_lambat", "d_lambat"], inplace=True
+        )
 
         # Mengembalikan dataframe yang telah diolah
         return self.df

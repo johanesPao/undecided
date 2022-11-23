@@ -38,7 +38,8 @@ class Strategi:
         leverage: int = 10,
         backtest: bool = False,
         jumlah_periode_backtest: int = 0,
-        saldo_backtest: float = 40,
+        saldo_backtest: float = 0,
+        jumlah_trade_usdt_live: float = 0,
         leverage_backtest: int = 10,
     ) -> None:
         self.inisiasi = Inisiasi()
@@ -70,6 +71,7 @@ class Strategi:
                 f"Jika backtest={self.backtest}, maka jumlah_periode_backtest harus lebih besar dari 0."
             )
         self.saldo_backtest = saldo_backtest
+        self.jumlah_trade_usdt_live = jumlah_trade_usdt_live
         self.leverage_backtest = leverage_backtest
         self.fungsi = Fungsi()
         self.HOLD_TRADE = ""
@@ -109,6 +111,8 @@ class Strategi:
         self.k_lambat = k_lambat
         self.d_lambat = d_lambat
         self.dua = 2
+        # state interval
+        self.INTERVAL_SAMA = self.interval[0] == self.interval[1]
 
         if len(self.interval) != self.dua:
             return print(
@@ -116,9 +120,10 @@ class Strategi:
             )
 
         self.jumlah_bar = (
-            self.jumlah_periode_backtest
-            if self.backtest
-            else self.k_cepat + self.k_lambat + self.d_lambat
+            self.k_cepat
+            + self.k_lambat
+            + self.d_lambat
+            + (self.jumlah_periode_backtest if self.backtest else 0)
         )
 
         self.data_stokastik = []
@@ -156,36 +161,28 @@ class Strategi:
                 data_short = DATA_POSISI_FUTURES[
                     DATA_POSISI_FUTURES["positionSide"] == "SHORT"
                 ]
-                nilai_usdt_short = float(data_short.iloc[0]["isolatedWallet"])
-                harga_masuk_short = float(data_short.iloc[0]["entryPrice"])
-                leverage_short = float(data_short.iloc[0]["leverage"])
-                self.kuantitas_short_nir = round(
-                    (nilai_usdt_short + 0.5) * leverage_short / harga_masuk_short
-                )
+                # kuantitas short yang perlu ditutup
+                self.kuantitas_short_nir = abs(int(data_short.iloc[0]["positionAmt"]))
             if "LONG" in POSISI:
                 data_long = DATA_POSISI_FUTURES[
                     DATA_POSISI_FUTURES["positionSide"] == "LONG"
                 ]
-                data_long = DATA_POSISI_FUTURES[
-                    DATA_POSISI_FUTURES["positionSide"] == "LONG"
-                ]
-                nilai_usdt_long = float(data_long.iloc[0]["isolatedWallet"])
-                harga_masuk_long = float(data_long.iloc[0]["entryPrice"])
-                leverage_long = float(data_long.iloc[0]["leverage"])
-                self.kuantitas_long_nir = round(
-                    (nilai_usdt_long + 0.5) * leverage_long / harga_masuk_long
-                )
+                # kuantitas long yang perlu ditutup
+                self.kuantitas_long_nir = int(data_long.iloc[0]["positionAmt"])
 
-            USDT_AKUN = (self.saldo_tersedia + self.saldo_terpakai) - 1
             harga_koin_terakhir = self.akun.harga_koin_terakhir(self.simbol)
-            kuantitas_koin = float(USDT_AKUN / 2 * self.leverage / harga_koin_terakhir)
+            kuantitas_koin = float(
+                self.jumlah_trade_usdt_live * self.leverage / harga_koin_terakhir
+            )
 
             # set nilai k_lambat_tf_kecil, d_lambat_tf_kecil, k_lambat_tf_besar dan d_lambat_tf_besar
             # untuk evaluasi state strategi
-            k_lambat_tf_kecil = list_df_stokastik[0].iloc[-1]["k_lambat"]
-            d_lambat_tf_kecil = list_df_stokastik[0].iloc[-1]["d_lambat"]
-            k_lambat_tf_kecil_sebelumnya = list_df_stokastik[0].iloc[-2]["k_lambat"]
-            d_lambat_tf_kecil_sebelumnya = list_df_stokastik[0].iloc[-2]["d_lambat"]
+
+            if not self.INTERVAL_SAMA:
+                k_lambat_tf_kecil = list_df_stokastik[0].iloc[-1]["k_lambat"]
+                d_lambat_tf_kecil = list_df_stokastik[0].iloc[-1]["d_lambat"]
+                k_lambat_tf_kecil_sebelumnya = list_df_stokastik[0].iloc[-2]["k_lambat"]
+                d_lambat_tf_kecil_sebelumnya = list_df_stokastik[0].iloc[-2]["d_lambat"]
             k_lambat_tf_besar = list_df_stokastik[1].iloc[-1]["k_lambat"]
             d_lambat_tf_besar = list_df_stokastik[1].iloc[-1]["d_lambat"]
             k_lambat_tf_besar_sebelumnya = list_df_stokastik[1].iloc[-2]["k_lambat"]
@@ -206,146 +203,172 @@ class Strategi:
                     else "SHORT_LONG"
                     if k_lambat_tf_besar < d_lambat_tf_besar
                     and k_lambat_tf_besar_sebelumnya >= d_lambat_tf_besar_sebelumnya
-                    else "MENUNGGU_PERMULAAN_TREND"
+                    else "MENUNGGU_TREND"
                 )
             )
 
-            if self.interval[0] != self.interval[1]:
-                print(
-                    f"k_lambat pada TF kecil: {Fore.GREEN if k_lambat_tf_kecil > d_lambat_tf_kecil else Fore.RED}{round(k_lambat_tf_kecil, 4)}{Style.RESET_ALL}"
-                )
-                print(
-                    f"d_lambat pada TF kecil: {Fore.GREEN if k_lambat_tf_kecil > d_lambat_tf_kecil else Fore.RED}{round(d_lambat_tf_kecil, 4)}{Style.RESET_ALL}"
-                )
-                print(
-                    f"k_lambat pada TF besar: {Fore.GREEN if k_lambat_tf_besar > d_lambat_tf_besar else Fore.RED}{round(k_lambat_tf_besar, 4)}{Style.RESET_ALL}"
-                )
-                print(
-                    f"d_lambat pada TF besar: {Fore.GREEN if k_lambat_tf_besar > d_lambat_tf_besar else Fore.RED}{round(d_lambat_tf_besar, 4)}{Style.RESET_ALL}"
-                )
+            if not self.INTERVAL_SAMA:
+                print(f"k_lambat pada TF kecil: {Fore.GREEN if k_lambat_tf_kecil > d_lambat_tf_kecil else Fore.RED}{round(k_lambat_tf_kecil, 5)}{Style.RESET_ALL}")  # type: ignore
+                print(f"d_lambat pada TF kecil: {Fore.GREEN if k_lambat_tf_kecil > d_lambat_tf_kecil else Fore.RED}{round(d_lambat_tf_kecil, 5)}{Style.RESET_ALL}")  # type: ignore
+                print(f"k_lambat pada TF besar: {Fore.GREEN if k_lambat_tf_besar > d_lambat_tf_besar else Fore.RED}{round(k_lambat_tf_besar, 5)}{Style.RESET_ALL}")  # type: ignore
+                print(f"d_lambat pada TF besar: {Fore.GREEN if k_lambat_tf_besar > d_lambat_tf_besar else Fore.RED}{round(d_lambat_tf_besar, 5)}{Style.RESET_ALL}")  # type: ignore
             else:
-                print(
-                    f"k_lambat: {Fore.GREEN if k_lambat_tf_kecil > d_lambat_tf_kecil else Fore.RED}{round(k_lambat_tf_kecil, 4)}{Style.RESET_ALL}"
-                )
-                print(
-                    f"d_lambat: {Fore.GREEN if k_lambat_tf_kecil > d_lambat_tf_kecil else Fore.RED}{round(d_lambat_tf_kecil, 4)}{Style.RESET_ALL}"
-                )
+                print(f"k_lambat: {Fore.GREEN if k_lambat_tf_besar > d_lambat_tf_besar else Fore.RED}{round(k_lambat_tf_besar, 5)}{Style.RESET_ALL}")  # type: ignore
+                print(f"d_lambat: {Fore.GREEN if k_lambat_tf_besar > d_lambat_tf_besar else Fore.RED}{round(d_lambat_tf_besar, 5)}{Style.RESET_ALL}")  # type: ignore
             print(f"\nHARGA {self.simbol} TERAKHIR: {round(harga_koin_terakhir, 4)}")
             print(
-                f"\nMODE STRATEGI: [{Fore.GREEN if self.HOLD_TRADE == 'LONG_SHORT' else Fore.RED}{self.HOLD_TRADE}{Style.RESET_ALL}]"
+                f"\nMODE STRATEGI: [{Fore.GREEN if self.HOLD_TRADE == 'LONG_SHORT' else Fore.RED if self.HOLD_TRADE == 'SHORT_LONG' else Fore.YELLOW}{self.HOLD_TRADE}{Style.RESET_ALL}]"
             )
 
             # STRATEGI HOLD
             # jika variabel self.HOLD_TRADE == 'LONG_SHORT'
-            if self.HOLD_TRADE == "LONG_SHORT":
-                # jika tidak ada posisi LONG
-                # print("BUKA_LONG")
-                # jangan memaksakan diri untuk membuka posisi LONG
-                # jika timeframe kecil tidak mendukung
-                if "LONG" not in POSISI and (
-                    k_lambat_tf_kecil >= d_lambat_tf_kecil
-                    and k_lambat_tf_kecil_sebelumnya < d_lambat_tf_kecil_sebelumnya
-                ):
-                    self.kuantitas_long_nir = self.order.buka_long(
-                        kuantitas_koin, leverage=self.leverage
-                    )
-                # jika k_lambat < d_lambat pada timeframe kecil
-                if (
-                    k_lambat_tf_kecil < d_lambat_tf_kecil
-                    and k_lambat_tf_kecil_sebelumnya >= d_lambat_tf_kecil_sebelumnya
-                ):
-                    # jika tidak ada posisi SHORT
-                    if "SHORT" not in POSISI:
-                        self.kuantitas_short_nir = self.order.buka_short(
-                            kuantitas_koin, leverage=self.leverage
-                        )
-                # jika ada posisi SHORT
-                elif "SHORT" in POSISI and self.kuantitas_short_nir > 0:  # type: ignore
-                    self.order.tutup_short(
-                        self.kuantitas_short_nir, leverage=self.leverage
-                    )
-                    self.kuantitas_short_nir = 0
-            # jika variabel self.HOLD_TRADE == 'SHORT_LONG
-            elif self.HOLD_TRADE == "SHORT_LONG":
-                # jika tidak ada posisi SHORT
-                # print("BUKA_SHORT")
-                # jangan memaksakan diri untuk membuka posisi SHORT
-                # jika timeframe kecil tidak mendukung
-                if "SHORT" not in POSISI and (
-                    k_lambat_tf_kecil < d_lambat_tf_kecil
-                    and k_lambat_tf_kecil_sebelumnya >= d_lambat_tf_kecil_sebelumnya
-                ):
-                    self.kuantitas_short_nir = self.order.buka_short(
-                        kuantitas_koin, leverage=self.leverage
-                    )
-                # jika k_lambat >= d_lambat pada timeframe kecil
-                if (
-                    k_lambat_tf_kecil >= d_lambat_tf_kecil
-                    and k_lambat_tf_kecil_sebelumnya < d_lambat_tf_kecil_sebelumnya
-                ):
+            if self.HOLD_TRADE != "MENUNGGU_TREND":
+                if self.HOLD_TRADE == "LONG_SHORT":
                     # jika tidak ada posisi LONG
-                    if "LONG" not in POSISI:
+                    # print("BUKA_LONG")
+                    # jangan memaksakan diri untuk membuka posisi LONG
+                    # jika timeframe kecil tidak mendukung
+                    if "LONG" not in POSISI and (
+                        k_lambat_tf_kecil >= d_lambat_tf_kecil  # type: ignore
+                        if not self.INTERVAL_SAMA
+                        else k_lambat_tf_besar >= d_lambat_tf_besar
+                    ):
                         self.kuantitas_long_nir = self.order.buka_long(
                             kuantitas_koin, leverage=self.leverage
                         )
-                # jika ada posisi LONG
-                elif "LONG" in POSISI and self.kuantitas_long_nir > 0:  # type: ignore
-                    self.order.tutup_long(
-                        self.kuantitas_long_nir, leverage=self.leverage
-                    )
-                    self.kuantitas_long_nir = 0
+                    # jika k_lambat < d_lambat pada timeframe kecil
+                    if (
+                        k_lambat_tf_kecil < d_lambat_tf_kecil  # type: ignore
+                        if not self.INTERVAL_SAMA
+                        else k_lambat_tf_besar < d_lambat_tf_besar
+                    ):
+                        # jika tidak ada posisi SHORT
+                        if "SHORT" not in POSISI:
+                            self.kuantitas_short_nir = self.order.buka_short(
+                                kuantitas_koin, leverage=self.leverage
+                            )
+                    # jika ada posisi SHORT
+                    elif "SHORT" in POSISI and self.kuantitas_short_nir > 0:  # type: ignore
+                        self.order.tutup_short(
+                            self.kuantitas_short_nir, leverage=self.leverage
+                        )
+                        self.kuantitas_short_nir = 0
+                # jika variabel self.HOLD_TRADE == 'SHORT_LONG
+                elif self.HOLD_TRADE == "SHORT_LONG":
+                    # jika tidak ada posisi SHORT
+                    # print("BUKA_SHORT")
+                    # jangan memaksakan diri untuk membuka posisi SHORT
+                    # jika timeframe kecil tidak mendukung
+                    if "SHORT" not in POSISI and (
+                        k_lambat_tf_kecil < d_lambat_tf_kecil  # type: ignore
+                        if not self.INTERVAL_SAMA
+                        else k_lambat_tf_besar < d_lambat_tf_besar
+                    ):
+                        self.kuantitas_short_nir = self.order.buka_short(
+                            kuantitas_koin, leverage=self.leverage
+                        )
+                    # jika k_lambat >= d_lambat pada timeframe kecil
+                    if (
+                        k_lambat_tf_kecil >= d_lambat_tf_kecil  # type: ignore
+                        if not self.INTERVAL_SAMA
+                        else k_lambat_tf_besar >= d_lambat_tf_besar
+                    ):
+                        # jika tidak ada posisi LONG
+                        if "LONG" not in POSISI:
+                            self.kuantitas_long_nir = self.order.buka_long(
+                                kuantitas_koin, leverage=self.leverage
+                            )
+                    # jika ada posisi LONG
+                    elif "LONG" in POSISI and self.kuantitas_long_nir > 0:  # type: ignore
+                        self.order.tutup_long(
+                            self.kuantitas_long_nir, leverage=self.leverage
+                        )
+                        self.kuantitas_long_nir = 0
 
         # FUNGSI SAAT BACKTEST
         def backtest(list_df_stokastik) -> str:
             # VARIABEL DAN KONSTANTA
-            SALDO = self.saldo_backtest
-            LEVERAGE = self.leverage_backtest
-            STOKASTIK = list_df_stokastik
+            # SALDO = self.saldo_backtest
+            # LEVERAGE = self.leverage_backtest
+            # STOKASTIK = list_df_stokastik
 
-            if isinstance(STOKASTIK, list):
+            if isinstance(list_df_stokastik, list):
                 # iterrows pada timeframe kecil
                 list_akhir = []
                 df_backtest = pd.DataFrame()
 
                 # pembentukan df inisial waktu_tf_kecil, close_tf_kecil, k_lambat_tf_kecil, d_lambat_tf_kecil, waktu_tf_besar, k_lambat_tf_besar, d_lambat_tf_besar
                 # type: ignore : pasti mengembalikan list
-                for baris in STOKASTIK[0].iterrows():
+                for baris in list_df_stokastik[0].iterrows():
                     # kembalikan waktu_tf_kecil, waktu_tf_besar, k_lambat_tf_kecil,
                     # d_lambat_tf_kecil, k_lambat_tf_besar, d_lambat_tf_besar
                     waktu_tf_kecil = baris[0]
+                    tinggi_tf_kecil = baris[1]["high"]
+                    rendah_tf_kecil = baris[1]["low"]
                     close_tf_kecil = baris[1]["close"]
                     k_lambat_tf_kecil = baris[1]["k_lambat"]
                     d_lambat_tf_kecil = baris[1]["d_lambat"]
                     # slice dataframe tf_besar dengan waktu_tf_besar <= waktu_tf_kecil
                     # timeframe besar yang berbeda membutuhkan offset yang berbeda
-                    df_tf_besar = STOKASTIK[1][
-                        STOKASTIK[1].index <= (waktu_tf_kecil - self.offset)
+                    df_tf_besar = list_df_stokastik[1][
+                        list_df_stokastik[1].index <= (waktu_tf_kecil - self.offset)
                     ].iloc[-1:, :]
+                    tinggi_tf_besar = df_tf_besar.iloc[-1]["high"]
+                    rendah_tf_besar = df_tf_besar.iloc[-1]["low"]
+                    close_tf_besar = df_tf_besar.iloc[-1]["close"]
                     waktu_tf_besar = df_tf_besar.index[0]
                     k_lambat_tf_besar = df_tf_besar.iloc[-1]["k_lambat"]
                     d_lambat_tf_besar = df_tf_besar.iloc[-1]["d_lambat"]
-                    list_akhir.append(
-                        [
+                    # list umum untuk beda interval dan sama interval
+                    list_interval_umum = [
+                        waktu_tf_besar,
+                        tinggi_tf_besar,
+                        rendah_tf_besar,
+                        close_tf_besar,
+                        k_lambat_tf_besar,
+                        d_lambat_tf_besar,
+                    ]
+                    # jika interval berbeda
+                    if not self.INTERVAL_SAMA:
+                        list_interval_beda = [
                             waktu_tf_kecil,
+                            tinggi_tf_kecil,
+                            rendah_tf_kecil,
                             close_tf_kecil,
                             k_lambat_tf_kecil,
                             d_lambat_tf_kecil,
-                            waktu_tf_besar,
-                            k_lambat_tf_besar,
-                            d_lambat_tf_besar,
                         ]
+                        for i in range(len(list_interval_umum)):
+                            list_interval_beda.append(list_interval_umum[i])
+                    list_akhir.append(
+                        list_interval_umum
+                        if self.INTERVAL_SAMA
+                        else list_interval_beda  # type: ignore
                     )
-                    df_backtest = pd.DataFrame(
-                        list_akhir,
-                        columns=[
+                    # list kolom umum
+                    list_kolom_umum = [
+                        "waktu_tf_besar",
+                        "tinggi_tf_besar",
+                        "rendah_tf_besar",
+                        "close_tf_besar",
+                        "k_lambat_tf_besar",
+                        "d_lambat_tf_besar",
+                    ]
+                    # tambahan list kolom interval beda
+                    if not self.INTERVAL_SAMA:
+                        list_kolom_int_beda = [
                             "waktu_tf_kecil",
+                            "tinggi_tf_kecil",
+                            "rendah_tf_kecil",
                             "close_tf_kecil",
                             "k_lambat_tf_kecil",
                             "d_lambat_tf_kecil",
-                            "waktu_tf_besar",
-                            "k_lambat_tf_besar",
-                            "d_lambat_tf_besar",
-                        ],
+                        ]
+                        for i in range(len(list_kolom_umum)):
+                            list_kolom_int_beda.append(list_kolom_umum[i])
+                    df_backtest = pd.DataFrame(
+                        list_akhir,
+                        columns=list_kolom_umum if self.INTERVAL_SAMA else list_kolom_int_beda,  # type: ignore
                     )
 
                 # iterasi pada dataframe untuk kolom tindakan, posisi, harga_long, harga_short
@@ -353,23 +376,64 @@ class Strategi:
                 posisi = []
                 harga_long = []
                 harga_short = []
+                list_df_mode = []
                 list_df_posisi = []
                 list_df_tindakan = []
                 list_df_harga_long = []
                 list_df_harga_short = []
                 for baris in range(len(df_backtest)):
                     tindakan = []
-                    harga = df_backtest.iloc[baris]["close_tf_kecil"]
-                    k_lambat_tf_kecil = df_backtest.iloc[baris]["k_lambat_tf_kecil"]
-                    d_lambat_tf_kecil = df_backtest.iloc[baris]["d_lambat_tf_kecil"]
+                    mode = []
+                    harga = (
+                        df_backtest.iloc[baris]["close_tf_kecil"]
+                        if not self.INTERVAL_SAMA
+                        else df_backtest.iloc[baris]["close_tf_besar"]
+                    )
+                    rendah = (
+                        df_backtest.iloc[baris]["rendah_tf_kecil"]
+                        if not self.INTERVAL_SAMA
+                        else df_backtest.iloc[baris]["rendah_tf_besar"]
+                    )
+                    tinggi = (
+                        df_backtest.iloc[baris]["tinggi_tf_kecil"]
+                        if not self.INTERVAL_SAMA
+                        else df_backtest.iloc[baris]["tinggi_tf_besar"]
+                    )
+                    if not self.INTERVAL_SAMA:
+                        k_lambat_tf_kecil = df_backtest.iloc[baris]["k_lambat_tf_kecil"]
+                        d_lambat_tf_kecil = df_backtest.iloc[baris]["d_lambat_tf_kecil"]
                     k_lambat_tf_besar = df_backtest.iloc[baris]["k_lambat_tf_besar"]
                     d_lambat_tf_besar = df_backtest.iloc[baris]["d_lambat_tf_besar"]
+                    k_lambat_tf_besar_sebelumnya = df_backtest.iloc[baris - 1][
+                        "k_lambat_tf_besar"
+                    ]
+                    d_lambat_tf_besar_sebelumnya = df_backtest.iloc[baris - 1][
+                        "d_lambat_tf_besar"
+                    ]
 
                     HOLD_TRADE = (
-                        "LONG_SHORT"
-                        if k_lambat_tf_besar >= d_lambat_tf_besar
-                        else "SHORT_LONG"
+                        ("MENUNGGU_TREND")
+                        if baris == 0
+                        else (
+                            "LONG_SHORT"
+                            if k_lambat_tf_besar >= d_lambat_tf_besar
+                            else "SHORT_LONG"
+                        )
+                        if len(posisi) != 0
+                        else (
+                            "LONG_SHORT"
+                            if k_lambat_tf_besar >= d_lambat_tf_besar
+                            and k_lambat_tf_besar_sebelumnya
+                            < d_lambat_tf_besar_sebelumnya
+                            else "SHORT_LONG"
+                            if k_lambat_tf_besar < d_lambat_tf_besar
+                            and k_lambat_tf_besar_sebelumnya
+                            >= d_lambat_tf_besar_sebelumnya
+                            else "MENUNGGU_TREND"
+                        )
                     )
+
+                    mode.append(HOLD_TRADE)
 
                     # Cek semua posisi pada masing - masing interval,
                     # jika ada posisi short atau long dengan
@@ -377,59 +441,84 @@ class Strategi:
                     # margin call dan hapus posisi
                     if (
                         "LONG" in posisi
-                        and (harga - harga_long) / harga_long * LEVERAGE <= -1
+                        and (rendah - harga_long) / harga_long * self.leverage_backtest
+                        <= -0.8
                     ):
                         tindakan.append("MARGIN_CALL_LONG")
                         posisi.remove("LONG")
                         harga_long.clear()
                     if (
                         "SHORT" in posisi
-                        and (harga_short - harga) / harga_short * LEVERAGE <= -1
+                        and (harga_short - tinggi)
+                        / harga_short
+                        * self.leverage_backtest
+                        <= -0.8
                     ):
                         tindakan.append("MARGIN_CALL_SHORT")
                         posisi.remove("SHORT")
                         harga_short.clear()
 
-                    if HOLD_TRADE == "LONG_SHORT":
+                    if HOLD_TRADE != "MENUNGGU_TREND":
                         if (
-                            "LONG" not in posisi
-                            and k_lambat_tf_kecil >= d_lambat_tf_kecil
+                            HOLD_TRADE == "LONG_SHORT"
+                            and k_lambat_tf_besar_sebelumnya
+                            < d_lambat_tf_besar_sebelumnya
                         ):
-                            tindakan.append("BUKA_LONG")
-                            posisi.append("LONG")
-                            harga_long.append(harga)
-                        if k_lambat_tf_kecil < d_lambat_tf_kecil:
-                            if "SHORT" not in posisi:
-                                tindakan.append("BUKA_SHORT")
-                                posisi.append("SHORT")
-                                harga_short.append(harga)
-                        elif "SHORT" in posisi:
-                            tindakan.append("TUTUP_SHORT")
-                            posisi.remove("SHORT")
-                            harga_short.clear()
-                    elif HOLD_TRADE == "SHORT_LONG":
-                        if (
-                            "SHORT" not in posisi
-                            and k_lambat_tf_kecil < d_lambat_tf_kecil
-                        ):
-                            tindakan.append("BUKA_SHORT")
-                            posisi.append("SHORT")
-                            harga_short.append(harga)
-                        if k_lambat_tf_kecil >= d_lambat_tf_kecil:
-                            if "LONG" not in posisi:
+                            if "LONG" not in posisi and (
+                                k_lambat_tf_kecil >= d_lambat_tf_kecil  # type: ignore
+                                if not self.INTERVAL_SAMA
+                                else k_lambat_tf_besar >= d_lambat_tf_besar
+                            ):
                                 tindakan.append("BUKA_LONG")
                                 posisi.append("LONG")
                                 harga_long.append(harga)
-                        elif "LONG" in posisi:
-                            tindakan.append("TUTUP_LONG")
-                            posisi.remove("LONG")
-                            harga_long.clear()
+                            if (
+                                k_lambat_tf_kecil < d_lambat_tf_kecil  # type: ignore
+                                if not self.INTERVAL_SAMA
+                                else k_lambat_tf_besar < d_lambat_tf_besar
+                            ):
+                                if "SHORT" not in posisi:
+                                    tindakan.append("BUKA_SHORT")
+                                    posisi.append("SHORT")
+                                    harga_short.append(harga)
+                            elif "SHORT" in posisi:
+                                tindakan.append("TUTUP_SHORT")
+                                posisi.remove("SHORT")
+                                harga_short.clear()
+                        elif (
+                            HOLD_TRADE == "SHORT_LONG"
+                            and k_lambat_tf_besar_sebelumnya
+                            >= d_lambat_tf_besar_sebelumnya
+                        ):
+                            if "SHORT" not in posisi and (
+                                k_lambat_tf_kecil < d_lambat_tf_kecil  # type: ignore
+                                if not self.INTERVAL_SAMA
+                                else k_lambat_tf_besar < d_lambat_tf_besar
+                            ):
+                                tindakan.append("BUKA_SHORT")
+                                posisi.append("SHORT")
+                                harga_short.append(harga)
+                            if (
+                                k_lambat_tf_kecil >= d_lambat_tf_kecil  # type: ignore
+                                if not self.INTERVAL_SAMA
+                                else k_lambat_tf_besar >= d_lambat_tf_besar
+                            ):
+                                if "LONG" not in posisi:
+                                    tindakan.append("BUKA_LONG")
+                                    posisi.append("LONG")
+                                    harga_long.append(harga)
+                            elif "LONG" in posisi:
+                                tindakan.append("TUTUP_LONG")
+                                posisi.remove("LONG")
+                                harga_long.clear()
 
                     list_df_tindakan.append(tindakan)
+                    list_df_mode.append(mode)
                     list_df_posisi.append(posisi.copy())
                     list_df_harga_long.append(harga_long.copy())
                     list_df_harga_short.append(harga_short.copy())
 
+                df_backtest["mode"] = list_df_mode
                 df_backtest["tindakan"] = list_df_tindakan
                 df_backtest["posisi"] = list_df_posisi
                 df_backtest["harga_long"] = list_df_harga_long
@@ -445,77 +534,99 @@ class Strategi:
                 for baris in range(len(df_backtest)):
                     profit_dan_loss = 0
                     if "TUTUP_LONG" in df_backtest.iloc[baris]["tindakan"]:
-                        harga_keluar = df_backtest.iloc[baris]["close_tf_kecil"]
+                        harga_keluar = (
+                            df_backtest.iloc[baris]["close_tf_kecil"]
+                            if not self.INTERVAL_SAMA
+                            else df_backtest.iloc[baris]["close_tf_besar"]
+                        )
                         harga_long = df_backtest.iloc[baris - 1]["harga_long"]
                         profit_dan_loss = (
                             (harga_keluar - harga_long)
                             / harga_long
                             * saldo_long
-                            * LEVERAGE
-                        ) - (saldo_long * 0.01 / LEVERAGE)
-                        SALDO = SALDO + saldo_long + profit_dan_loss
+                            * self.leverage_backtest
+                        ) - (0.031 * saldo_long)
+                        self.saldo_backtest = (
+                            self.saldo_backtest + saldo_long + profit_dan_loss
+                        )
                         saldo_long = 0
                     if "TUTUP_SHORT" in df_backtest.iloc[baris]["tindakan"]:
-                        harga_keluar = df_backtest.iloc[baris]["close_tf_kecil"]
+                        harga_keluar = (
+                            df_backtest.iloc[baris]["close_tf_kecil"]
+                            if not self.INTERVAL_SAMA
+                            else df_backtest.iloc[baris]["close_tf_besar"]
+                        )
                         harga_short = df_backtest.iloc[baris - 1]["harga_short"]
                         profit_dan_loss = (
                             (harga_short - harga_keluar)
                             / harga_short
                             * saldo_short
-                            * LEVERAGE
-                        ) - (saldo_short * 0.01 / LEVERAGE)
-                        SALDO = SALDO + saldo_short + profit_dan_loss
+                            * self.leverage_backtest
+                        ) - (0.031 * saldo_short)
+                        self.saldo_backtest = (
+                            self.saldo_backtest + saldo_short + profit_dan_loss
+                        )
                         saldo_short = 0
                     if "MARGIN_CALL_SHORT" in df_backtest.iloc[baris]["tindakan"]:
-                        harga_keluar = df_backtest.iloc[baris]["close_tf_kecil"]
-                        harga_short = df_backtest.iloc[baris - 1]["harga_short"]
-                        profit_dan_loss = -saldo_short - (saldo_short * 0.01 / LEVERAGE)
-                        SALDO = SALDO + saldo_short + profit_dan_loss
+                        profit_dan_loss = -saldo_short - (
+                            saldo_short * 0.031 / self.leverage_backtest
+                        )
+                        self.saldo_backtest = (
+                            self.saldo_backtest + saldo_short + profit_dan_loss
+                        )
                         saldo_short = 0
                     if "MARGIN_CALL_LONG" in df_backtest.iloc[baris]["tindakan"]:
-                        harga_keluar = df_backtest.iloc[baris]["close_tf_kecil"]
-                        harga_long = df_backtest.iloc[baris - 1]["harga_long"]
-                        profit_dan_loss = -saldo_long - (saldo_long * 0.01 / LEVERAGE)
-                        SALDO = SALDO + saldo_long + profit_dan_loss
+                        profit_dan_loss = -saldo_long - (
+                            saldo_long * 0.01 / self.leverage_backtest
+                        )
+                        self.saldo_backtest = (
+                            self.saldo_backtest + saldo_long + profit_dan_loss
+                        )
                         saldo_long = 0
                     # NOTES: Penggunaan saldo untuk pembukaan posisi tidak harus setengah atau seluruh saldo, tapi akan
                     # selalu merujuk kepada saldo + saldo_posisi jika ada dibagi dua atau saldo tersedia
                     # jika saldo tersedia < saldo + saldo_posisi dibagi dua
                     if "BUKA_LONG" in df_backtest.iloc[baris]["tindakan"]:
-                        # jika baris pertama dalam iterrows
-                        if baris == 0:
-                            saldo_long = 0.5 * SALDO
-                            SALDO = SALDO - saldo_long
-                        else:
-                            # jika ada posisi short pada timeframe sebelumnya dan ditutup pada timeframe ini maka gunakan setengah saldo yang ada
-                            if "SHORT" in df_backtest.iloc[baris - 1]["posisi"] and (
-                                "TUTUP_SHORT" in df_backtest.iloc[baris]["tindakan"]
-                                or "MARGIN_CALL_SHORT"
-                                in df_backtest.iloc[baris]["tindakan"]
-                            ):
-                                saldo_long = 0.5 * SALDO
-                                SALDO = SALDO - saldo_long
-                            else:
-                                saldo_long = min((SALDO + saldo_short) / 2, SALDO)
-                                SALDO = SALDO - saldo_long
+                        # # HALF INVESTMENT STRATEGY
+                        # # jika baris pertama dalam iterrows
+                        # if baris == 0:
+                        #     saldo_long = 0.5 * self.saldo_backtest
+                        #     self.saldo_backtest = self.saldo_backtest - saldo_long
+                        # else:
+                        #     # jika ada posisi short pada timeframe sebelumnya dan ditutup pada timeframe ini maka gunakan setengah saldo yang ada
+                        #     if "SHORT" in df_backtest.iloc[baris - 1]["posisi"] and (
+                        #         "TUTUP_SHORT" in df_backtest.iloc[baris]["tindakan"]
+                        #         or "MARGIN_CALL_SHORT"
+                        #         in df_backtest.iloc[baris]["tindakan"]
+                        #     ):
+                        #         saldo_long = 0.5 * SALDO
+                        #         self.saldo_backtest = self.saldo_backtest - saldo_long
+                        #     else:
+                        #         saldo_long = min((self.saldo_backtest + saldo_short) / 2, self.saldo_backtest)
+                        #         self.saldo_backtest = self.saldo_backtest - saldo_long
+                        saldo_long = min(self.saldo_backtest, 3.3)
+                        self.saldo_backtest = self.saldo_backtest - saldo_long
                     if "BUKA_SHORT" in df_backtest.iloc[baris]["tindakan"]:
-                        # jika baris pertama dalam iterrows
-                        if baris == 0:
-                            saldo_short = 0.5 * SALDO
-                            SALDO = SALDO - saldo_short
-                        else:
-                            # jika ada posisi long pada timeframe sebelumnya dan ditutup pada timeframe ini maka gunakan setengah saldo yang ada
-                            if "LONG" in df_backtest.iloc[baris - 1]["posisi"] and (
-                                "TUTUP_LONG" in df_backtest.iloc[baris]["tindakan"]
-                                or "MARGIN_CALL_LONG"
-                                in df_backtest.iloc[baris]["tindakan"]
-                            ):
-                                saldo_short = 0.5 * SALDO
-                                SALDO = SALDO - saldo_short
-                            else:
-                                saldo_short = min((SALDO + saldo_long) / 2, SALDO)
-                                SALDO = SALDO - saldo_short
-                    list_df_saldo_tersedia.append(SALDO)
+                        # # HALF INVESTMENT STRATEGY
+                        # # jika baris pertama dalam iterrows
+                        # if baris == 0:
+                        #     saldo_short = 0.5 * SALDO
+                        #     self.saldo_backtest = self.saldo_backtest - saldo_short
+                        # else:
+                        #     # jika ada posisi long pada timeframe sebelumnya dan ditutup pada timeframe ini maka gunakan setengah saldo yang ada
+                        #     if "LONG" in df_backtest.iloc[baris - 1]["posisi"] and (
+                        #         "TUTUP_LONG" in df_backtest.iloc[baris]["tindakan"]
+                        #         or "MARGIN_CALL_LONG"
+                        #         in df_backtest.iloc[baris]["tindakan"]
+                        #     ):
+                        #         saldo_short = 0.5 * self.saldo_backtest
+                        #         self.saldo_backtest = self.saldo_backtest - saldo_short
+                        #     else:
+                        #         saldo_short = min((self.saldo_backtest + saldo_long) / 2, self.saldo_backtest)
+                        #         self.saldo_backtest = self.saldo_backtest - saldo_short
+                        saldo_short = min(self.saldo_backtest, 3.3)
+                        self.saldo_backtest = self.saldo_backtest - saldo_short
+                    list_df_saldo_tersedia.append(self.saldo_backtest)
                     list_df_saldo_long.append(saldo_long)
                     list_df_saldo_short.append(saldo_short)
                     list_df_profit_dan_loss.append(profit_dan_loss)
@@ -591,14 +702,14 @@ class Strategi:
         k_cepat: int = 15,
         k_lambat: int = 8,
         d_lambat: int = 3,
-        mode_laju_stokastik: bool = False,
+        mode_laju_ma: bool = False,
     ) -> None | list:
         self.interval = interval
         self.periode_ma = periode_ma
         self.k_cepat = k_cepat
         self.k_lambat = k_lambat
         self.d_lambat = d_lambat
-        self.mode_laju_stokastik = mode_laju_stokastik
+        self.mode_laju_ma = mode_laju_ma
 
         if len(self.interval) != 1:
             return print(
@@ -675,7 +786,7 @@ class Strategi:
             k_lambat_sebelumnya = list_data[0].iloc[-2]["k_lambat"]
             d_lambat_sebelumnya = list_data[0].iloc[-2]["d_lambat"]
             harga_penutupan = list_data[0].iloc[-1]["close"]
-            if self.mode_laju_stokastik:
+            if self.mode_laju_ma:
                 laju_stokastik = (
                     "UP"
                     if (k_lambat - d_lambat)
@@ -700,10 +811,10 @@ class Strategi:
             print(
                 f"\nMODE STRATEGI: \nRIDE THE WAVE {Fore.RED if harga_penutupan <= ma else Fore.GREEN}[{self.MODE_SCALPING}]{Style.RESET_ALL}"
             )
-            if self.mode_laju_stokastik:
+            if self.mode_laju_ma:
                 print(f"LAJU STOKASTIK {Fore.RED if laju_stokastik == 'DOWN' else Fore.GREEN}[{laju_stokastik}]{Style.RESET_ALL}")  # type: ignore
 
-            if not self.mode_laju_stokastik:
+            if not self.mode_laju_ma:
                 if self.MODE_SCALPING == "DIATAS_MA":
                     if "SHORT" in POSISI and self.kuantitas_short_rtw > 0:
                         self.order.tutup_short(
@@ -820,7 +931,7 @@ class Strategi:
 
                 MODE_SCALPING = "DIATAS_MA" if harga >= ma else "DIBAWAH_MA"
 
-                if not self.mode_laju_stokastik:
+                if not self.mode_laju_ma:
                     if MODE_SCALPING == "DIATAS_MA":
                         if "SHORT" in posisi:
                             tindakan.append("TUTUP_SHORT")
@@ -1353,11 +1464,7 @@ class Strategi:
                         harga_short.clear()
 
                     MODE_EMA = (
-                        (
-                            "DIATAS_EMA"
-                            if ema > ema_smooth
-                            else "DIBAWAH_EMA"
-                        )
+                        ("DIATAS_EMA" if ema > ema_smooth else "DIBAWAH_EMA")
                         if not self.dual_ema
                         else (
                             "EMA_NAIK"
@@ -1451,7 +1558,7 @@ class Strategi:
                             if MODE_RTE == "RTE_NAIK":  # type: ignore
                                 if "SHORT" in posisi and harga_sebelumnya < (
                                     harga_short - harga_sebelumnya * 0.031 / LEVERAGE
-                                    ):
+                                ):
                                     tindakan.append("TUTUP_SHORT")
                                     posisi.remove("SHORT")
                                     harga_short.clear()
@@ -1464,7 +1571,7 @@ class Strategi:
                             if MODE_RTE == "RTE_TURUN":  # type: ignore
                                 if "LONG" in posisi and harga_sebelumnya > (
                                     harga_long + harga_sebelumnya * 0.031 / LEVERAGE
-                                    ):  # type: ignore
+                                ):  # type: ignore
                                     tindakan.append("TUTUP_LONG")
                                     posisi.remove("LONG")
                                     harga_long.clear()

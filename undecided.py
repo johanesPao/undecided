@@ -23,14 +23,15 @@ __status__ = "Development"
 # KONSTANTA
 MODE_BACKTEST = False
 PERIODE_BACKTEST = 1000
-INTERVAL = ["1 menit"]
+INTERVAL = ["1 jam", "1 jam"]
 # VARIABEL ASET
 ASET_DATA = "MATICUSDTPERP"
 ASET = "MATICUSDT"
 EXCHANGE = "BINANCE"
-LEVERAGE = 15
+LEVERAGE = 50
 INISIATOR_WAKTU = True
 JUMLAH_ERROR = 0
+JUMLAH_TRADE_USDT_LIVE = 6
 inisiasi_konektor = Inisiasi()
 konektor_exchange = inisiasi_konektor.exchange()
 info_akun = InfoAkun(konektor_exchange)
@@ -159,11 +160,12 @@ while True:
             leverage=LEVERAGE,
             backtest=MODE_BACKTEST,
             jumlah_periode_backtest=PERIODE_BACKTEST,
+            jumlah_trade_usdt_live=JUMLAH_TRADE_USDT_LIVE,
         )
 
         # Eksekusi strategi
-        # strategi.jpao_niten_ichi_ryu_28_16_8(interval=INTERVAL, k_cepat=120, k_lambat=160, d_lambat=20)  # type: ignore
-        strategi.jpao_ride_the_ema(interval=INTERVAL, periode_ema=37, smoothing=2, dual_ema=True, periode_ema_cepat=5)  # type: ignore
+        strategi.jpao_niten_ichi_ryu_28_16_8(interval=INTERVAL, k_cepat=24, k_lambat=16, d_lambat=8)  # type: ignore
+        # strategi.jpao_ride_the_ema(interval=INTERVAL, periode_ema=37, smoothing=2, dual_ema=True, periode_ema_cepat=5)  # type: ignore
 
         # Reset jumlah error b2eruntun
         JUMLAH_ERROR = 0
