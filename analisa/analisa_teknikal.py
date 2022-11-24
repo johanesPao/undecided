@@ -152,13 +152,24 @@ class AnalisaTeknikal:
         self,
         data: pd.DataFrame,
         periode: int = 100,
+        k_tinggi: str = "high",
+        k_rendah: str = "low",
         k_tutup: str = "close",
         backtest: bool = False,
-    ) -> pd.DataFrame:
+        smoothing: int = 0,
+    ) -> None | pd.DataFrame:
         self.data = data
         self.periode = periode
+        self.k_tinggi = k_tinggi
+        self.k_rendah = k_rendah
         self.k_tutup = k_tutup
         self.backtest = backtest
+        self.smoothing = smoothing
+
+        if len(self.data) < self.periode + self.smoothing + 1:
+            return print(
+                "Data tidak cukup untuk menghitung moving_average dan smoothing"
+            )
 
         self.df = self.data.copy()
 
@@ -168,14 +179,31 @@ class AnalisaTeknikal:
         # Menambahkan kolom 'ma' dengan nilai rata - rata k_tutup selama periode 'ma'
         self.df["ma"] = tutup.rolling(self.periode).mean()
 
-        # Jika bukan backtest, kembalikan baris terakhir
+        # Menambahkan kolom 'ma_smoothing'
+        self.df["ma_smoothing"] = (
+            self.df["ma"]
+            if self.smoothing <= 0
+            else self.df["ma"].rolling(self.smoothing).mean()
+        )
+
+        kolom_kembali = [
+            self.k_tinggi,
+            self.k_rendah,
+            self.k_tutup,
+            "ma",
+            "ma_smoothing",
+        ]
+
+        # Jika bukan backtest, kembalikan 2 baris terakhir yang close
         if not self.backtest:
-            self.df = self.df[[k_tutup, "ma"]].iloc[:, :]
+            self.df = self.df[kolom_kembali].iloc[-3:-1, :]
         else:
-            self.df = self.df[[k_tutup, "ma"]].iloc[:, :]
+            self.df = self.df[kolom_kembali].iloc[:-1, :]
+
+        kolom_filter = ["ma", "ma_smoothing"]
 
         # Membuang data dengan nilai NaN pada kolom ma
-        # self.df.dropna(subset=[k_tutup, "ma"], inplace=True)
+        self.df.dropna(subset=kolom_filter, inplace=True)
 
         # Mengembalikan dataframe
         return self.df

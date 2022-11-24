@@ -39,7 +39,7 @@ class Strategi:
         backtest: bool = False,
         jumlah_periode_backtest: int = 0,
         saldo_backtest: float = 0,
-        jumlah_trade_usdt_live: float = 0,
+        jumlah_trade_usdt: float = 0,
         leverage_backtest: int = 10,
     ) -> None:
         self.inisiasi = Inisiasi()
@@ -71,7 +71,7 @@ class Strategi:
                 f"Jika backtest={self.backtest}, maka jumlah_periode_backtest harus lebih besar dari 0."
             )
         self.saldo_backtest = saldo_backtest
-        self.jumlah_trade_usdt_live = jumlah_trade_usdt_live
+        self.jumlah_trade_usdt = jumlah_trade_usdt
         self.leverage_backtest = leverage_backtest
         self.fungsi = Fungsi()
         self.HOLD_TRADE = ""
@@ -172,7 +172,7 @@ class Strategi:
 
             harga_koin_terakhir = self.akun.harga_koin_terakhir(self.simbol)
             kuantitas_koin = float(
-                self.jumlah_trade_usdt_live * self.leverage / harga_koin_terakhir
+                self.jumlah_trade_usdt * self.leverage / harga_koin_terakhir
             )
 
             # set nilai k_lambat_tf_kecil, d_lambat_tf_kecil, k_lambat_tf_besar dan d_lambat_tf_besar
@@ -743,7 +743,9 @@ class Strategi:
             self.df_stokastik, self.periode_ma, backtest=self.backtest
         )
 
-        self.df_stokastik["ma"] = self.df_ma["ma"]
+        if self.df_ma is not None:
+            self.df_stokastik["ma"] = self.df_ma["ma"]
+
         self.data.append(self.df_stokastik)
 
         # FUNGSI SAAT LIVE
@@ -901,6 +903,7 @@ class Strategi:
             DATA = list_data
 
             df_backtest = pd.DataFrame(DATA[0])
+            print(df_backtest)
 
             MODE_SCALPING = ""
             posisi = []
@@ -1710,6 +1713,320 @@ class Strategi:
             print(df_backtest.to_string())
 
             return f'Profit dan Loss menggunakan strategi ini: {float(sum(df_backtest["profit_dan_loss"]))} dollar'
+
+        # jika live stream strategi
+        if not self.backtest:
+            live()
+        else:
+            print(backtest())
+
+    def jpao_smooth_ma_velocity(
+        self,
+        interval: List[
+            Literal[
+                "1 menit",
+                "3 menit",
+                "5 menit",
+                "15 menit",
+                "30 menit",
+                "45 menit",
+                "1 jam",
+                "2 jam",
+                "3 jam",
+                "4 jam",
+                "1 hari",
+                "1 minggu",
+                "1 bulan",
+            ]
+        ] = ["15 menit"],
+        periode_ma: int = 7,
+        smoothing: int = 70,
+    ) -> None | list:
+        self.interval = interval
+        self.periode_ma = periode_ma
+        self.smoothing = smoothing
+
+        if len(self.interval) != 1:
+            return print(
+                "STRATEGI INI (jpao_smooth_ma_velocity) MENGGUNAKAN INTERVAL WAKTU DALAM LIST BERJUMLAH SATU"
+            )
+
+        # if self.periode_ma < self.k_cepat + self.k_lambat + self.d_lambat:  # type: ignore
+        #     return print(
+        #         "JUMLAH PARAMETER k_cepat, k_lambat dan d_lambat HARUS LEBIH KECIL DARI periode_ma"
+        #     )
+
+        self.jumlah_bar = (
+            max(self.jumlah_periode_backtest, self.periode_ma + self.smoothing + 1)
+            if self.backtest
+            else self.periode_ma + self.smoothing + 1
+        )
+
+        waktu = self.fungsi.konverter_waktu(self.interval[0])
+
+        self.data = []
+
+        self.df = self.model.ambil_data_historis(
+            self.simbol_data, self.exchange, waktu, self.jumlah_bar
+        )
+
+        self.df_ma = self.analisa_teknikal.moving_average(
+            self.df, self.periode_ma, backtest=self.backtest, smoothing=self.smoothing
+        )
+
+        self.data.append(self.df_ma)
+
+        # FUNGSI SAAT LIVE
+        def live(list_data: list = self.data) -> str | None:
+            # VARIABEL DAN KONSTANTA
+            DATA_POSISI_FUTURES = self.posisi_futures
+            # cek posisi aset yang dipegang saat ini
+            POSISI = DATA_POSISI_FUTURES["positionSide"].unique().tolist()
+            if "SHORT" in POSISI:
+                data_short = DATA_POSISI_FUTURES[
+                    DATA_POSISI_FUTURES["positionSide"] == "SHORT"
+                ]
+                nilai_usdt_short = float(data_short.iloc[0]["isolatedWallet"])
+                harga_masuk_short = float(data_short.iloc[0]["entryPrice"])
+                leverage_short = float(data_short.iloc[0]["leverage"])
+                self.kuantitas_short_rtw = round(
+                    nilai_usdt_short * leverage_short / harga_masuk_short
+                )
+            if "LONG" in POSISI:
+                data_long = DATA_POSISI_FUTURES[
+                    DATA_POSISI_FUTURES["positionSide"] == "LONG"
+                ]
+                data_long = DATA_POSISI_FUTURES[
+                    DATA_POSISI_FUTURES["positionSide"] == "LONG"
+                ]
+                nilai_usdt_long = float(data_long.iloc[0]["isolatedWallet"])
+                harga_masuk_long = float(data_long.iloc[0]["entryPrice"])
+                leverage_long = float(data_long.iloc[0]["leverage"])
+                self.kuantitas_long_rtw = round(
+                    nilai_usdt_long * leverage_long / harga_masuk_long
+                )
+
+            USDT_AKUN = math.floor(self.saldo_tersedia + self.saldo_terpakai)
+            harga_koin_terakhir = self.akun.harga_koin_terakhir(self.simbol)
+            kuantitas_koin = float(USDT_AKUN / 2 * self.leverage / harga_koin_terakhir)
+
+            ma = list_data[0].iloc[-1]["ma"]
+            k_lambat = list_data[0].iloc[-1]["k_lambat"]
+            d_lambat = list_data[0].iloc[-1]["d_lambat"]
+            k_lambat_sebelumnya = list_data[0].iloc[-2]["k_lambat"]
+            d_lambat_sebelumnya = list_data[0].iloc[-2]["d_lambat"]
+            harga_penutupan = list_data[0].iloc[-1]["close"]
+            if self.mode_laju_ma:
+                laju_stokastik = (
+                    "UP"
+                    if (k_lambat - d_lambat)
+                    - (k_lambat_sebelumnya - d_lambat_sebelumnya)
+                    >= 0
+                    else "DOWN"
+                )
+
+            print(f"\nHarga Penutupan terakhir: {harga_penutupan}")
+            print(
+                f"Moving Average terakhir: {Fore.RED if harga_penutupan <= ma else Fore.GREEN}{round(ma, 4)}{Style.RESET_ALL}"
+            )
+            print(
+                f"K Lambat terakhir: {Fore.GREEN if k_lambat > d_lambat else Fore.RED}{round(k_lambat, 4)}{Style.RESET_ALL}"
+            )
+            print(
+                f"D Lambat terakhir: {Fore.GREEN if k_lambat > d_lambat else Fore.RED}{round(d_lambat, 4)}{Style.RESET_ALL}"
+            )
+
+            self.MODE_SCALPING = "DIATAS_MA" if harga_penutupan > ma else "DIBAWAH_MA"
+
+            print(
+                f"\nMODE STRATEGI: \nRIDE THE WAVE {Fore.RED if harga_penutupan <= ma else Fore.GREEN}[{self.MODE_SCALPING}]{Style.RESET_ALL}"
+            )
+            if self.mode_laju_ma:
+                print(f"LAJU STOKASTIK {Fore.RED if laju_stokastik == 'DOWN' else Fore.GREEN}[{laju_stokastik}]{Style.RESET_ALL}")  # type: ignore
+
+            if not self.mode_laju_ma:
+                if self.MODE_SCALPING == "DIATAS_MA":
+                    if "SHORT" in POSISI and self.kuantitas_short_rtw > 0:
+                        self.order.tutup_short(
+                            self.kuantitas_short_rtw, leverage=self.leverage
+                        )
+                        self.kuantitas_short_rtw = 0
+                    if (
+                        k_lambat > d_lambat
+                    ):  # and k_lambat_sebelumnya <= d_lambat_sebelumnya:
+                        if "LONG" not in POSISI:
+                            self.kuantitas_long_rtw = self.order.buka_long(
+                                kuantitas_koin, leverage=self.leverage
+                            )
+                    elif k_lambat <= d_lambat:
+                        if "LONG" in POSISI and self.kuantitas_long_rtw > 0:
+                            self.order.tutup_long(
+                                self.kuantitas_long_rtw, leverage=self.leverage
+                            )
+                            self.kuantitas_long_rtw = 0
+                elif self.MODE_SCALPING == "DIBAWAH_MA":
+                    if "LONG" in POSISI and self.kuantitas_long_rtw > 0:
+                        self.order.tutup_long(
+                            self.kuantitas_long_rtw, leverage=self.leverage
+                        )
+                        self.kuantitas_long_rtw = 0
+                    if (
+                        k_lambat <= d_lambat
+                    ):  # and k_lambat_sebelumnya > d_lambat_sebelumnya:
+                        if "SHORT" not in POSISI:
+                            self.kuantitas_short_rtw = self.order.buka_short(
+                                kuantitas_koin, leverage=self.leverage
+                            )
+                    elif k_lambat > d_lambat:
+                        if "SHORT" in POSISI:
+                            self.order.tutup_short(
+                                self.kuantitas_short_rtw, leverage=self.leverage
+                            )
+                            self.kuantitas_short_rtw = 0
+            else:
+                if self.MODE_SCALPING == "DIATAS_MA":
+                    # cek apakah masih ada short
+                    if "SHORT" in POSISI and self.kuantitas_short_rtw > 0:
+                        self.order.tutup_short(
+                            self.kuantitas_short_rtw, leverage=self.leverage
+                        )
+                        self.kuantitas_short_rtw = 0
+                    # hanya trade long DIATAS_MA jika laju_stokastik UP
+                    if laju_stokastik == "UP":  # type: ignore
+                        if "LONG" not in POSISI:
+                            self.kuantitas_long_rtw = self.order.buka_long(
+                                kuantitas_koin, leverage=self.leverage
+                            )
+                    else:
+                        if "LONG" in POSISI and self.kuantitas_long_rtw > 0:
+                            self.order.tutup_long(
+                                self.kuantitas_long_rtw, leverage=self.leverage
+                            )
+                            self.kuantitas_long_rtw = 0
+                elif self.MODE_SCALPING == "DIBAWAH_MA":
+                    # cek apakah masih ada long
+                    if "LONG" in POSISI and self.kuantitas_long_rtw > 0:
+                        self.order.tutup_long(
+                            self.kuantitas_long_rtw, leverage=self.leverage
+                        )
+                        self.kuantitas_long_rtw = 0
+                    # hanya trade short DIBAWAH_MA jika laju_stokastik DOWN
+                    if laju_stokastik == "DOWN":  # type: ignore
+                        if "SHORT" not in POSISI:
+                            self.kuantitas_short_rtw = self.order.buka_short(
+                                kuantitas_koin, leverage=self.leverage
+                            )
+                    else:
+                        if "SHORT" in POSISI:
+                            self.order.tutup_short(
+                                self.kuantitas_short_rtw, leverage=self.leverage
+                            )
+                            self.kuantitas_short_rtw = 0
+
+        # FUNGSI BACKTEST
+        def backtest(list_data: list = self.data) -> str:
+            # VARIABEL DAN KONSTANTA
+            SALDO = self.saldo_backtest
+            TRADE_USDT = self.jumlah_trade_usdt
+            LEVERAGE = self.leverage_backtest
+            DATA = list_data
+
+            df_backtest = pd.DataFrame(DATA[0])
+
+            MODE_MA_SMOOTHING = ""
+            posisi = []
+            harga_posisi = []
+            list_df_posisi = []
+            list_df_tindakan = []
+            list_df_laju_ma_smoothing = []
+            list_df_harga_posisi = []
+            for baris in range(len(df_backtest)):
+                tindakan = []
+                harga = df_backtest.iloc[baris]["close"]
+                ma_smoothing = df_backtest.iloc[baris]["ma_smoothing"]
+                ma_smoothing_sebelumnya = df_backtest.iloc[baris - 1]["ma_smoothing"]
+                laju_ma_smoothing = ma_smoothing - ma_smoothing_sebelumnya
+
+                MODE_MA_SMOOTHING = (
+                    "MA_SMOOTH_NAIK" if laju_ma_smoothing >= 0 else "MA_SMOOTH_TURUN"
+                )
+
+                if MODE_MA_SMOOTHING == "MA_SMOOTH_NAIK":
+                    if "SHORT" in posisi:
+                        tindakan.append("TUTUP_SHORT")
+                        posisi.remove("SHORT")
+                        harga_posisi.clear()
+                    if "LONG" not in posisi:
+                        tindakan.append("BUKA_LONG")
+                        posisi.append("LONG")
+                        harga_posisi.append(harga)
+                elif MODE_MA_SMOOTHING == "MA_SMOOTHING_TURUN":
+                    if "LONG" in posisi:
+                        tindakan.append("TUTUP_LONG")
+                        posisi.remove("LONG")
+                        harga_posisi.clear()
+                    if "SHORT" not in posisi:
+                        tindakan.append("BUKA_SHORT")
+                        posisi.append("SHORT")
+                        harga_posisi.append(harga)
+
+                list_df_laju_ma_smoothing.append(laju_ma_smoothing.copy())
+                list_df_tindakan.append(tindakan)
+                list_df_posisi.append(posisi.copy())
+                list_df_harga_posisi.append(harga_posisi.copy())
+
+            df_backtest["laju_ma_smoothing"] = list_df_laju_ma_smoothing
+            df_backtest["tindakan"] = list_df_tindakan
+            df_backtest["posisi"] = list_df_posisi
+            df_backtest["harga_posisi"] = list_df_harga_posisi
+
+            print(df_backtest)
+
+            # iterasi kolom untung_rugi
+            list_df_profit_dan_loss = []
+            list_df_saldo_tersedia = []
+            list_df_saldo_posisi = []
+            saldo_posisi = 0
+            for baris in range(len(df_backtest)):
+                profit_dan_loss = 0
+                if "TUTUP_LONG" in df_backtest.iloc[baris]["tindakan"]:
+                    harga_keluar = df_backtest.iloc[baris]["close"]
+                    harga_posisi = df_backtest.iloc[baris - 1]["harga_posisi"]
+                    profit_dan_loss = (
+                        harga_keluar - harga_posisi
+                    ) / harga_posisi * saldo_posisi * LEVERAGE - (
+                        0.01 * saldo_posisi / LEVERAGE
+                    )
+                    SALDO = SALDO + saldo_posisi + profit_dan_loss
+                    saldo_posisi = 0
+                if "TUTUP_SHORT" in df_backtest.iloc[baris]["tindakan"]:
+                    harga_keluar = df_backtest.iloc[baris]["close"]
+                    harga_posisi = df_backtest.iloc[baris - 1]["harga_posisi"]
+                    profit_dan_loss = (
+                        harga_posisi - harga_keluar
+                    ) / harga_posisi * saldo_posisi * LEVERAGE - (
+                        0.01 * saldo_posisi / LEVERAGE
+                    )
+                    SALDO = SALDO + saldo_posisi + profit_dan_loss
+                    saldo_posisi = 0
+                if (
+                    "BUKA_LONG" in df_backtest.iloc[baris]["tindakan"]
+                    or "BUKA_SHORT" in df_backtest.iloc[baris]["tindakan"]
+                ):
+                    saldo_posisi = 0.5 * SALDO
+                    SALDO = SALDO - saldo_posisi
+
+                list_df_saldo_tersedia.append(SALDO)
+                list_df_saldo_posisi.append(saldo_posisi)
+                list_df_profit_dan_loss.append(profit_dan_loss)
+
+            df_backtest["saldo_tersedia"] = list_df_saldo_tersedia
+            df_backtest["saldo_posisi"] = list_df_saldo_posisi
+            df_backtest["profit_dan_loss"] = list_df_profit_dan_loss
+
+            print(df_backtest.to_string())
+
+            return f'Profit dan Loss menggunakan strategi ini: {float(sum(df_backtest["profit_dan_loss"]))} dollar'  # type: ignore
 
         # jika live stream strategi
         if not self.backtest:

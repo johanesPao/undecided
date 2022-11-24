@@ -31,7 +31,7 @@ EXCHANGE = "BINANCE"
 LEVERAGE = 50
 INISIATOR_WAKTU = True
 JUMLAH_ERROR = 0
-JUMLAH_TRADE_USDT_LIVE = 6
+JUMLAH_TRADE_USDT = 6
 inisiasi_konektor = Inisiasi()
 konektor_exchange = inisiasi_konektor.exchange()
 info_akun = InfoAkun(konektor_exchange)
@@ -160,7 +160,7 @@ while True:
             leverage=LEVERAGE,
             backtest=MODE_BACKTEST,
             jumlah_periode_backtest=PERIODE_BACKTEST,
-            jumlah_trade_usdt_live=JUMLAH_TRADE_USDT_LIVE,
+            jumlah_trade_usdt=JUMLAH_TRADE_USDT,
         )
 
         # Eksekusi strategi
