@@ -196,7 +196,7 @@ class AnalisaTeknikal:
 
         # Jika bukan backtest, kembalikan 2 baris terakhir yang close
         if not self.backtest:
-            self.df = self.df[kolom_kembali].iloc[-3:-1, :]
+            self.df = self.df[kolom_kembali].iloc[-4:-1, :]
         else:
             self.df = self.df[kolom_kembali].iloc[:-1, :]
 

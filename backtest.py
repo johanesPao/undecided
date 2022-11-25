@@ -48,9 +48,10 @@ strategi_backtest = Strategi(
     ASET,
     EXCHANGE,
     backtest=True,
-    jumlah_periode_backtest=300,
-    saldo_backtest=33,
-    leverage_backtest=1,
+    jumlah_periode_backtest=3360,
+    saldo_backtest=60,
+    leverage_backtest=10,
+    jumlah_trade_usdt=6
 )
 
 # Eksekusi strategi dalam fungsi backtest kelas Strategi
