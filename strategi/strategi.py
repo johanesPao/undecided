@@ -1759,7 +1759,7 @@ class Strategi:
         self.jumlah_bar = (
             max(self.jumlah_periode_backtest, self.periode_ma + self.smoothing + 2)
             if self.backtest
-            else self.periode_ma + self.smoothing + 1
+            else self.periode_ma + self.smoothing + 2
         )
 
         waktu = self.fungsi.konverter_waktu(self.interval[0])
@@ -1831,21 +1831,37 @@ class Strategi:
             )
 
             self.ui.label_nilai(
-                label="Harga Penutupan terakhir", nilai=harga_penutupan, spasi_label=35
+                label="Harga Penutupan terakhir", nilai=harga_penutupan, spasi_label=50
             )
-            print("\n")
+            print("")
             self.ui.label_nilai(
-                label="Smooth Moving Average Velocity sebelumnya",
+                label="Smooth Moving Average [-2]",
+                nilai=round(ma_smoothing_dua_penutupan_sebelumnya, 8),
+                spasi_label=50,
+            )
+            self.ui.label_nilai(
+                label="Smooth Moving Average [-1]",
+                nilai=round(ma_smoothing_sebelumnya, 8),
+                spasi_label=50,
+            )
+            self.ui.label_nilai(
+                label="Smooth Moving Average [0]",
+                nilai=round(ma_smoothing, 8),
+                spasi_label=50,
+            )
+            print("")
+            self.ui.label_nilai(
+                label="Smooth Moving Average Velocity [-1]",
                 nilai=round(laju_ma_smoothing_sebelumnya, 8),
-                spasi_label=35,
+                spasi_label=50,
             )
             self.ui.label_nilai(
-                label="Smooth Moving Average Velocity terakhir",
+                label="Smooth Moving Average Velocity [0]",
                 nilai=round(laju_ma_smoothing_sekarang, 8),
-                spasi_label=35,
+                spasi_label=50,
             )
             print(
-                f"\nMODE STRATEGI: \nSMOOTH MOVING AVERAGE VELOCITY ({self.smoothing}) {Fore.RED if laju_ma_smoothing_sekarang < laju_ma_smoothing_sebelumnya else Fore.GREEN}[{MODE_MA_SMOOTHING}]{Style.RESET_ALL}"
+                f"\nMODE STRATEGI: \nSMOOTH MOVING AVERAGE VELOCITY ({self.smoothing}) {Fore.YELLOW if MODE_MA_SMOOTHING == 'MENUNGGU_TREND' else Fore.RED if laju_ma_smoothing_sekarang < 0 else Fore.GREEN}[{MODE_MA_SMOOTHING}]{Style.RESET_ALL}"
             )
 
             if MODE_MA_SMOOTHING != "MENUNGGU_TREND":
