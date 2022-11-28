@@ -40,7 +40,7 @@ EXCHANGE = "BINANCE"
 
 # SMV
 periode_ma = 7
-smoothing = 70
+smoothing = 21
 
 # Inisiasi kelas strategi
 strategi_backtest = Strategi(
@@ -48,10 +48,10 @@ strategi_backtest = Strategi(
     ASET,
     EXCHANGE,
     backtest=True,
-    jumlah_periode_backtest=3360,
-    saldo_backtest=60,
-    leverage_backtest=10,
-    jumlah_trade_usdt=6
+    jumlah_periode_backtest=4900,
+    saldo_backtest=66,
+    leverage_backtest=25,
+    jumlah_trade_usdt=12,
 )
 
 # Eksekusi strategi dalam fungsi backtest kelas Strategi
