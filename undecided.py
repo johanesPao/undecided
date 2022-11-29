@@ -23,12 +23,12 @@ __status__ = "Development"
 # KONSTANTA
 MODE_BACKTEST = False
 PERIODE_BACKTEST = 1000
-INTERVAL = ["3 menit"]
+INTERVAL = ["1 menit"]
 # VARIABEL ASET
 ASET_DATA = "MATICUSDTPERP"
 ASET = "MATICUSDT"
 EXCHANGE = "BINANCE"
-LEVERAGE = 25
+LEVERAGE = 50
 INISIATOR_WAKTU = True
 JUMLAH_ERROR = 0
 JUMLAH_TRADE_USDT = 12
@@ -166,7 +166,8 @@ while True:
         # Eksekusi strategi
         # strategi.jpao_niten_ichi_ryu_28_16_8(interval=INTERVAL, k_cepat=24, k_lambat=16, d_lambat=8)  # type: ignore
         # strategi.jpao_ride_the_ema(interval=INTERVAL, periode_ema=37, smoothing=2, dual_ema=True, periode_ema_cepat=5)  # type: ignore
-        strategi.jpao_smooth_ma_velocity(interval=INTERVAL, periode_ma=7, smoothing=21)  # type: ignore
+        # strategi.jpao_smooth_ma_velocity(interval=INTERVAL, periode_ma=7, smoothing=21)  # type: ignore
+        strategi.jpao_ride_the_wave(interval=INTERVAL, periode_ma_cepat=4, periode_ma_lambat=49)  # type: ignore
 
         # Reset jumlah error b2eruntun
         JUMLAH_ERROR = 0
