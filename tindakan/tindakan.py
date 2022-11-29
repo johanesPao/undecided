@@ -110,10 +110,13 @@ class Order:
 
             *_, df_saldo_futures = self.info_akun.akun_futures()
             df_long = df_saldo_futures[df_saldo_futures["positionSide"] == "LONG"]
-            harga_masuk_long = df_long.iloc[0]["entryPrice"]
+            # harga_masuk_long = df_long.iloc[0]["entryPrice"]
             saldo_long = df_long.iloc[0]["isolatedWallet"]
 
-            *_, pnl = self.info_akun.harga_pnl_transaksi_terakhir(simbol=self.aset)
+            harga_masuk_long, pnl = self.info_akun.harga_pnl_transaksi_terakhir(
+                simbol=self.aset,
+                sisi='LONG'
+            )
 
             kalimat = f"\nPosisi LONG senilai {saldo_long} USDT / {round(kuantitas)} {self.aset} berhasil dibuka untuk {self.aset} pada harga {harga_masuk_long} USDT dengan biaya komisi {pnl} USDT"
             try:
@@ -160,10 +163,13 @@ class Order:
             )
             *_, df_saldo_futures = self.info_akun.akun_futures()
             df_short = df_saldo_futures[df_saldo_futures["positionSide"] == "SHORT"]
-            harga_masuk_short = df_short.iloc[0]["entryPrice"]
+            # harga_masuk_short = df_short.iloc[0]["entryPrice"]
             saldo_short = df_short.iloc[0]["isolatedWallet"]
 
-            *_, pnl = self.info_akun.harga_pnl_transaksi_terakhir(simbol=self.aset)
+            harga_masuk_short, pnl = self.info_akun.harga_pnl_transaksi_terakhir(
+                simbol=self.aset,
+                sisi='SHORT'
+            )
 
             kalimat = f"\nPosisi SHORT senilai {saldo_short} USDT / {round(kuantitas)} {self.aset} berhasil dibuka untuk {self.aset} pada harga {harga_masuk_short} USDT dengan biaya komisi {pnl} USDT"
             try:
@@ -216,7 +222,8 @@ class Order:
             )
 
             harga_tutup_posisi, pnl = self.info_akun.harga_pnl_transaksi_terakhir(
-                simbol=self.aset
+                simbol=self.aset,
+                sisi='LONG'
             )
 
             kalimat = f"\nPosisi LONG senilai {saldo_long} USDT / {round(kuantitas)} {self.aset} berhasil ditutup untuk {self.aset} pada harga {harga_tutup_posisi} dan profit/loss sebesar {pnl} USDT (sudah dipotong komisi)"
@@ -269,7 +276,8 @@ class Order:
             )
 
             harga_tutup_posisi, pnl = self.info_akun.harga_pnl_transaksi_terakhir(
-                simbol=self.aset
+                simbol=self.aset,
+                sisi='SHORT'
             )
 
             kalimat = f"\nPosisi SHORT senilai {saldo_short} USDT / {round(kuantitas)} {self.aset} berhasil ditutup untuk {self.aset} pada harga {harga_tutup_posisi} dan profit/loss sebesar {pnl} USDT (sudah dipotong komisi)"
