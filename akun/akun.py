@@ -6,6 +6,7 @@ Script untuk melakukan penarikan data akun di exchange
 import datetime as dt
 import numpy as np
 import pandas as pd
+import time
 from binance import Client
 
 __author__ = "Johanes Indra Pradana Pao"
@@ -161,13 +162,16 @@ class InfoAkun:
         """
         return float(self.exchange.futures_ticker(symbol=simbol)["lastPrice"])
 
-    def harga_pnl_transaksi_terakhir(self, simbol: str, sisi: str, limit: int = 20) -> tuple:
+    def harga_pnl_transaksi_terakhir(
+        self, simbol: str, sisi: str, limit: int = 20
+    ) -> tuple:
+        time.sleep(1)  # jeda 1 detik sebelum mengambil data trannsaksi
         df_transaksi = pd.DataFrame(
             self.exchange.futures_account_trades(symbol=simbol, limit=limit)
         )
 
-        df_transaksi = df_transaksi[df_transaksi['positionSide'] == sisi]
-        
+        df_transaksi = df_transaksi[df_transaksi["positionSide"] == sisi]
+
         df_transaksi["realizedPnl"] = df_transaksi["realizedPnl"].astype(float)
         df_transaksi["commission"] = df_transaksi["commission"].astype(float)
         df_transaksi["price"] = df_transaksi["price"].astype(float)
@@ -189,8 +193,6 @@ class InfoAkun:
         df_ringkasan["harga"] = df_ringkasan["nilai_total"] / df_ringkasan["qty"]
         print(df_ringkasan)
 
-        return round(
-            df_ringkasan.iloc[-1:, :]["harga"].values[0], 5  # type: ignore
-        ), round(
-            df_ringkasan.iloc[-1:, :]["pnl_setelah_komisi"].values[0], 5  # type: ignore
+        return round(df_ringkasan.iloc[-1]["harga"], 5), round(  # type: ignore
+            df_ringkasan.iloc[-1]["pnl_setelah_komisi"], 5  # type: ignore
         )

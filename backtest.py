@@ -23,8 +23,16 @@ EXCHANGE = "BINANCE"
 # d_lambat = 30
 
 # RTW
-periode_ma_cepat = 4
-periode_ma_lambat = 49
+# periode_ma_cepat = 21
+# periode_ma_lambat = 69
+
+# DSHA
+smoothed = True
+tipe_ma_smoothing = ["ema"]
+smoothing_1 = 4
+smoothing_2 = 9
+ma_1 = 20
+ma_2 = 50
 
 # RTE
 # periode_ema = 36
@@ -46,9 +54,9 @@ strategi_backtest = Strategi(
     ASET,
     EXCHANGE,
     backtest=True,
-    jumlah_periode_backtest=4900,
+    jumlah_periode_backtest=600,
     saldo_backtest=66,
-    leverage_backtest=50,
+    leverage_backtest=25,
     jumlah_trade_usdt=12,
 )
 
@@ -60,10 +68,20 @@ strategi_backtest = Strategi(
 #     d_lambat=d_lambat,
 # )
 
-hasil_strategi = strategi_backtest.jpao_ride_the_wave(
+# hasil_strategi = strategi_backtest.jpao_ride_the_wave(
+#     interval=["1 menit"],
+#     periode_ma_cepat=periode_ma_cepat,
+#     periode_ma_lambat=periode_ma_lambat,
+# )
+
+hasil_strategi = strategi_backtest.jpao_double_smoothed_heiken_ashi(
     interval=["1 menit"],
-    periode_ma_cepat=periode_ma_cepat,
-    periode_ma_lambat=periode_ma_lambat,
+    smoothed_ha=smoothed,
+    tipe_ma_smoothing=tipe_ma_smoothing, # type: ignore
+    smoothing_1=smoothing_1,
+    smoothing_2=smoothing_2,
+    periode_ma_1=ma_1,
+    periode_ma_2=ma_2,
 )
 
 # hasil_strategi = strategi_backtest.jpao_ride_the_ema(
