@@ -186,12 +186,10 @@ class InfoAkun:
             df_transaksi["realizedPnl"] - df_transaksi["commission"]
         )
         df_transaksi["nilai_total"] = df_transaksi["price"] * df_transaksi["qty"]
-        print(df_transaksi)
         df_ringkasan = df_transaksi.groupby(["orderId"]).aggregate(
             {"pnl_setelah_komisi": "sum", "nilai_total": "sum", "qty": "sum"}
         )
         df_ringkasan["harga"] = df_ringkasan["nilai_total"] / df_ringkasan["qty"]
-        print(df_ringkasan)
 
         return round(df_ringkasan.iloc[-1]["harga"], 5), round(  # type: ignore
             df_ringkasan.iloc[-1]["pnl_setelah_komisi"], 5  # type: ignore

@@ -2030,7 +2030,7 @@ class Strategi:
             + 1
             if self.backtest
             else max(
-                (self.smoothing_1 + self.smoothing_2) * 30,
+                (self.smoothing_1 + self.smoothing_2) * 60,
                 max(self.periode_ma_1, self.periode_ma_2),
             )
             + 2
@@ -2169,13 +2169,13 @@ class Strategi:
                     DATA_POSISI_FUTURES["positionSide"] == "SHORT"
                 ]
                 # kuantitas short yang perlu ditutup
-                self.kuantitas_short_rtw = abs(int(data_short.iloc[0]["positionAmt"]))
+                self.kuantitas_short_dsha = abs(int(data_short.iloc[0]["positionAmt"]))
             if "LONG" in POSISI:
                 data_long = DATA_POSISI_FUTURES[
                     DATA_POSISI_FUTURES["positionSide"] == "LONG"
                 ]
                 # kuantitas long yang perlu ditutup
-                self.kuantitas_long_rtw = int(data_long.iloc[0]["positionAmt"])
+                self.kuantitas_long_dsha = int(data_long.iloc[0]["positionAmt"])
 
             TRADE_USDT = self.jumlah_trade_usdt
             harga_koin_terakhir = self.akun.harga_koin_terakhir(self.simbol)
@@ -2208,7 +2208,6 @@ class Strategi:
                 nilai=round(tinggi_ha, 8),
                 spasi_label=50,
             )
-            print("")
             self.ui.label_nilai(
                 label=f"Terendah",
                 nilai=round(rendah_ha, 8),
