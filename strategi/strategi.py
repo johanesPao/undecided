@@ -85,6 +85,8 @@ class Strategi:
         self.kuantitas_short_rte = 0
         self.kuantitas_long_svm = 0
         self.kuantitas_short_svm = 0
+        self.kuantitas_long_dsha = 0
+        self.kuantitas_short_dsha = 0
 
     def jpao_niten_ichi_ryu_28_16_8(
         self,
@@ -2158,99 +2160,94 @@ class Strategi:
 
         # FUNGSI SAAT LIVE
         def live(list_data: list = self.data) -> str | None:
-            # # VARIABEL DAN KONSTANTA
-            # DATA_POSISI_FUTURES = self.posisi_futures
-            # # cek posisi aset yang dipegang saat ini
-            # POSISI = DATA_POSISI_FUTURES["positionSide"].unique().tolist()
-            # if "SHORT" in POSISI:
-            #     data_short = DATA_POSISI_FUTURES[
-            #         DATA_POSISI_FUTURES["positionSide"] == "SHORT"
-            #     ]
-            #     # kuantitas short yang perlu ditutup
-            #     self.kuantitas_short_rtw = abs(int(data_short.iloc[0]["positionAmt"]))
-            # if "LONG" in POSISI:
-            #     data_long = DATA_POSISI_FUTURES[
-            #         DATA_POSISI_FUTURES["positionSide"] == "LONG"
-            #     ]
-            #     # kuantitas long yang perlu ditutup
-            #     self.kuantitas_long_rtw = int(data_long.iloc[0]["positionAmt"])
+            # VARIABEL DAN KONSTANTA
+            DATA_POSISI_FUTURES = self.posisi_futures
+            # cek posisi aset yang dipegang saat ini
+            POSISI = DATA_POSISI_FUTURES["positionSide"].unique().tolist()
+            if "SHORT" in POSISI:
+                data_short = DATA_POSISI_FUTURES[
+                    DATA_POSISI_FUTURES["positionSide"] == "SHORT"
+                ]
+                # kuantitas short yang perlu ditutup
+                self.kuantitas_short_rtw = abs(int(data_short.iloc[0]["positionAmt"]))
+            if "LONG" in POSISI:
+                data_long = DATA_POSISI_FUTURES[
+                    DATA_POSISI_FUTURES["positionSide"] == "LONG"
+                ]
+                # kuantitas long yang perlu ditutup
+                self.kuantitas_long_rtw = int(data_long.iloc[0]["positionAmt"])
 
-            # TRADE_USDT = self.jumlah_trade_usdt
-            # harga_koin_terakhir = self.akun.harga_koin_terakhir(self.simbol)
-            # kuantitas_koin = float(TRADE_USDT * self.leverage / harga_koin_terakhir)
+            TRADE_USDT = self.jumlah_trade_usdt
+            harga_koin_terakhir = self.akun.harga_koin_terakhir(self.simbol)
+            kuantitas_koin = float(TRADE_USDT * self.leverage / harga_koin_terakhir)
 
-            # ma_cepat = list_data[0].iloc[-1]["ma_cepat"]
-            # ma_cepat_sebelumnya = list_data[0].iloc[-2]["ma_cepat"]
-            # ma_lambat = list_data[0].iloc[-1]["ma_lambat"]
-            # ma_lambat_sebelumnya = list_data[0].iloc[-2]["ma_lambat"]
+            harga_penutupan_terakhir = list_data[0].iloc[-1].close
 
-            # harga_penutupan = list_data[0].iloc[-1]["close"]
+            buka_ha = list_data[0].iloc[-1].buka_ha
+            tingi_ha = list_data[0].iloc[-1].tinggi_ha
+            rendah_ha = list_data[0].iloc[-1].rendah_ha
+            tutup_ha = list_data[0].iloc[-1].tutup_ha
 
-            # MODE_SCALPING = (
-            #     ("MA_NAIK" if ma_cepat >= ma_lambat else "MA_TURUN")
-            #     if len(POSISI) != 0
-            #     else (
-            #         "MA_NAIK"
-            #         if ma_cepat >= ma_lambat
-            #         and ma_cepat_sebelumnya < ma_lambat_sebelumnya
-            #         else "MA_TURUN"
-            #         if ma_cepat < ma_lambat
-            #         and ma_cepat_sebelumnya >= ma_lambat_sebelumnya
-            #         else "MENUNGGU_TREND"
-            #     )
-            # )
+            warna_ha = list_data[0].iloc[-1].warna_ha
+            warna_ha_sebelumnya = list_data[0].iloc[-2].warna_ha
 
-            # self.ui.label_nilai(
-            #     label="Harga Penutupan terakhir", nilai=harga_penutupan, spasi_label=50
-            # )
-            # print("")
-            # self.ui.label_nilai(
-            #     label=f"Moving Average Cepat ({self.periode_ma_cepat}) [-1]",
-            #     nilai=round(ma_cepat_sebelumnya, 8),
-            #     spasi_label=50,
-            # )
-            # self.ui.label_nilai(
-            #     label=f"Moving Average Lambat ({self.periode_ma_lambat}) [-1]",
-            #     nilai=round(ma_lambat_sebelumnya, 8),
-            #     spasi_label=50,
-            # )
-            # print("")
-            # self.ui.label_nilai(
-            #     label=f"Moving Average Cepat ({self.periode_ma_cepat}) [0]",
-            #     nilai=round(ma_cepat, 8),
-            #     spasi_label=50,
-            # )
-            # self.ui.label_nilai(
-            #     label=f"Moving Average Lambat ({self.periode_ma_lambat}) [0]",
-            #     nilai=round(ma_lambat, 8),
-            #     spasi_label=50,
-            # )
-            # print(
-            #     f"\nMODE STRATEGI: \nRIDE THE WAVE (fast_ma: {self.periode_ma_cepat}; slow_ma: {self.periode_ma_lambat}) {Fore.YELLOW if MODE_SCALPING == 'MENUNGGU_TREND' else Fore.RED if ma_cepat < ma_lambat else Fore.GREEN}[{MODE_SCALPING}]{Style.RESET_ALL}"
-            # )
+            self.ui.label_nilai(
+                label="Harga Penutupan terakhir",
+                nilai=harga_penutupan_terakhir,
+                spasi_label=50,
+            )
+            print("")
+            print("Data Smoothed Heiken Ashi Terakhir:")
+            self.ui.label_nilai(
+                label=f"Pembukaan",
+                nilai=round(buka_ha, 8),
+                spasi_label=50,
+            )
+            self.ui.label_nilai(
+                label=f"Tertinggi",
+                nilai=round(tinggi_ha, 8),
+                spasi_label=50,
+            )
+            print("")
+            self.ui.label_nilai(
+                label=f"Terendah",
+                nilai=round(rendah_ha, 8),
+                spasi_label=50,
+            )
+            self.ui.label_nilai(
+                label=f"Penutupan",
+                nilai=round(tutup_ha, 8),
+                spasi_label=50,
+            )
+            print(
+                f"\nMODE STRATEGI: \nDOUBLE SMOOTHED HEIKEN ASHI (smoothing 1: {self.smoothing_1}; smoothing 2: {self.smoothing_2}) {Fore.RED if warna_ha == 'HA_MERAH' else Fore.GREEN}[{warna_ha}]{Style.RESET_ALL}"
+            )
 
-            # if MODE_SCALPING != "MENUNGGU_TREND":
-            #     if MODE_SCALPING == "MA_NAIK":
-            #         if "SHORT" in POSISI and self.kuantitas_short_rtw > 0:
-            #             self.order.tutup_short(
-            #                 self.kuantitas_short_rtw, leverage=self.leverage
-            #             )
-            #             self.kuantitas_short_rtw = 0
-            #         if "LONG" not in POSISI:
-            #             self.kuantitas_long_rtw = self.order.buka_long(
-            #                 kuantitas_koin, leverage=self.leverage
-            #             )
-            #     elif MODE_SCALPING == "MA_TURUN":
-            #         if "LONG" in POSISI and self.kuantitas_long_rtw > 0:
-            #             self.order.tutup_long(
-            #                 self.kuantitas_long_rtw, leverage=self.leverage
-            #             )
-            #             self.kuantitas_long_rtw = 0
-            #         if "SHORT" not in POSISI:
-            #             self.kuantitas_short_rtw = self.order.buka_short(
-            #                 kuantitas_koin, leverage=self.leverage
-            #             )
-            pass
+            # KONDISI EXIT
+            if "LONG" in POSISI:
+                if warna_ha == "HA_MERAH" and warna_ha_sebelumnya == "HA_HIJAU":
+                    self.order.tutup_long(
+                        self.kuantitas_long_dsha, leverage=self.leverage
+                    )
+                    self.kuantitas_long_dsha = 0
+            if "SHORT" in POSISI:
+                if warna_ha == "HA_HIJAU" and warna_ha_sebelumnya == "HA_MERAH":
+                    self.order.tutup_short(
+                        self.kuantitas_short_dsha, leverage=self.leverage
+                    )
+                    self.kuantitas_short_dsha = 0
+
+            # KONDISI ENTRY
+            if "LONG" not in POSISI:
+                if warna_ha == "HA_HIJAU" and warna_ha_sebelumnya == "HA_MERAH":
+                    self.kuantitas_long_dsha = self.order.buka_long(
+                        kuantitas_koin, leverage=self.leverage
+                    )
+            if "SHORT" not in POSISI:
+                if warna_ha == "HA_MERAH" and warna_ha_sebelumnya == "HA_HIJAU":
+                    self.kuantitas_short_dsha = self.order.buka_short(
+                        kuantitas_koin, leverage=self.leverage
+                    )
 
         # FUNGSI BACKTEST
         def backtest(list_data: list = self.data) -> str:
@@ -2264,10 +2261,12 @@ class Strategi:
 
             MODE_SCALPING = ""
             posisi = []
-            harga_posisi = []
+            harga_long = []
+            harga_short = []
             list_df_posisi = []
             list_df_tindakan = []
-            list_df_harga_posisi = []
+            list_df_harga_long = []
+            list_df_harga_short = []
             for baris in range(len(df_backtest)):
                 tindakan = []
                 harga = df_backtest.iloc[baris].close
@@ -2284,158 +2283,170 @@ class Strategi:
                 # margin call dan hapus posisi
                 if (
                     "LONG" in posisi
-                    and (rendah - harga_posisi) / harga_posisi * LEVERAGE <= -0.8
+                    and (rendah - harga_long) / harga_long * LEVERAGE <= -0.8
                 ):
                     tindakan.append("MARGIN_CALL_LONG")
                     posisi.remove("LONG")
-                    harga_posisi.clear()
+                    harga_long.clear()
                 if (
                     "SHORT" in posisi
-                    and (harga_posisi - tinggi) / harga_posisi * LEVERAGE <= -0.8
+                    and (harga_short - tinggi) / harga_short * LEVERAGE <= -0.8
                 ):
                     tindakan.append("MARGIN_CALL_SHORT")
                     posisi.remove("SHORT")
-                    harga_posisi.clear()
+                    harga_short.clear()
 
-                # KONDISI EXIT
-                # 5. jika ada posisi LONG
-                if "LONG" in posisi:
-                    # 6. keadaan_ma adalah MA_TURUN atau keadaan_ha MENGECIL (Apakah perlu mengevaluasi warna_ma juga?)
-                    # if (
-                    #     keadaan_ma == "MA_TURUN"
-                    #     or (
-                    #         warna_ha == "HA_HIJAU"
-                    #         and warna_ha_sebelumnya == "HA_HIJAU"
-                    #         and keadaan_ha == "MENGECIL"
-                    #     )
-                    #     or (
-                    #         warna_ha == "HA_MERAH" and warna_ha_sebelumnya == "HA_HIJAU"
-                    #     )
-                    # ):
-                    #     tindakan.append("TUTUP_LONG")
-                    #     posisi.remove("LONG")
-                    #     harga_posisi.clear()
-                    # metode sederhana
-                    if keadaan_ma == "MA_TURUN" or warna_ha == "HA_MERAH":
-                        tindakan.append("TUTUP_LONG")
-                        posisi.remove("LONG")
-                        harga_posisi.clear()
-                # 7. jika ada posisi SHORT
-                if "SHORT" in posisi:
-                    # 8. keadaan_ma adalah MA_NAIK atau keadaan_ha MENGECIL (Apakah perlu mengevaluasi warna_ma juga?)
-                    # if (
-                    #     keadaan_ma == "MA_NAIK"
-                    #     or (
-                    #         warna_ha == "HA_MERAH"
-                    #         and warna_ha_sebelumnya == "HA_MERAH"
-                    #         and keadaan_ha == "MENGECIL"
-                    #     )
-                    #     or (
-                    #         warna_ha == "HA_HIJAU" and warna_ha_sebelumnya == "HA_MERAH"
-                    #     )
-                    # ):
-                    #     tindakan.append("TUTUP_SHORT")
-                    #     posisi.remove("SHORT")
-                    #     harga_posisi.clear()
-                    # metode sederhana
-                    if keadaan_ma == "MA_NAIK" or warna_ha == "HA_HIJAU":
-                        tindakan.append("TUTUP_SHORT")
-                        posisi.remove("SHORT")
-                        harga_posisi.clear()
-                # KONDISI ENTRY
-                # 1. jika keadaan_ma adalah MA_NAIK dan posisi LONG belum ada
-                if keadaan_ma == "MA_NAIK" and "LONG" not in posisi:
-                    # 2. jika HA_HIJAU dan sebelumnya HA_MERAH atau HA_HIJAU dan sebelumnya HA_HIJAU dan MEMBESAR
-                    # if (
-                    #     warna_ha == "HA_HIJAU" and warna_ha_sebelumnya == "HA_MERAH"
-                    # ) or (
-                    #     warna_ha == "HA_HIJAU"
-                    #     and warna_ha_sebelumnya == "HA_HIJAU"
-                    #     and keadaan_ha == "MEMBESAR"
-                    # ):
-                    #     tindakan.append("BUKA_LONG")
-                    #     posisi.append("LONG")
-                    #     harga_posisi.append(harga)
-                    # metode sederhana
-                    if warna_ha == "HA_HIJAU":
-                        tindakan.append("BUKA_LONG")
-                        posisi.append("LONG")
-                        harga_posisi.append(harga)
-                # 3. jika keadaan_ma adalah MA_TURUN dan posisi SHORT belum ada
-                elif keadaan_ma == "MA_TURUN" and "SHORT" not in posisi:
-                    # 4.jika HA_MERAH dan sebelumnya HA_HIJAU atau HA_MERAH dan sebelumnya HA_MERAH dan MEMBESAR
-                    # if (
-                    #     warna_ha == "HA_MERAH" and warna_ha_sebelumnya == "HA_HIJAU"
-                    # ) or (
-                    #     warna_ha == "HA_MERAH"
-                    #     and warna_ha_sebelumnya == "HA_MERAH"
-                    #     and keadaan_ha == "MEMBESAR"
-                    # ):
-                    #     tindakan.append("BUKA_SHORT")
-                    #     posisi.append("SHORT")
-                    #     harga_posisi.append(harga)
-                    # metode sederhana
-                    if warna_ha == "HA_MERAH":
-                        tindakan.append("BUKA_SHORT")
-                        posisi.append("SHORT")
-                        harga_posisi.append(harga)
+                if baris != 0:
+
+                    # KONDISI EXIT
+                    # 5. jika ada posisi LONG
+                    if (
+                        "LONG" in posisi
+                    ):  # harga_penutupan_terakhir < (harga_masuk_short - harga_penutupan_terakhir * 0.01 / self.leverage)
+                        # 6. keadaan_ma adalah MA_TURUN atau keadaan_ha MENGECIL (Apakah perlu mengevaluasi warna_ma juga?)
+                        # if (
+                        #     keadaan_ma == "MA_TURUN"
+                        #     or (
+                        #         warna_ha == "HA_HIJAU"
+                        #         and warna_ha_sebelumnya == "HA_HIJAU"
+                        #         and keadaan_ha == "MENGECIL"
+                        #     )
+                        #     or (
+                        #         warna_ha == "HA_MERAH" and warna_ha_sebelumnya == "HA_HIJAU"
+                        #     )
+                        # ):
+                        #     tindakan.append("TUTUP_LONG")
+                        #     posisi.remove("LONG")
+                        #     harga_posisi.clear()
+                        # metode sederhana
+                        if warna_ha == "HA_MERAH" and warna_ha_sebelumnya == "HA_HIJAU":
+                            # and harga > (harga_long + harga * 0.016)
+                            tindakan.append("TUTUP_LONG")
+                            posisi.remove("LONG")
+                            harga_long.clear()
+                    # 7. jika ada posisi SHORT
+                    if "SHORT" in posisi:
+                        # 8. keadaan_ma adalah MA_NAIK atau keadaan_ha MENGECIL (Apakah perlu mengevaluasi warna_ma juga?)
+                        # if (
+                        #     keadaan_ma == "MA_NAIK"
+                        #     or (
+                        #         warna_ha == "HA_MERAH"
+                        #         and warna_ha_sebelumnya == "HA_MERAH"
+                        #         and keadaan_ha == "MENGECIL"
+                        #     )
+                        #     or (
+                        #         warna_ha == "HA_HIJAU" and warna_ha_sebelumnya == "HA_MERAH"
+                        #     )
+                        # ):
+                        #     tindakan.append("TUTUP_SHORT")
+                        #     posisi.remove("SHORT")
+                        #     harga_posisi.clear()
+                        # metode sederhana
+                        if warna_ha == "HA_HIJAU" and warna_ha_sebelumnya == "HA_MERAH":
+                            # and harga < (harga_short - harga * 0.016)
+                            tindakan.append("TUTUP_SHORT")
+                            posisi.remove("SHORT")
+                            harga_short.clear()
+                    # KONDISI ENTRY
+                    # 1. jika keadaan_ma adalah MA_NAIK dan posisi LONG belum ada
+                    if "LONG" not in posisi:
+                        # 2. jika HA_HIJAU dan sebelumnya HA_MERAH atau HA_HIJAU dan sebelumnya HA_HIJAU dan MEMBESAR
+                        # if (
+                        #     warna_ha == "HA_HIJAU" and warna_ha_sebelumnya == "HA_MERAH"
+                        # ) or (
+                        #     warna_ha == "HA_HIJAU"
+                        #     and warna_ha_sebelumnya == "HA_HIJAU"
+                        #     and keadaan_ha == "MEMBESAR"
+                        # ):
+                        #     tindakan.append("BUKA_LONG")
+                        #     posisi.append("LONG")
+                        #     harga_posisi.append(harga)
+                        # metode sederhana
+                        if warna_ha == "HA_HIJAU" and warna_ha_sebelumnya == "HA_MERAH":
+                            tindakan.append("BUKA_LONG")
+                            posisi.append("LONG")
+                            harga_long.append(harga)
+                    # 3. jika keadaan_ma adalah MA_TURUN dan posisi SHORT belum ada
+                    if "SHORT" not in posisi:
+                        # 4.jika HA_MERAH dan sebelumnya HA_HIJAU atau HA_MERAH dan sebelumnya HA_MERAH dan MEMBESAR
+                        # if (
+                        #     warna_ha == "HA_MERAH" and warna_ha_sebelumnya == "HA_HIJAU"
+                        # ) or (
+                        #     warna_ha == "HA_MERAH"
+                        #     and warna_ha_sebelumnya == "HA_MERAH"
+                        #     and keadaan_ha == "MEMBESAR"
+                        # ):
+                        #     tindakan.append("BUKA_SHORT")
+                        #     posisi.append("SHORT")
+                        #     harga_posisi.append(harga)
+                        # metode sederhana
+                        if warna_ha == "HA_MERAH" and warna_ha_sebelumnya == "HA_HIJAU":
+                            tindakan.append("BUKA_SHORT")
+                            posisi.append("SHORT")
+                            harga_short.append(harga)
 
                 list_df_tindakan.append(tindakan)
                 list_df_posisi.append(posisi.copy())
-                list_df_harga_posisi.append(harga_posisi.copy())
+                list_df_harga_long.append(harga_long.copy())
+                list_df_harga_short.append(harga_short.copy())
 
             df_backtest["tindakan"] = list_df_tindakan
             df_backtest["posisi"] = list_df_posisi
-            df_backtest["harga_posisi"] = list_df_harga_posisi
+            df_backtest["harga_long"] = list_df_harga_long
+            df_backtest["harga_short"] = list_df_harga_short
 
             # iterasi kolom untung_rugi
             list_df_profit_dan_loss = []
             list_df_saldo_tersedia = []
-            list_df_saldo_posisi = []
-            saldo_posisi = 0
+            list_df_saldo_long = []
+            list_df_saldo_short = []
+            saldo_long = 0
+            saldo_short = 0
             for baris in range(len(df_backtest)):
                 profit_dan_loss = 0
                 if "TUTUP_LONG" in df_backtest.iloc[baris]["tindakan"]:
                     harga_keluar = df_backtest.iloc[baris]["close"]
-                    harga_posisi = df_backtest.iloc[baris - 1]["harga_posisi"]
+                    harga_long = df_backtest.iloc[baris - 1]["harga_long"]
                     profit_dan_loss = (
-                        harga_keluar - harga_posisi
-                    ) / harga_posisi * saldo_posisi * LEVERAGE - (0.016 * saldo_posisi)
-                    SALDO = SALDO + saldo_posisi + profit_dan_loss
-                    saldo_posisi = 0
+                        harga_keluar - harga_long
+                    ) / harga_long * saldo_long * LEVERAGE - (0.016 * saldo_long)
+                    SALDO = SALDO + saldo_long + profit_dan_loss
+                    saldo_long = 0
                 if "TUTUP_SHORT" in df_backtest.iloc[baris]["tindakan"]:
                     harga_keluar = df_backtest.iloc[baris]["close"]
-                    harga_posisi = df_backtest.iloc[baris - 1]["harga_posisi"]
+                    harga_short = df_backtest.iloc[baris - 1]["harga_short"]
                     profit_dan_loss = (
-                        harga_posisi - harga_keluar
-                    ) / harga_posisi * saldo_posisi * LEVERAGE - (0.016 * saldo_posisi)
-                    SALDO = SALDO + saldo_posisi + profit_dan_loss
-                    saldo_posisi = 0
+                        harga_short - harga_keluar
+                    ) / harga_short * saldo_short * LEVERAGE - (0.016 * saldo_short)
+                    SALDO = SALDO + saldo_short + profit_dan_loss
+                    saldo_short = 0
                 if "MARGIN_CALL_SHORT" in df_backtest.iloc[baris]["tindakan"]:
                     harga_keluar = df_backtest.iloc[baris - 1]["close"]
-                    harga_posisi = df_backtest.iloc[baris - 1]["harga_posisi"]
-                    profit_dan_loss = -saldo_posisi - (saldo_posisi * 0.016)
-                    SALDO = SALDO + saldo_posisi + profit_dan_loss
-                    saldo_posisi = 0
+                    harga_short = df_backtest.iloc[baris - 1]["harga_short"]
+                    profit_dan_loss = -saldo_short - (saldo_short * 0.016)
+                    SALDO = SALDO + saldo_short + profit_dan_loss
+                    saldo_short = 0
                 if "MARGIN_CALL_LONG" in df_backtest.iloc[baris]["tindakan"]:
                     harga_keluar = df_backtest.iloc[baris - 1]["close"]
-                    harga_posisi = df_backtest.iloc[baris - 1]["harga_posisi"]
-                    profit_dan_loss = -saldo_posisi - (saldo_posisi * 0.016)
-                    SALDO = SALDO + saldo_posisi + profit_dan_loss
-                    saldo_posisi = 0
-                if (
-                    "BUKA_LONG" in df_backtest.iloc[baris]["tindakan"]
-                    or "BUKA_SHORT" in df_backtest.iloc[baris]["tindakan"]
-                ):
-                    saldo_posisi = TRADE_USDT
-                    SALDO = SALDO - saldo_posisi
+                    harga_long = df_backtest.iloc[baris - 1]["harga_long"]
+                    profit_dan_loss = -saldo_long - (saldo_long * 0.016)
+                    SALDO = SALDO + saldo_long + profit_dan_loss
+                    saldo_long = 0
+                if "BUKA_LONG" in df_backtest.iloc[baris]["tindakan"]:
+                    saldo_long = TRADE_USDT
+                    SALDO = SALDO - saldo_long
+                if "BUKA_SHORT" in df_backtest.iloc[baris]["tindakan"]:
+                    saldo_short = TRADE_USDT
+                    SALDO = SALDO - saldo_short
 
                 list_df_saldo_tersedia.append(SALDO)
-                list_df_saldo_posisi.append(saldo_posisi)
+                list_df_saldo_long.append(saldo_long)
+                list_df_saldo_short.append(saldo_short)
                 list_df_profit_dan_loss.append(profit_dan_loss)
 
             df_backtest["saldo_tersedia"] = list_df_saldo_tersedia
-            df_backtest["saldo_posisi"] = list_df_saldo_posisi
+            df_backtest["saldo_long"] = list_df_saldo_long
+            df_backtest["saldo_short"] = list_df_saldo_short
             df_backtest["profit_dan_loss"] = list_df_profit_dan_loss
 
             print(df_backtest.to_string())
