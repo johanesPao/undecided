@@ -2022,18 +2022,22 @@ class Strategi:
         # Karena kalkulasi melibatkan exponential moving average, nilainya bisa tidak akurat jika jumlah_bar terlalu sedikit
         # sesuaikan jumlah bar dengan nilai heiken ashi pada versi live production
         self.jumlah_bar = (
-            self.jumlah_periode_backtest
-            + max(
-                self.smoothing_1 + self.smoothing_2,
-                max(self.periode_ma_1, self.periode_ma_2),
+            (
+                self.jumlah_periode_backtest
+                + max(
+                    self.smoothing_1 + self.smoothing_2,
+                    max(self.periode_ma_1, self.periode_ma_2),
+                )
+                + 1
             )
-            + 1
             if self.backtest
-            else max(
-                (self.smoothing_1 + self.smoothing_2) * 60,
-                max(self.periode_ma_1, self.periode_ma_2),
+            else (
+                max(
+                    (self.smoothing_1 + self.smoothing_2) * 10,
+                    max(self.periode_ma_1, self.periode_ma_2),
+                )
+                + 2
             )
-            + 2
         )
 
         waktu = self.fungsi.konverter_waktu(self.interval[0])
@@ -2103,10 +2107,10 @@ class Strategi:
         # Ambil data tergantung mode backtest
         if self.backtest:
             # Semua baris tidak termasuk baris terakhir
-            self.df.iloc[:-1]
+            self.df = self.df.iloc[:-1]
         else:
             # Dua baris data terakhir tidak termasuk baris data terakhir
-            self.df.iloc[-3:-1]
+            self.df = self.df.iloc[-3:-1]
 
         # spread tutup dan buka Heiken Ashi upscale 100000
         self.df = self.df.assign(
