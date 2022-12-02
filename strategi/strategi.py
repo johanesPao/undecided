@@ -2030,7 +2030,7 @@ class Strategi:
             + 1
             if self.backtest
             else max(
-                self.smoothing_1 + self.smoothing_2,
+                (self.smoothing_1 + self.smoothing_2) * 30,
                 max(self.periode_ma_1, self.periode_ma_2),
             )
             + 2
@@ -2184,7 +2184,7 @@ class Strategi:
             harga_penutupan_terakhir = list_data[0].iloc[-1].close
 
             buka_ha = list_data[0].iloc[-1].buka_ha
-            tingi_ha = list_data[0].iloc[-1].tinggi_ha
+            tinggi_ha = list_data[0].iloc[-1].tinggi_ha
             rendah_ha = list_data[0].iloc[-1].rendah_ha
             tutup_ha = list_data[0].iloc[-1].tutup_ha
 
