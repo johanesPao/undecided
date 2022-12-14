@@ -29,8 +29,8 @@ EXCHANGE = "BINANCE"
 # DSHA
 smoothed = True
 tipe_ma_smoothing = ["ema"]
-smoothing_1 = 4
-smoothing_2 = 9
+smoothing_1 = 14
+smoothing_2 = 14
 ma_1 = 20
 ma_2 = 50
 
@@ -54,10 +54,10 @@ strategi_backtest = Strategi(
     ASET,
     EXCHANGE,
     backtest=True,
-    jumlah_periode_backtest=600,
-    saldo_backtest=66,
+    jumlah_periode_backtest=144,
+    saldo_backtest=35,
     leverage_backtest=25,
-    jumlah_trade_usdt=12,
+    jumlah_trade_usdt=7,
 )
 
 # Eksekusi strategi dalam fungsi backtest kelas Strategi
@@ -75,9 +75,9 @@ strategi_backtest = Strategi(
 # )
 
 hasil_strategi = strategi_backtest.jpao_double_smoothed_heiken_ashi(
-    interval=["1 menit"],
+    interval=["30 menit"],
     smoothed_ha=smoothed,
-    tipe_ma_smoothing=tipe_ma_smoothing, # type: ignore
+    tipe_ma_smoothing=tipe_ma_smoothing,  # type: ignore
     smoothing_1=smoothing_1,
     smoothing_2=smoothing_2,
     periode_ma_1=ma_1,

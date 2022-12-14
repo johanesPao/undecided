@@ -83,6 +83,8 @@ class UI:
                 )
             sys.stdout.flush()
             time.sleep(1)
+        # Tambahan detik untuk mencegah script running lebih cepat dari closing interval
+        time.sleep(1)
         kalimat_selesai_hitung_mundur = "Melakukan eksekusi strategi!"
         sys.stdout.write(
             f"\r{kalimat_selesai_hitung_mundur}"
