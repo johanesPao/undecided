@@ -478,3 +478,77 @@ class AnalisaTeknikal:
         #     self.df = self.df[kolom_kembali].iloc[:-1, :]
 
         return df
+
+    def adx(
+        self,
+        data: pd.DataFrame,
+        tipe_smoothing: List[Literal["sma", "ema"]] = ["sma"],
+        smooth_period: int = 14,
+        k_tinggi: str = "high",
+        k_rendah: str = "low",
+        k_tutup: str = "close",
+        backtest: bool = False,
+    ) -> None | pd.DataFrame:
+        df = data.copy()
+
+        # Perhitungan True Range
+        # True Range adalah nilai terbesar dari k_tinggi - k_rendah, abs(k_tinggi - k_tutup[-1]) atau abs(k_tutup[-1] - k_rendah)
+        tr = []
+        for i in range(len(df)):
+            if i == 0:
+                tr.append(np.nan)
+            else:
+                tr.append(
+                    max(
+                        df[k_tinggi].iloc[i] - df[k_rendah].iloc[i],
+                        abs(df[k_tinggi].iloc[i] - df[k_tutup].iloc[i - 1]),
+                        abs(df[k_tutup].iloc[i - 1] - df[k_rendah].iloc[i]),
+                    )
+                )
+        df["true_range"] = tr
+
+        # Perhitungan +/-DirectionalMovement
+        # +DM jika k_tinggi - k_tinggi[-1] > k_rendah[-1] - k_rendah maka k_tinggi - k_tinggi[-1], else 0
+        # -DM jika k_rendah[-1] - k_rendah > k_tinggi - k_tinggi[-1] maka k_rendah[-1] - k_rendah, else 0
+        plus_dm = []
+        minus_dm = []
+        for i in range(len(df)):
+            if i == 0:
+                plus_dm.append(np.nan)
+                minus_dm.append(np.nan)
+            else:
+                plus_dm.append(
+                    df[k_tinggi].iloc[i] - df[k_tinggi].iloc[i - 1]
+                    if df[k_tinggi].iloc[i] - df[k_tinggi].iloc[i - 1]
+                    > df[k_rendah].iloc[i - 1] - df[k_rendah].iloc[i]
+                    else 0
+                )
+                minus_dm.append(
+                    df[k_rendah].iloc[i - 1] - df[k_rendah].iloc[i]
+                    if df[k_rendah].iloc[i - 1] - df[k_rendah].iloc[i]
+                    > df[k_tinggi].iloc[i] - df[k_tinggi].iloc[i - 1]
+                    else 0
+                )
+        df["+DM"], df["-DM"] = plus_dm, minus_dm
+
+        # fungsi smoothed
+        def smoothed(data: pd.Series) -> pd.Series:
+            return data.rolling(smooth_period).mean()
+
+        # Perhitungan +/-DirectionalIndicator
+        # +DI = 100 * (smoothed+DM/smoothedTR)
+        # -DI = 100 * (smoothed-DM/smoothedTR)
+        df["+DI"] = 100 * smoothed(df["+DM"]) / smoothed(df["true_range"])
+        df["-DI"] = 100 * smoothed(df["-DM"]) / smoothed(df["true_range"])
+
+        # Perhitungan DirectionalIndex
+        # DX = 100 * (abs(+DI - -DI)/abs(+DI + -DI))
+        df["DX"] = 100 * abs(df["+DI"] - df["-DI"]) / abs(df["+DI"] + df["-DI"])
+
+        # Perhitungan Average Directional Index (ADX)
+        df["ADX"] = smoothed(df["DX"])
+
+        print(df)
+
+        # return dataframe
+        return df
