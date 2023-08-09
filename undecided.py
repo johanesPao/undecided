@@ -30,13 +30,13 @@ INTERVAL_EVALUASI = ["0.5 menit"]
 # Interval waktu chart yang dikembalikan oleh tradingview
 INTERVAL_CHART = ["1 jam"]
 # VARIABEL ASET
-ASET_DATA = "SOLUSDTPERP"
-ASET = "SOLUSDT"
+ASET_DATA = "LINAUSDT.P"
+ASET = "LINAUSDT"
 EXCHANGE = "BINANCE"
 LEVERAGE = 10
 INISIATOR_WAKTU = True
 JUMLAH_ERROR = 0
-JUMLAH_TRADE_USDT = 7
+JUMLAH_TRADE_USDT = 10
 inisiasi_konektor = Inisiasi()
 konektor_exchange = inisiasi_konektor.exchange()
 info_akun = InfoAkun(konektor_exchange)
@@ -203,7 +203,11 @@ while True:
         JUMLAH_ERROR = 0
 
         # Kalibrasi waktu untuk eksekusi selanjutnya
-        hitung_mundur = fungsi.kalibrasi_waktu(INTERVAL[0])
+        hitung_mundur = (
+            fungsi.kalibrasi_waktu(INTERVAL_CHART[INDEX_INTERVAL_CHART_TERKECIL]) 
+                    if MODE_HARGA_PENUTUPAN 
+                    else fungsi.kalibrasi_waktu(INTERVAL_EVALUASI[0])
+        )
         if hitung_mundur is not None and hitung_mundur > 2:
             ui.garis_horizontal(komponen="=")
             ui.keluar()
