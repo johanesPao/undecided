@@ -230,6 +230,7 @@ class AnalisaTeknikal:
         k_tinggi: str = "high",
         k_rendah: str = "low",
         k_tutup: str = "close",
+        mode_harga_penutupan: bool = True,
         backtest: bool = False,
     ) -> None | pd.DataFrame:
         # Cek jika smoothed
@@ -353,128 +354,10 @@ class AnalisaTeknikal:
         df["rendah_ha"] = df_heiken_ashi["rendah_ha"].values
         df["tutup_ha"] = df_heiken_ashi["tutup_ha"].values
 
-        # # Jika mode smooth heiken ashi
-        # if self.smoothed:
-        #     # string kolom smoothed komponen
-        #     komp_buka_smooth = "buka_smooth_1"
-        #     komp_tinggi_smooth = "tinggi_smooth_1"
-        #     komp_rendah_smooth = "rendah_smooth_1"
-        #     komp_tutup_smooth = "tutup_smooth_1"
-
-        #     # smoothed komponen pertama
-        #     buka_ha, tinggi_ha, rendah_ha, tutup_ha = olah_smoothed_komponen(
-        #         self.df, self.smooth_period_1
-        #     )
-        #     self.df[komp_buka_smooth] = buka_ha
-        #     self.df[komp_tinggi_smooth] = tinggi_ha
-        #     self.df[komp_rendah_smooth] = rendah_ha
-        #     self.df[komp_tutup_smooth] = tutup_ha
-
-        #     # drop baris dataframe dengan komponen smooth NaN
-        #     self.df.dropna(
-        #         subset=[
-        #             komp_buka_smooth,
-        #             komp_tinggi_smooth,
-        #             komp_rendah_smooth,
-        #             komp_tutup_smooth,
-        #         ],
-        #         inplace=True,
-        #     )
-
-        # # list untuk menampung heiken ashi
-        # list_buka_ha = []
-        # list_tinggi_ha = []
-        # list_rendah_ha = []
-        # list_tutup_ha = []
-
-        # for baris in range(len(self.df)):
-        #     buka = (
-        #         self.df.iloc[baris][komp_buka_smooth if self.smoothed else self.k_buka]  # type: ignore
-        #         + (
-        #             0
-        #             if baris == 0
-        #             else self.df.iloc[baris - 1][
-        #                 komp_tutup_smooth if self.smoothed else self.k_tutup  # type: ignore
-        #             ]
-        #         )
-        #     ) / 2
-        #     tinggi = max(
-        #         self.df.iloc[baris][
-        #             komp_tinggi_smooth if self.smoothed else self.k_tinggi  # type: ignore
-        #         ],
-        #         self.df.iloc[baris][komp_buka_smooth if self.smoothed else self.k_buka],  # type: ignore
-        #     )
-        #     rendah = min(
-        #         self.df.iloc[baris][
-        #             komp_rendah_smooth if self.smoothed else self.k_rendah  # type: ignore
-        #         ],
-        #         self.df.iloc[baris][
-        #             komp_tutup_smooth if self.smoothed else self.k_tutup  # type: ignore
-        #         ],
-        #     )
-        #     tutup = (
-        #         self.df.iloc[baris][komp_buka_smooth if self.smoothed else self.k_buka]  # type: ignore
-        #         + self.df.iloc[baris][
-        #             komp_tinggi_smooth if self.smoothed else self.k_tinggi  # type: ignore
-        #         ]
-        #         + self.df.iloc[baris][
-        #             komp_rendah_smooth if self.smoothed else self.k_rendah  # type: ignore
-        #         ]
-        #         + self.df.iloc[baris][
-        #             komp_tutup_smooth if self.smoothed else self.k_tutup  # type: ignore
-        #         ]
-        #     ) / 4
-        #     list_buka_ha.append(buka)
-        #     list_tinggi_ha.append(tinggi)
-        #     list_rendah_ha.append(rendah)
-        #     list_tutup_ha.append(tutup)
-
-        # # string kolom has (heiken ashi smoothed)
-        # buka_has = "buka_has"
-        # tinggi_has = "tinggi_has"
-        # rendah_has = "rendah_has"
-        # tutup_has = "tutup_has"
-
-        # # Menambahkan hasil smoothed pertama ke dalam kolom ha_smoothed di dataframe
-        # self.df[buka_has] = list_buka_ha
-        # self.df[tinggi_has] = list_tinggi_ha
-        # self.df[rendah_has] = list_rendah_ha
-        # self.df[tutup_has] = list_tutup_ha
-
-        # # Jika smooth_period_2 lebih besar dari 1
-        # if self.smooth_period_2 > 1:
-        #     # Lakukan smoothing pada komponen has
-        #     buka_has_2 = self.df[buka_has].rolling(self.smooth_period_2).mean()
-        #     tinggi_has_2 = self.df[tinggi_has].rolling(self.smooth_period_2).mean()
-        #     rendah_has_2 = self.df[rendah_has].rolling(self.smooth_period_2).mean()
-        #     tutup_has_2 = self.df[tutup_has].rolling(self.smooth_period_2).mean()
-        #     # Overwrite kolom has pada dataframe
-        #     self.df[buka_has] = buka_has_2
-        #     self.df[tinggi_has] = tinggi_has_2
-        #     self.df[rendah_has] = rendah_has_2
-        #     self.df[tutup_has] = tutup_has_2
-
-        # # drop baris dengan nilai NaN
-        # self.df.dropna(
-        #     subset=[buka_has, tinggi_has, rendah_has, tutup_has], inplace=True
-        # )
-
-        # # kolom kembali
-        # kolom_kembali = [
-        #     self.k_buka,
-        #     self.k_tinggi,
-        #     self.k_rendah,
-        #     self.k_tutup,
-        #     buka_has,
-        #     tinggi_has,
-        #     rendah_has,
-        #     tutup_has,
-        # ]
-
-        # heiken ashi backtest atau live
+        # backtest atau live
         # if not self.backtest:
-        #     self.df = self.df[kolom_kembali].iloc[-3:-1, :]
+        #     return df.iloc[-3: -1] if mode_harga_penutupan else df.iloc[-2:]
         # else:
-        #     self.df = self.df[kolom_kembali].iloc[:-1, :]
-
+        #     return df.iloc[:-1]
+        
         return df

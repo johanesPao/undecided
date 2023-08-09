@@ -87,7 +87,7 @@ class Fungsi:
                 # (60 pangkat 2 dikalikan dengan 24 dan 7) detik dalam 1 minggu
                 faktor_detik = 60**2 * 24 * 7
             case "bulan":
-                # (60 pangkat 2 dikalikan dengan 24, 7 dan jumlah hari dalam bulan) detik dalam bulan berjalan
+                # (60 pangkat 2 dikalikan dengan 24 dan jumlah hari dalam bulan) detik dalam bulan berjalan
                 faktor_detik = 60 ^ 2 * 24 * hari_dlm_bulan
             case _:
                 # Kasus default
@@ -104,8 +104,7 @@ class Fungsi:
         Argumen
         -------
         interval (str):
-            Interval waktu pertama (list[0]) yang digunakan dalam evaluasi strategi.
-
+            Interval waktu pertama (list[0]) yang digunakan dalam evaluasi strategi
         Return
         ------
         hitung_mundur (float):
@@ -158,7 +157,9 @@ class Fungsi:
                 hari_dlm_bulan=hari_dlm_bulan if list_interval[1] == "bulan" else 0,
             )
             # Jumlah detik interval
-            interval_detik = int(list_interval[0]) * faktor_detik
+            # Casting list_interval[0] dirubah dari int menjadi float
+            # Untuk mengakomodasi, misal: 0.5 menit
+            interval_detik = float(list_interval[0]) * faktor_detik
             # Jumlah detik hitung mundur sampai eksekusi berikutnya adalah
             # jumlah detik dalam interval dikurangi dengan waktu_saat_ini
             # modulus jumlah detik dalam interval

@@ -23,7 +23,12 @@ __status__ = "Development"
 # KONSTANTA
 MODE_BACKTEST = False
 PERIODE_BACKTEST = 1000
-INTERVAL = ["1 jam"]
+# Interval waktu yang digunakan untuk melakukan evaluasi tindakan
+# Interval ini berbeda dengan interval waktu yang dipergunakan dalam
+# dalam menarik data chart
+INTERVAL_EVALUASI = ["0.5 menit"]
+# Interval waktu chart yang dikembalikan oleh tradingview
+INTERVAL_CHART = ["1 jam"]
 # VARIABEL ASET
 ASET_DATA = "SOLUSDTPERP"
 ASET = "SOLUSDT"
@@ -47,6 +52,20 @@ ui.garis_horizontal(komponen="=")
 print(f"{ui.judul()} v{__version__}")
 ui.garis_horizontal(komponen="=")
 
+# Jika INTERVAL_EVALUASI lebih kecil dari INTERVAL_CHART terkecil maka 
+# MODE_HARGA_PENUTUPAN akan diset menjadi False dam sebaliknya adalah True
+# Sebenarnya INTERVAL_EVALUASI tidak akan berguna jika strategi menggunakan
+# kumpulan INTERVAL_CHART yang nilai terkecilnya lebih kecil dari INTERVAL_EVALUASI
+split_int_eva = INTERVAL_EVALUASI[0].split(" ")
+int_eva_konv = float(split_int_eva[0]) * fungsi.konverter_detik(split_int_eva[1])
+list_int_chart = []
+for waktu in INTERVAL_CHART:
+    split_waktu = waktu.split(" ")
+    int_chart = float(split_waktu[0]) * fungsi.konverter_detik(split_waktu[1])
+    list_int_chart.append(int_chart)
+# Mode ini menentukan penggunaan harga penutupan terakhir atau harga terakhir
+MODE_HARGA_PENUTUPAN = False if int_eva_konv < min(list_int_chart) else False
+INDEX_INTERVAL_CHART_TERKECIL = list_int_chart.index(min(list_int_chart))
 
 while True:
     try:
@@ -143,8 +162,15 @@ while True:
         ui.garis_horizontal()
 
         # Kalibrasi waktu sebelum eksekusi jika loop awal program
+        # INTERVAL diubah menjadi INTERVAL_EVALUASI untuk memungkinkan
+        # evaluasi tindakan yang berbeda dengan data yang dikembalikan oleh
+        # INTERVAL_CHART
         if INISIATOR_WAKTU:
-            hitung_mundur = fungsi.kalibrasi_waktu(INTERVAL[0])
+            hitung_mundur = (
+                fungsi.kalibrasi_waktu(INTERVAL_CHART[INDEX_INTERVAL_CHART_TERKECIL]) 
+                    if MODE_HARGA_PENUTUPAN 
+                    else fungsi.kalibrasi_waktu(INTERVAL_EVALUASI[0])
+            )
             if hitung_mundur is not None and hitung_mundur > 2:
                 ui.keluar()
                 ui.hitung_mundur(hitung_mundur, True)
@@ -158,6 +184,9 @@ while True:
             ASET,
             EXCHANGE,
             leverage=LEVERAGE,
+            inter_eval=INTERVAL_EVALUASI,
+            inter_chart=INTERVAL_CHART,
+            mode_harga_penutupan=MODE_HARGA_PENUTUPAN,
             backtest=MODE_BACKTEST,
             jumlah_periode_backtest=PERIODE_BACKTEST,
             jumlah_trade_usdt=JUMLAH_TRADE_USDT,
@@ -168,7 +197,7 @@ while True:
         # strategi.jpao_ride_the_ema(interval=INTERVAL, periode_ema=37, smoothing=2, dual_ema=True, periode_ema_cepat=5)  # type: ignore
         # strategi.jpao_smooth_ma_velocity(interval=INTERVAL, periode_ma=7, smoothing=21)  # type: ignore
         # strategi.jpao_ride_the_wave(interval=INTERVAL, periode_ma_cepat=4, periode_ma_lambat=49)  # type: ignore
-        strategi.jpao_double_smoothed_heiken_ashi(interval=INTERVAL, smoothed_ha=True, tipe_ma_smoothing=["ema"], smoothing_1=2, smoothing_2=35)  # type: ignore
+        strategi.jpao_double_smoothed_heiken_ashi(smoothed_ha=True, tipe_ma_smoothing=["ema"], smoothing_1=2, smoothing_2=35)  # type: ignore
 
         # Reset jumlah error b2eruntun
         JUMLAH_ERROR = 0

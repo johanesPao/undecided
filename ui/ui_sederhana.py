@@ -42,7 +42,7 @@ class UI:
     def label_nilai(
         self,
         label: str = "Label",
-        nilai: int | float = 0,
+        nilai: int | float | str = 0,
         penting: bool = False,
         spasi_label: int = 18,
         spasi_nilai: int = 17,

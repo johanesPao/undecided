@@ -37,6 +37,9 @@ class Strategi:
         simbol: str,
         exchange: str,
         leverage: int = 10,
+        inter_eval: list[str] = [],
+        inter_chart: list[str] = [],
+        mode_harga_penutupan: bool = True,
         backtest: bool = False,
         jumlah_periode_backtest: int = 0,
         saldo_backtest: float = 0,
@@ -63,6 +66,9 @@ class Strategi:
         self.order = Order(self.simbol)
         self.exchange = exchange
         self.leverage = leverage
+        self.inter_eval = inter_eval
+        self.inter_chart = inter_chart
+        self.mode_harga_penutupan = mode_harga_penutupan
         self.backtest = backtest
         if not self.backtest:
             self.ui = UI()
@@ -1972,23 +1978,6 @@ class Strategi:
 
     def jpao_double_smoothed_heiken_ashi(
         self,
-        interval: List[
-            Literal[
-                "1 menit",
-                "3 menit",
-                "5 menit",
-                "15 menit",
-                "30 menit",
-                "45 menit",
-                "1 jam",
-                "2 jam",
-                "3 jam",
-                "4 jam",
-                "1 hari",
-                "1 minggu",
-                "1 bulan",
-            ]
-        ] = ["1 menit"],
         smoothed_ha: bool = False,
         tipe_ma_smoothing: List[Literal["sma", "ema"]] = ["sma"],
         smoothing_1: int = 4,
@@ -1996,7 +1985,6 @@ class Strategi:
         periode_ma_1: int = 20,
         periode_ma_2: int = 50,
     ) -> None | list:
-        self.interval = interval
         self.smoothed_ha = smoothed_ha
         self.tipe_ma_smoothing = tipe_ma_smoothing
         if self.smoothed_ha:
@@ -2009,7 +1997,7 @@ class Strategi:
         self.periode_ma_1 = periode_ma_1
         self.periode_ma_2 = periode_ma_2
 
-        if len(self.interval) != 1:
+        if len(self.inter_chart) != 1:
             return print(
                 "STRATEGI INI (jpao_double_smoothed_heiken_ashi) MENGGUNAKAN INTERVAL WAKTU DALAM LIST BERJUMLAH SATU"
             )
@@ -2040,7 +2028,7 @@ class Strategi:
             )
         )
 
-        waktu = self.fungsi.konverter_waktu(self.interval[0])
+        waktu = self.fungsi.konverter_waktu(self.inter_chart[0])
 
         self.data = []
 
@@ -2075,6 +2063,7 @@ class Strategi:
             smoothed=self.smoothed_ha,
             smooth_period_1=self.smoothing_1,
             smooth_period_2=self.smoothing_2,
+            mode_harga_penutupan=self.mode_harga_penutupan,
             backtest=self.backtest,
         )
 
@@ -2110,7 +2099,10 @@ class Strategi:
             self.df = self.df.iloc[:-1]
         else:
             # Dua baris data terakhir tidak termasuk baris data terakhir
-            self.df = self.df.iloc[-3:-1]
+            # Untuk live dilakukan perubahan data yang dikembalikan untuk
+            # memasukkan harga terakhir (belum tutup) jika self.mode_harga_penutupan
+            # adalah False dan sebaliknya
+            self.df = self.df.iloc[-3:-1] if self.mode_harga_penutupan else self.df.iloc[-2:]
 
         # spread tutup dan buka Heiken Ashi upscale 100000
         self.df = self.df.assign(
@@ -2151,10 +2143,12 @@ class Strategi:
         list_keadaan_ha = []
         for baris in range(len(self.df)):
             if baris != 0:
-                membesar = abs(self.df.iloc[baris].ha_spread) >= abs(
-                    self.df.iloc[baris - 1].ha_spread
-                )
-                list_keadaan_ha.append("MEMBESAR" if membesar else "MENGECIL")
+                # Merubah keadaan_ha dari membesar atau mengecil menjadi positif atau negatif
+                positif = self.df.iloc[baris].ha_spread > self.df.iloc[baris - 1].ha_spread
+                # membesar = abs(self.df.iloc[baris].ha_spread) >= abs(
+                #     self.df.iloc[baris - 1].ha_spread
+                # )
+                list_keadaan_ha.append("POSITIF" if positif else "NEGATIF")
             else:
                 list_keadaan_ha.append(np.nan)
         # menambahkan list_keadaan_ha ke dalam self.df
@@ -2185,19 +2179,20 @@ class Strategi:
             harga_koin_terakhir = self.akun.harga_koin_terakhir(self.simbol)
             kuantitas_koin = float(TRADE_USDT * self.leverage / harga_koin_terakhir)
 
-            harga_penutupan_terakhir = list_data[0].iloc[-1].close
+            harga_terakhir = list_data[0].iloc[-1].close
 
             buka_ha = list_data[0].iloc[-1].buka_ha
             tinggi_ha = list_data[0].iloc[-1].tinggi_ha
             rendah_ha = list_data[0].iloc[-1].rendah_ha
             tutup_ha = list_data[0].iloc[-1].tutup_ha
+            keadaan_ha = list_data[0].iloc[-1].keadaan_ha
 
-            warna_ha = list_data[0].iloc[-1].warna_ha
-            warna_ha_sebelumnya = list_data[0].iloc[-2].warna_ha
+            # warna_ha = list_data[0].iloc[-1].warna_ha
+            # warna_ha_sebelumnya = list_data[0].iloc[-2].warna_ha
 
             self.ui.label_nilai(
-                label="Harga Penutupan terakhir",
-                nilai=harga_penutupan_terakhir,
+                label="Harga Terakhir",
+                nilai=harga_terakhir,
                 spasi_label=50,
             )
             print("")
@@ -2222,19 +2217,24 @@ class Strategi:
                 nilai=round(tutup_ha, 8),
                 spasi_label=50,
             )
+            self.ui.label_nilai(
+                label=f"Keadaan HA",
+                nilai=keadaan_ha,
+                spasi_label=50,
+            )
             print(
-                f"\nMODE STRATEGI: \nDOUBLE SMOOTHED HEIKEN ASHI (smoothing 1: {self.smoothing_1}; smoothing 2: {self.smoothing_2}) {Fore.RED if warna_ha == 'HA_MERAH' else Fore.GREEN}[{warna_ha}]{Style.RESET_ALL}"
+                f"\nMODE STRATEGI: \nDOUBLE SMOOTHED HEIKEN ASHI (smoothing 1: {self.smoothing_1}; smoothing 2: {self.smoothing_2}) {Fore.RED if keadaan_ha == 'NEGATIF' else Fore.GREEN}[{keadaan_ha}]{Style.RESET_ALL}"
             )
 
             # KONDISI EXIT
             if "LONG" in POSISI:
-                if warna_ha == "HA_MERAH" and warna_ha_sebelumnya == "HA_HIJAU":
+                if keadaan_ha == "NEGATIF":
                     self.order.tutup_long(
                         self.kuantitas_long_dsha, leverage=self.leverage
                     )
                     self.kuantitas_long_dsha = 0
             if "SHORT" in POSISI:
-                if warna_ha == "HA_HIJAU" and warna_ha_sebelumnya == "HA_MERAH":
+                if keadaan_ha == "POSITIF":
                     self.order.tutup_short(
                         self.kuantitas_short_dsha, leverage=self.leverage
                     )
@@ -2242,12 +2242,12 @@ class Strategi:
 
             # KONDISI ENTRY
             if "LONG" not in POSISI:
-                if warna_ha == "HA_HIJAU" and warna_ha_sebelumnya == "HA_MERAH":
+                if keadaan_ha == "POSITIF":
                     self.kuantitas_long_dsha = self.order.buka_long(
                         kuantitas_koin, leverage=self.leverage
                     )
             if "SHORT" not in POSISI:
-                if warna_ha == "HA_MERAH" and warna_ha_sebelumnya == "HA_HIJAU":
+                if keadaan_ha == "NEGATIF":
                     self.kuantitas_short_dsha = self.order.buka_short(
                         kuantitas_koin, leverage=self.leverage
                     )
