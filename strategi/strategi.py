@@ -2136,7 +2136,7 @@ class Strategi:
 
         # jika spread negatif maka warna_ha MERAH dan jika positif HIJAU
         self.df["warna_ha"] = [
-            "HA_MERAH" if x < 0 else "HA_HIJAU" for x in self.df["ha_spread"]
+            "HA_MERAH" if x <= 0 else "HA_HIJAU" for x in self.df["ha_spread"]
         ]
 
         # jika spread melebar maka ha_state MEMBESAR dan jika menyempit maka has_state MENGECIL
@@ -2187,8 +2187,8 @@ class Strategi:
             tutup_ha = list_data[0].iloc[-1].tutup_ha
             keadaan_ha = list_data[0].iloc[-1].keadaan_ha
 
-            # warna_ha = list_data[0].iloc[-1].warna_ha
-            # warna_ha_sebelumnya = list_data[0].iloc[-2].warna_ha
+            warna_ha = list_data[0].iloc[-1].warna_ha
+            #warna_ha_sebelumnya = list_data[0].iloc[-2].warna_ha
 
             self.ui.label_nilai(
                 label="Harga Terakhir",
@@ -2218,23 +2218,23 @@ class Strategi:
                 spasi_label=50,
             )
             self.ui.label_nilai(
-                label=f"Keadaan HA",
-                nilai=keadaan_ha,
+                label=f"Warna HA",
+                nilai=warna_ha,
                 spasi_label=50,
             )
             print(
-                f"\nMODE STRATEGI: \nDOUBLE SMOOTHED HEIKEN ASHI (smoothing 1: {self.smoothing_1}; smoothing 2: {self.smoothing_2}) {Fore.RED if keadaan_ha == 'NEGATIF' else Fore.GREEN}[{keadaan_ha}]{Style.RESET_ALL}"
+                f"\nMODE STRATEGI: \nDOUBLE SMOOTHED HEIKEN ASHI (smoothing 1: {self.smoothing_1}; smoothing 2: {self.smoothing_2}) {Fore.RED if warna_ha == 'HA_MERAH' else Fore.GREEN}[{warna_ha}]{Style.RESET_ALL}"
             )
 
             # KONDISI EXIT
             if "LONG" in POSISI:
-                if keadaan_ha == "NEGATIF":
+                if warna_ha == "HA_MERAH":
                     self.order.tutup_long(
                         self.kuantitas_long_dsha, leverage=self.leverage
                     )
                     self.kuantitas_long_dsha = 0
             if "SHORT" in POSISI:
-                if keadaan_ha == "POSITIF":
+                if warna_ha == "HA_HIJAU":
                     self.order.tutup_short(
                         self.kuantitas_short_dsha, leverage=self.leverage
                     )
@@ -2242,12 +2242,12 @@ class Strategi:
 
             # KONDISI ENTRY
             if "LONG" not in POSISI:
-                if keadaan_ha == "POSITIF":
+                if warna_ha == "HA_HIJAU":
                     self.kuantitas_long_dsha = self.order.buka_long(
                         kuantitas_koin, leverage=self.leverage
                     )
             if "SHORT" not in POSISI:
-                if keadaan_ha == "NEGATIF":
+                if warna_ha == "HA_MERAH":
                     self.kuantitas_short_dsha = self.order.buka_short(
                         kuantitas_koin, leverage=self.leverage
                     )

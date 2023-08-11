@@ -26,9 +26,9 @@ PERIODE_BACKTEST = 1000
 # Interval waktu yang digunakan untuk melakukan evaluasi tindakan
 # Interval ini berbeda dengan interval waktu yang dipergunakan dalam
 # dalam menarik data chart
-INTERVAL_EVALUASI = ["0.5 menit"]
+INTERVAL_EVALUASI = ["7.5 menit"]
 # Interval waktu chart yang dikembalikan oleh tradingview
-INTERVAL_CHART = ["1 jam"]
+INTERVAL_CHART = ["15 menit"]
 # VARIABEL ASET
 ASET_DATA = "LINAUSDT.P"
 ASET = "LINAUSDT"
@@ -36,7 +36,7 @@ EXCHANGE = "BINANCE"
 LEVERAGE = 10
 INISIATOR_WAKTU = True
 JUMLAH_ERROR = 0
-JUMLAH_TRADE_USDT = 10
+JUMLAH_TRADE_USDT = 2
 inisiasi_konektor = Inisiasi()
 konektor_exchange = inisiasi_konektor.exchange()
 info_akun = InfoAkun(konektor_exchange)
@@ -64,7 +64,7 @@ for waktu in INTERVAL_CHART:
     int_chart = float(split_waktu[0]) * fungsi.konverter_detik(split_waktu[1])
     list_int_chart.append(int_chart)
 # Mode ini menentukan penggunaan harga penutupan terakhir atau harga terakhir
-MODE_HARGA_PENUTUPAN = False if int_eva_konv < min(list_int_chart) else False
+MODE_HARGA_PENUTUPAN = False if int_eva_konv <= min(list_int_chart) else True
 INDEX_INTERVAL_CHART_TERKECIL = list_int_chart.index(min(list_int_chart))
 
 while True:
