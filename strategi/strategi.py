@@ -2218,23 +2218,28 @@ class Strategi:
                 spasi_label=50,
             )
             self.ui.label_nilai(
-                label=f"Warna HA",
-                nilai=warna_ha,
-                spasi_label=50,
+                label=f"Keadaan HA",
+                nilai=keadaan_ha,
+                spasi_label=50
             )
+            # self.ui.label_nilai(
+            #     label=f"Warna HA",
+            #     nilai=warna_ha,
+            #     spasi_label=50,
+            # )
             print(
-                f"\nMODE STRATEGI: \nDOUBLE SMOOTHED HEIKEN ASHI (smoothing 1: {self.smoothing_1}; smoothing 2: {self.smoothing_2}) {Fore.RED if warna_ha == 'HA_MERAH' else Fore.GREEN}[{warna_ha}]{Style.RESET_ALL}"
+                f"\nMODE STRATEGI: \nDOUBLE SMOOTHED HEIKEN ASHI (smoothing 1: {self.smoothing_1}; smoothing 2: {self.smoothing_2}) {Fore.RED if keadaan_ha == 'HA_MERAH' else Fore.GREEN}[{keadaan_ha}]{Style.RESET_ALL}"
             )
 
             # KONDISI EXIT
             if "LONG" in POSISI:
-                if warna_ha == "HA_MERAH":
+                if keadaan_ha == "NEGATIF":
                     self.order.tutup_long(
                         self.kuantitas_long_dsha, leverage=self.leverage
                     )
                     self.kuantitas_long_dsha = 0
             if "SHORT" in POSISI:
-                if warna_ha == "HA_HIJAU":
+                if keadaan_ha == "POSITIF":
                     self.order.tutup_short(
                         self.kuantitas_short_dsha, leverage=self.leverage
                     )
@@ -2242,12 +2247,12 @@ class Strategi:
 
             # KONDISI ENTRY
             if "LONG" not in POSISI:
-                if warna_ha == "HA_HIJAU":
+                if keadaan_ha == "POSITIF":
                     self.kuantitas_long_dsha = self.order.buka_long(
                         kuantitas_koin, leverage=self.leverage
                     )
             if "SHORT" not in POSISI:
-                if warna_ha == "HA_MERAH":
+                if keadaan_ha == "NEGATIF":
                     self.kuantitas_short_dsha = self.order.buka_short(
                         kuantitas_koin, leverage=self.leverage
                     )

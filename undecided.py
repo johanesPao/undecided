@@ -26,7 +26,7 @@ PERIODE_BACKTEST = 1000
 # Interval waktu yang digunakan untuk melakukan evaluasi tindakan
 # Interval ini berbeda dengan interval waktu yang dipergunakan dalam
 # dalam menarik data chart
-INTERVAL_EVALUASI = ["7.5 menit"]
+INTERVAL_EVALUASI = ["5 menit"]
 # Interval waktu chart yang dikembalikan oleh tradingview
 INTERVAL_CHART = ["15 menit"]
 # VARIABEL ASET
@@ -197,7 +197,7 @@ while True:
         # strategi.jpao_ride_the_ema(interval=INTERVAL, periode_ema=37, smoothing=2, dual_ema=True, periode_ema_cepat=5)  # type: ignore
         # strategi.jpao_smooth_ma_velocity(interval=INTERVAL, periode_ma=7, smoothing=21)  # type: ignore
         # strategi.jpao_ride_the_wave(interval=INTERVAL, periode_ma_cepat=4, periode_ma_lambat=49)  # type: ignore
-        strategi.jpao_double_smoothed_heiken_ashi(smoothed_ha=True, tipe_ma_smoothing=["ema"], smoothing_1=1, smoothing_2=1)  # type: ignore
+        strategi.jpao_double_smoothed_heiken_ashi(smoothed_ha=True, tipe_ma_smoothing=["ema"], smoothing_1=1, smoothing_2=35)  # type: ignore
 
         # Reset jumlah error b2eruntun
         JUMLAH_ERROR = 0
