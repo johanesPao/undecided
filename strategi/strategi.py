@@ -2188,7 +2188,7 @@ class Strategi:
             keadaan_ha = list_data[0].iloc[-1].keadaan_ha
 
             warna_ha = list_data[0].iloc[-1].warna_ha
-            #warna_ha_sebelumnya = list_data[0].iloc[-2].warna_ha
+            # warna_ha_sebelumnya = list_data[0].iloc[-2].warna_ha
 
             self.ui.label_nilai(
                 label="Harga Terakhir",
@@ -2222,40 +2222,82 @@ class Strategi:
                 nilai=keadaan_ha,
                 spasi_label=50
             )
-            # self.ui.label_nilai(
-            #     label=f"Warna HA",
-            #     nilai=warna_ha,
-            #     spasi_label=50,
-            # )
+            self.ui.label_nilai(
+                label=f"Warna HA",
+                nilai=warna_ha,
+                spasi_label=50,
+            )
             print(
-                f"\nMODE STRATEGI: \nDOUBLE SMOOTHED HEIKEN ASHI (smoothing 1: {self.smoothing_1}; smoothing 2: {self.smoothing_2}) {Fore.RED if keadaan_ha == 'HA_MERAH' else Fore.GREEN}[{keadaan_ha}]{Style.RESET_ALL}"
+                f"\nMODE STRATEGI: \nDOUBLE SMOOTHED HEIKEN ASHI (smoothing 1: {self.smoothing_1}; smoothing 2: {self.smoothing_2}) {Fore.RED if warna_ha == 'HA_MERAH' else Fore.GREEN}[{warna_ha}]{Style.RESET_ALL} {Fore.RED if keadaan_ha == 'NEGATIF' else Fore.GREEN}[{keadaan_ha}]{Style.RESET_ALL}"
             )
 
-            # KONDISI EXIT
-            if "LONG" in POSISI:
-                if keadaan_ha == "NEGATIF":
+            # Pada dasarnya terdapat dua kondisi, HA_MERAH dan HA_HIJAU, tergantung warna HA, kita akan melakukan hedging
+            # Contoh: Saat HA_MERAH kita ingin membuka dan menjaga posisi SHORT namun pada warna_ha HA_MERAH dan keadaan_ha POSITIF kita juga akan membuka LONG, LONG ini ditutup jika keadaan_ha berubah menjadi NEGATIF dan warna_ha masih HA_MERAH
+            # Dan sebaliknya, kita ingin membuka dan menjaga posisi LONG saat warna_ha HIJAU dan membuka SHORT jika keadaan_ha berubah menjadi NEGATIF, SHORT ini akan ditutup jika keadaan_ha berubah menjadi POSITIF
+            # SKENARIO I (HA_MERAH)
+            if warna_ha == "HA_MERAH" and "SHORT" not in POSISI:
+                # BUKA POSISI JANGKA PANJANG SHORT
+                # TIDAK DIPERLUKAN CEK POSISI LONG PADA SKENARIO INI
+                self.order.buka_short(
+                    self.kuantitas_short_dsha, leverage=self.leverage
+                )
+                self.kuantitas_short_dsha = 0
+                # KONDISI EXIT LONG:
+                if keadaan_ha == "NEGATIF" and "LONG" in POSISI:
                     self.order.tutup_long(
                         self.kuantitas_long_dsha, leverage=self.leverage
                     )
                     self.kuantitas_long_dsha = 0
-            if "SHORT" in POSISI:
-                if keadaan_ha == "POSITIF":
+                # KONDISI ENTER LONG:
+                if keadaan_ha == "POSITIF" and "LONG" not in POSISI:
+                    self.order.buka_long(
+                        self.kuantitas_long_dsha, leverage=self.leverage
+                    )
+            # SKENARIO II (HA_HIJAU)
+            if warna_ha == "HA_HIJAU" and "LONG" not in POSISI:
+                # BUKA POSISI JANGKA PANJANG LONG
+                # TIDAK DIPERLUKAN CEK POSISI SHORT PADA SKENARIO INI
+                self.order.buka_long(
+                    self.kuantitas_long_dsha, leverage=self.leverage
+                )
+                self.kuantitas_long_dsha = 0
+                # KONDISI EXIT SHORT:
+                if keadaan_ha == "POSITIF" and "SHORT" in POSISI:
                     self.order.tutup_short(
                         self.kuantitas_short_dsha, leverage=self.leverage
                     )
                     self.kuantitas_short_dsha = 0
+                # KONDISI ENTER SHORT:
+                if keadaan_ha == "NEGATIF" and "SHORT" not in POSISI:
+                    self.order.buka_short(
+                        self.kuantitas_short_dsha, leverage=self.leverage
+                    )
 
-            # KONDISI ENTRY
-            if "LONG" not in POSISI:
-                if keadaan_ha == "POSITIF":
-                    self.kuantitas_long_dsha = self.order.buka_long(
-                        kuantitas_koin, leverage=self.leverage
-                    )
-            if "SHORT" not in POSISI:
-                if keadaan_ha == "NEGATIF":
-                    self.kuantitas_short_dsha = self.order.buka_short(
-                        kuantitas_koin, leverage=self.leverage
-                    )
+            # # KONDISI EXIT
+            # if "LONG" in POSISI:
+            #     if keadaan_ha == "NEGATIF":
+            #         self.order.tutup_long(
+            #             self.kuantitas_long_dsha, leverage=self.leverage
+            #         )
+            #         self.kuantitas_long_dsha = 0
+            # if "SHORT" in POSISI:
+            #     if keadaan_ha == "POSITIF":
+            #         self.order.tutup_short(
+            #             self.kuantitas_short_dsha, leverage=self.leverage
+            #         )
+            #         self.kuantitas_short_dsha = 0
+
+            # # KONDISI ENTRY
+            # if "LONG" not in POSISI:
+            #     if keadaan_ha == "POSITIF":
+            #         self.kuantitas_long_dsha = self.order.buka_long(
+            #             kuantitas_koin, leverage=self.leverage
+            #         )
+            # if "SHORT" not in POSISI:
+            #     if keadaan_ha == "NEGATIF":
+            #         self.kuantitas_short_dsha = self.order.buka_short(
+            #             kuantitas_koin, leverage=self.leverage
+            #         )
 
         # FUNGSI BACKTEST
         def backtest(list_data: list = self.data) -> str:
