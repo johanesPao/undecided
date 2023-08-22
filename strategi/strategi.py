@@ -2235,13 +2235,14 @@ class Strategi:
             # Contoh: Saat HA_MERAH kita ingin membuka dan menjaga posisi SHORT namun pada warna_ha HA_MERAH dan keadaan_ha POSITIF kita juga akan membuka LONG, LONG ini ditutup jika keadaan_ha berubah menjadi NEGATIF dan warna_ha masih HA_MERAH
             # Dan sebaliknya, kita ingin membuka dan menjaga posisi LONG saat warna_ha HIJAU dan membuka SHORT jika keadaan_ha berubah menjadi NEGATIF, SHORT ini akan ditutup jika keadaan_ha berubah menjadi POSITIF
             # SKENARIO I (HA_MERAH)
-            if warna_ha == "HA_MERAH" and "SHORT" not in POSISI:
+            if warna_ha == "HA_MERAH":
                 # BUKA POSISI JANGKA PANJANG SHORT
                 # TIDAK DIPERLUKAN CEK POSISI LONG PADA SKENARIO INI
-                self.order.buka_short(
-                    self.kuantitas_short_dsha, leverage=self.leverage
-                )
-                self.kuantitas_short_dsha = 0
+                if "SHORT" not in POSISI:
+                    self.order.buka_short(
+                        self.kuantitas_short_dsha, leverage=self.leverage
+                    )
+                    self.kuantitas_short_dsha = 0
                 # KONDISI EXIT LONG:
                 if keadaan_ha == "NEGATIF" and "LONG" in POSISI:
                     self.order.tutup_long(
@@ -2254,13 +2255,14 @@ class Strategi:
                         self.kuantitas_long_dsha, leverage=self.leverage
                     )
             # SKENARIO II (HA_HIJAU)
-            if warna_ha == "HA_HIJAU" and "LONG" not in POSISI:
+            if warna_ha == "HA_HIJAU":
                 # BUKA POSISI JANGKA PANJANG LONG
                 # TIDAK DIPERLUKAN CEK POSISI SHORT PADA SKENARIO INI
-                self.order.buka_long(
-                    self.kuantitas_long_dsha, leverage=self.leverage
-                )
-                self.kuantitas_long_dsha = 0
+                if "LONG" not in POSISI:
+                    self.order.buka_long(
+                        self.kuantitas_long_dsha, leverage=self.leverage
+                    )
+                    self.kuantitas_long_dsha = 0
                 # KONDISI EXIT SHORT:
                 if keadaan_ha == "POSITIF" and "SHORT" in POSISI:
                     self.order.tutup_short(
