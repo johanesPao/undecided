@@ -2239,10 +2239,9 @@ class Strategi:
                 # BUKA POSISI JANGKA PANJANG SHORT
                 # TIDAK DIPERLUKAN CEK POSISI LONG PADA SKENARIO INI
                 if "SHORT" not in POSISI:
-                    self.order.buka_short(
-                        self.kuantitas_short_dsha, leverage=self.leverage
+                    self.kuantitas_short_dsha = self.order.buka_short(
+                        kuantitas_koin, leverage=self.leverage
                     )
-                    self.kuantitas_short_dsha = 0
                 # KONDISI EXIT LONG:
                 if keadaan_ha == "NEGATIF" and "LONG" in POSISI:
                     self.order.tutup_long(
@@ -2251,18 +2250,17 @@ class Strategi:
                     self.kuantitas_long_dsha = 0
                 # KONDISI ENTER LONG:
                 if keadaan_ha == "POSITIF" and "LONG" not in POSISI:
-                    self.order.buka_long(
-                        self.kuantitas_long_dsha, leverage=self.leverage
+                    self.kuantitas_long_dsha = self.order.buka_long(
+                        kuantitas_koin, leverage=self.leverage
                     )
             # SKENARIO II (HA_HIJAU)
             if warna_ha == "HA_HIJAU":
                 # BUKA POSISI JANGKA PANJANG LONG
                 # TIDAK DIPERLUKAN CEK POSISI SHORT PADA SKENARIO INI
                 if "LONG" not in POSISI:
-                    self.order.buka_long(
-                        self.kuantitas_long_dsha, leverage=self.leverage
+                    self.kuantitas_long_dsha = self.order.buka_long(
+                        kuantitas_koin, leverage=self.leverage
                     )
-                    self.kuantitas_long_dsha = 0
                 # KONDISI EXIT SHORT:
                 if keadaan_ha == "POSITIF" and "SHORT" in POSISI:
                     self.order.tutup_short(
@@ -2271,8 +2269,8 @@ class Strategi:
                     self.kuantitas_short_dsha = 0
                 # KONDISI ENTER SHORT:
                 if keadaan_ha == "NEGATIF" and "SHORT" not in POSISI:
-                    self.order.buka_short(
-                        self.kuantitas_short_dsha, leverage=self.leverage
+                    self.kuantitas_short_dsha = self.order.buka_short(
+                        kuantitas_koin, leverage=self.leverage
                     )
 
             # # KONDISI EXIT
