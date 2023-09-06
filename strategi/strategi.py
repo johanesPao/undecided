@@ -2231,45 +2231,72 @@ class Strategi:
                 f"\nMODE STRATEGI: \nDOUBLE SMOOTHED HEIKEN ASHI (smoothing 1: {self.smoothing_1}; smoothing 2: {self.smoothing_2}) {Fore.RED if warna_ha == 'HA_MERAH' else Fore.GREEN}[{warna_ha}]{Style.RESET_ALL} {Fore.RED if keadaan_ha == 'NEGATIF' else Fore.GREEN}[{keadaan_ha}]{Style.RESET_ALL}"
             )
 
-            # Pada dasarnya terdapat dua kondisi, HA_MERAH dan HA_HIJAU, tergantung warna HA, kita akan melakukan hedging
-            # Contoh: Saat HA_MERAH kita ingin membuka dan menjaga posisi SHORT namun pada warna_ha HA_MERAH dan keadaan_ha POSITIF kita juga akan membuka LONG, LONG ini ditutup jika keadaan_ha berubah menjadi NEGATIF dan warna_ha masih HA_MERAH
-            # Dan sebaliknya, kita ingin membuka dan menjaga posisi LONG saat warna_ha HIJAU dan membuka SHORT jika keadaan_ha berubah menjadi NEGATIF, SHORT ini akan ditutup jika keadaan_ha berubah menjadi POSITIF
+            # Pada dasarnya terdapat dua kondisi, HA_MERAH dan HA_HIJAU, tergantung warna_ha, kita akan melakukan hedging
+            # Contoh: Saat HA_MERAH kita ingin membuka dan menjaga posisi SHORT namun pada warna_ha HA_MERAH dan keadaan_ha POSITIF kita juga akan membuka LONG,
+            # LONG ini ditutup jika keadaan_ha berubah menjadi NEGATIF dan warna_ha masih HA_MERAH. Sebaliknya, kita ingin membuka dan menjaga posisi LONG saat 
+            # warna_ha HIJAU dan membuka SHORT jika keadaan_ha berubah menjadi NEGATIF, SHORT ini akan ditutup jika keadaan_ha berubah menjadi POSITIF
             # SKENARIO I (HA_MERAH)
+            # if warna_ha == "HA_MERAH":
+            #     # BUKA POSISI JANGKA PANJANG SHORT
+            #     # TIDAK DIPERLUKAN CEK POSISI LONG PADA SKENARIO INI
+            #     if "SHORT" not in POSISI:
+            #         self.kuantitas_short_dsha = self.order.buka_short(
+            #             kuantitas_koin, leverage=self.leverage
+            #         )
+            #     # KONDISI EXIT LONG:
+            #     if keadaan_ha == "NEGATIF" and "LONG" in POSISI:
+            #         self.order.tutup_long(
+            #             self.kuantitas_long_dsha, leverage=self.leverage
+            #         )
+            #         self.kuantitas_long_dsha = 0
+            #     # KONDISI ENTER LONG:
+            #     if keadaan_ha == "POSITIF" and "LONG" not in POSISI:
+            #         self.kuantitas_long_dsha = self.order.buka_long(
+            #             kuantitas_koin, leverage=self.leverage
+            #         )
+            # # SKENARIO II (HA_HIJAU)
+            # if warna_ha == "HA_HIJAU":
+            #     # BUKA POSISI JANGKA PANJANG LONG
+            #     # TIDAK DIPERLUKAN CEK POSISI SHORT PADA SKENARIO INI
+            #     if "LONG" not in POSISI:
+            #         self.kuantitas_long_dsha = self.order.buka_long(
+            #             kuantitas_koin, leverage=self.leverage
+            #         )
+            #     # KONDISI EXIT SHORT:
+            #     if keadaan_ha == "POSITIF" and "SHORT" in POSISI:
+            #         self.order.tutup_short(
+            #             self.kuantitas_short_dsha, leverage=self.leverage
+            #         )
+            #         self.kuantitas_short_dsha = 0
+            #     # KONDISI ENTER SHORT:
+            #     if keadaan_ha == "NEGATIF" and "SHORT" not in POSISI:
+            #         self.kuantitas_short_dsha = self.order.buka_short(
+            #             kuantitas_koin, leverage=self.leverage
+            #         )
+
+            # Perubahan menggunakan heiken ashi 1 1 dan perubahan posisi long short hanya berdasar warna ha, interval cek dibuat lebih rendah dari interval chart dan tidak mengimplementasikan hedge
+            # hanya ada 1 posisi pada 1 waktu tertentu
             if warna_ha == "HA_MERAH":
-                # BUKA POSISI JANGKA PANJANG SHORT
-                # TIDAK DIPERLUKAN CEK POSISI LONG PADA SKENARIO INI
-                if "SHORT" not in POSISI:
-                    self.kuantitas_short_dsha = self.order.buka_short(
-                        kuantitas_koin, leverage=self.leverage
-                    )
-                # KONDISI EXIT LONG:
-                if keadaan_ha == "NEGATIF" and "LONG" in POSISI:
+                # TUTUP POSISI LONG JIKA ADA
+                if "LONG" in POSISI:
                     self.order.tutup_long(
                         self.kuantitas_long_dsha, leverage=self.leverage
                     )
                     self.kuantitas_long_dsha = 0
-                # KONDISI ENTER LONG:
-                if keadaan_ha == "POSITIF" and "LONG" not in POSISI:
-                    self.kuantitas_long_dsha = self.order.buka_long(
+                # BUKA POSISI SHORT JIKA TIDAK ADA
+                if "SHORT" not in POSISI:
+                    self.order.buka_short(
                         kuantitas_koin, leverage=self.leverage
                     )
-            # SKENARIO II (HA_HIJAU)
             if warna_ha == "HA_HIJAU":
-                # BUKA POSISI JANGKA PANJANG LONG
-                # TIDAK DIPERLUKAN CEK POSISI SHORT PADA SKENARIO INI
+                # TUTUP POSISI SHORT JIKA ADA
+                self.order.tutup_short(
+                    self.kuantitas_short_dsha, leverage=self.leverage
+                )
+                self.kuantitas_short_dsha = 0
+                # BUKA POSISI LONG JIKA TIDAK ADA
                 if "LONG" not in POSISI:
-                    self.kuantitas_long_dsha = self.order.buka_long(
-                        kuantitas_koin, leverage=self.leverage
-                    )
-                # KONDISI EXIT SHORT:
-                if keadaan_ha == "POSITIF" and "SHORT" in POSISI:
-                    self.order.tutup_short(
-                        self.kuantitas_short_dsha, leverage=self.leverage
-                    )
-                    self.kuantitas_short_dsha = 0
-                # KONDISI ENTER SHORT:
-                if keadaan_ha == "NEGATIF" and "SHORT" not in POSISI:
-                    self.kuantitas_short_dsha = self.order.buka_short(
+                    self.order.buka_long(
                         kuantitas_koin, leverage=self.leverage
                     )
 
