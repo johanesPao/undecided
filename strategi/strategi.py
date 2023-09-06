@@ -2290,10 +2290,11 @@ class Strategi:
                     )
             if warna_ha == "HA_HIJAU":
                 # TUTUP POSISI SHORT JIKA ADA
-                self.order.tutup_short(
-                    self.kuantitas_short_dsha, leverage=self.leverage
-                )
-                self.kuantitas_short_dsha = 0
+                if "SHORT" in POSISI:
+                    self.order.tutup_short(
+                        self.kuantitas_short_dsha, leverage=self.leverage
+                    )
+                    self.kuantitas_short_dsha = 0
                 # BUKA POSISI LONG JIKA TIDAK ADA
                 if "LONG" not in POSISI:
                     self.order.buka_long(
