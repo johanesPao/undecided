@@ -2274,32 +2274,67 @@ class Strategi:
             #             kuantitas_koin, leverage=self.leverage
             #         )
 
-            # Perubahan menggunakan heiken ashi 1 1 dan perubahan posisi long short hanya berdasar warna ha, interval cek dibuat lebih rendah dari interval chart dan tidak mengimplementasikan hedge
-            # hanya ada 1 posisi pada 1 waktu tertentu
-            if warna_ha == "HA_MERAH":
-                # TUTUP POSISI LONG JIKA ADA
+            # Perubahan implementasi strategi di atas tanpa posisi hedging
+            # Hal ini juga berarti kita tidak akan melakukan evaluasi terhadap warna_ha
+            # Dan hanya akan memegang satu posisi di satu waktu berdasar keadaan_ha
+            # SKENARIO I (keadaan_ha NEGATIF)
+            if keadaan_ha == "NEGATIF":
+                # CEK POSISI LONG
                 if "LONG" in POSISI:
+                    # TUTUP POSISI LONG
                     self.order.tutup_long(
                         self.kuantitas_long_dsha, leverage=self.leverage
                     )
                     self.kuantitas_long_dsha = 0
-                # BUKA POSISI SHORT JIKA TIDAK ADA
+                # CEK POSISI SHORT
                 if "SHORT" not in POSISI:
-                    self.order.buka_short(
+                    # BUKA POSISI SHORT
+                    self.kuantitas_short_dsha = self.order.buka_short(
                         kuantitas_koin, leverage=self.leverage
                     )
-            if warna_ha == "HA_HIJAU":
-                # TUTUP POSISI SHORT JIKA ADA
+            # SKENARIO II (keadaan_ha POSITIF)
+            else:
+                # CEK POSISI SHORT
                 if "SHORT" in POSISI:
+                    # TUTUP POSISI SHORT
                     self.order.tutup_short(
                         self.kuantitas_short_dsha, leverage=self.leverage
                     )
                     self.kuantitas_short_dsha = 0
-                # BUKA POSISI LONG JIKA TIDAK ADA
+                # CEK POSISI LONG
                 if "LONG" not in POSISI:
-                    self.order.buka_long(
+                    # BUKA POSISI LONG
+                    self.kuantitas_long_dsha = self.order.buka_long(
                         kuantitas_koin, leverage=self.leverage
                     )
+
+
+            # Perubahan menggunakan heiken ashi 1 1 dan perubahan posisi long short hanya berdasar warna ha, interval cek dibuat lebih rendah dari interval chart dan tidak mengimplementasikan hedge
+            # hanya ada 1 posisi pada 1 waktu tertentu
+            # if warna_ha == "HA_MERAH":
+            #     # TUTUP POSISI LONG JIKA ADA
+            #     if "LONG" in POSISI:
+            #         self.order.tutup_long(
+            #             self.kuantitas_long_dsha, leverage=self.leverage
+            #         )
+            #         self.kuantitas_long_dsha = 0
+            #     # BUKA POSISI SHORT JIKA TIDAK ADA
+            #     if "SHORT" not in POSISI:
+            #         self.order.buka_short(
+            #             kuantitas_koin, leverage=self.leverage
+            #         )
+            # if warna_ha == "HA_HIJAU":
+            #     # TUTUP POSISI SHORT JIKA ADA
+            #     if "SHORT" in POSISI:
+            #         self.order.tutup_short(
+            #             self.kuantitas_short_dsha, leverage=self.leverage
+            #         )
+            #         self.kuantitas_short_dsha = 0
+            #     # BUKA POSISI LONG JIKA TIDAK ADA
+            #     if "LONG" not in POSISI:
+            #         self.order.buka_long(
+            #             kuantitas_koin, leverage=self.leverage
+            #         )
 
             # # KONDISI EXIT
             # if "LONG" in POSISI:

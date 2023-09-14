@@ -26,17 +26,17 @@ PERIODE_BACKTEST = 1000
 # Interval waktu yang digunakan untuk melakukan evaluasi tindakan
 # Interval ini berbeda dengan interval waktu yang dipergunakan dalam
 # dalam menarik data chart
-INTERVAL_EVALUASI = ["1 menit"]
+INTERVAL_EVALUASI = ["1 jam"]
 # Interval waktu chart yang dikembalikan oleh tradingview
 INTERVAL_CHART = ["1 jam"]
 # VARIABEL ASET
 ASET_DATA = "LINAUSDT.P"
 ASET = "LINAUSDT"
 EXCHANGE = "BINANCE"
-LEVERAGE = 10
+LEVERAGE = 20
 INISIATOR_WAKTU = True
 JUMLAH_ERROR = 0
-JUMLAH_TRADE_USDT = 5
+JUMLAH_TRADE_USDT = 0.22
 inisiasi_konektor = Inisiasi()
 konektor_exchange = inisiasi_konektor.exchange()
 info_akun = InfoAkun(konektor_exchange)
