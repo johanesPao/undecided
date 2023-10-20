@@ -26,7 +26,7 @@ PERIODE_BACKTEST = 1000
 # Interval waktu yang digunakan untuk melakukan evaluasi tindakan
 # Interval ini berbeda dengan interval waktu yang dipergunakan dalam
 # dalam menarik data chart
-INTERVAL_EVALUASI = ["10 menit"]
+INTERVAL_EVALUASI = ["0.5 menit"]
 # Interval waktu chart yang dikembalikan oleh tradingview
 INTERVAL_CHART = ["1 jam"]
 # VARIABEL ASET
@@ -194,7 +194,7 @@ while True:
         # Eksekusi strategi
         # strategi.jpao_niten_ichi_ryu_28_16_8(interval=INTERVAL_CHART, k_cepat=24, k_lambat=16, d_lambat=8)  # type: ignore
         # strategi.jpao_ride_the_ema(interval=INTERVAL_CHART, periode_ema=37, smoothing=2, dual_ema=True, periode_ema_cepat=5)  # type: ignore
-        strategi.jpao_smooth_ma_velocity(interval=INTERVAL_CHART, periode_ma=3, smoothing=100)  # type: ignore
+        strategi.jpao_smooth_ma_velocity(interval=INTERVAL_CHART, periode_ma=3, smoothing=2)  # type: ignore
         # strategi.jpao_ride_the_wave(interval=INTERVAL_CHART, periode_ma_cepat=4, periode_ma_lambat=49)  # type: ignore
         # strategi.jpao_double_smoothed_heiken_ashi(smoothed_ha=True, tipe_ma_smoothing=["ema"], smoothing_1=5, smoothing_2=35)  # type: ignore
 

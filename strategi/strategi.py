@@ -1725,7 +1725,6 @@ class Strategi:
 
         # FUNGSI SAAT LIVE
         def live(list_data: list = self.data) -> str | None:
-            print(list_data)
             # VARIABEL DAN KONSTANTA
             DATA_POSISI_FUTURES = self.posisi_futures
             # cek posisi aset yang dipegang saat ini
