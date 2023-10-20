@@ -1695,15 +1695,33 @@ class Strategi:
             self.simbol_data, self.exchange, waktu, self.jumlah_bar
         )
 
-        self.df_ma = self.analisa_teknikal.moving_average(
-            self.df,
-            self.periode_ma,
-            backtest=self.backtest,
-            smoothed=self.smoothing != 0,
-            smoothing=self.smoothing,
+        self.seri_ma = pd.DataFrame(
+            self.analisa_teknikal.moving_average(
+                self.df["close"],
+                self.periode_ma,
+                backtest=self.backtest,
+                smoothed=self.smoothing != 0,
+                smoothing=self.smoothing,
+            )
         )
 
-        self.data.append(self.df_ma)
+        if self.seri_ma is not None:
+            self.df["ma_smoothing"] = self.seri_ma.values
+
+        # drop baris dengna nilai NaN
+        self.df.dropna(subset=["ma_smoothing"], inplace=True)
+
+        # Ambil data tergantung mdoe backtest
+        if self.backtest:
+            # Semua baris tidak termasuk baris terakhir
+            self.df = self.df.iloc[:-1]
+        else:
+            self.df = (
+                self.df.iloc[-3:-1] if self.mode_harga_penutupan else self.df.iloc[-2:]
+            )
+
+        # Menambahkan dataframe ke dalam list self.data
+        self.data.append(self.df)
 
         # FUNGSI SAAT LIVE
         def live(list_data: list = self.data) -> str | None:
