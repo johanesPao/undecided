@@ -1696,13 +1696,18 @@ class Strategi:
         )
 
         self.df_ma = self.analisa_teknikal.moving_average(
-            self.df, self.periode_ma, backtest=self.backtest, smoothing=self.smoothing
+            self.df,
+            self.periode_ma,
+            backtest=self.backtest,
+            smoothed=self.smoothing != 0,
+            smoothing=self.smoothing,
         )
 
         self.data.append(self.df_ma)
 
         # FUNGSI SAAT LIVE
         def live(list_data: list = self.data) -> str | None:
+            print(list_data)
             # VARIABEL DAN KONSTANTA
             DATA_POSISI_FUTURES = self.posisi_futures
             # cek posisi aset yang dipegang saat ini
