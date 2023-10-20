@@ -1726,44 +1726,42 @@ class Strategi:
 
             ma_smoothing = list_data[0].iloc[-1]["ma_smoothing"]
             ma_smoothing_sebelumnya = list_data[0].iloc[-2]["ma_smoothing"]
-            ma_smoothing_dua_penutupan_sebelumnya = list_data[0].iloc[-3][
-                "ma_smoothing"
-            ]
+            # ma_smoothing_dua_penutupan_sebelumnya = list_data[0].iloc[-3][
+            #     "ma_smoothing"
+            # ]
 
             laju_ma_smoothing_sekarang = ma_smoothing - ma_smoothing_sebelumnya
-            laju_ma_smoothing_sebelumnya = (
-                ma_smoothing_sebelumnya - ma_smoothing_dua_penutupan_sebelumnya
-            )
+            # laju_ma_smoothing_sebelumnya = (
+            #     ma_smoothing_sebelumnya - ma_smoothing_dua_penutupan_sebelumnya
+            # )
 
             harga_penutupan = list_data[0].iloc[-1]["close"]
 
             MODE_MA_SMOOTHING = (
-                (
-                    "MA_SMOOTH_NAIK"
-                    if laju_ma_smoothing_sekarang >= 0
-                    else "MA_SMOOTH_TURUN"
-                )
-                if len(POSISI) != 0
-                else (
-                    "MA_SMOOTH_NAIK"
-                    if laju_ma_smoothing_sekarang >= 0
-                    and laju_ma_smoothing_sebelumnya < 0
-                    else "MA_SMOOTH_TURUN"
-                    if laju_ma_smoothing_sekarang < 0
-                    and laju_ma_smoothing_sebelumnya >= 0
-                    else "MENUNGGU_TREND"
-                )
+                "MA_SMOOTH_NAIK"
+                if laju_ma_smoothing_sekarang >= 0
+                else "MA_SMOOTH_TURUN"
+                # if len(POSISI) != 0
+                # else (
+                #     "MA_SMOOTH_NAIK"
+                #     if laju_ma_smoothing_sekarang >= 0
+                #     and laju_ma_smoothing_sebelumnya < 0
+                #     else "MA_SMOOTH_TURUN"
+                #     if laju_ma_smoothing_sekarang < 0
+                #     and laju_ma_smoothing_sebelumnya >= 0
+                #     else "MENUNGGU_TREND"
+                # )
             )
 
             self.ui.label_nilai(
                 label="Harga Penutupan terakhir", nilai=harga_penutupan, spasi_label=50
             )
             print("")
-            self.ui.label_nilai(
-                label="Smooth Moving Average [-2]",
-                nilai=round(ma_smoothing_dua_penutupan_sebelumnya, 8),
-                spasi_label=50,
-            )
+            # self.ui.label_nilai(
+            #     label="Smooth Moving Average [-2]",
+            #     nilai=round(ma_smoothing_dua_penutupan_sebelumnya, 8),
+            #     spasi_label=50,
+            # )
             self.ui.label_nilai(
                 label="Smooth Moving Average [-1]",
                 nilai=round(ma_smoothing_sebelumnya, 8),
@@ -1775,11 +1773,11 @@ class Strategi:
                 spasi_label=50,
             )
             print("")
-            self.ui.label_nilai(
-                label="Smooth Moving Average Velocity [-1]",
-                nilai=round(laju_ma_smoothing_sebelumnya, 8),
-                spasi_label=50,
-            )
+            # self.ui.label_nilai(
+            #     label="Smooth Moving Average Velocity [-1]",
+            #     nilai=round(laju_ma_smoothing_sebelumnya, 8),
+            #     spasi_label=50,
+            # )
             self.ui.label_nilai(
                 label="Smooth Moving Average Velocity [0]",
                 nilai=round(laju_ma_smoothing_sekarang, 8),
@@ -1789,29 +1787,30 @@ class Strategi:
                 f"\nMODE STRATEGI: \nSMOOTH MOVING AVERAGE VELOCITY ({self.smoothing}) {Fore.YELLOW if MODE_MA_SMOOTHING == 'MENUNGGU_TREND' else Fore.RED if laju_ma_smoothing_sekarang < 0 else Fore.GREEN}[{MODE_MA_SMOOTHING}]{Style.RESET_ALL}"
             )
 
-            if MODE_MA_SMOOTHING != "MENUNGGU_TREND":
-                if MODE_MA_SMOOTHING == "MA_SMOOTH_NAIK":
-                    # cek apakah masih ada short
-                    if "SHORT" in POSISI and self.kuantitas_short_svm > 0:
-                        self.order.tutup_short(
-                            self.kuantitas_short_svm, leverage=self.leverage
-                        )
-                        self.kuantitas_short_svm = 0
-                    if "LONG" not in POSISI:
-                        self.kuantitas_long_svm = self.order.buka_long(
-                            kuantitas_koin, leverage=self.leverage
-                        )
-                elif MODE_MA_SMOOTHING == "MA_SMOOTH_TURUN":
-                    # cek apakah masih ada long
-                    if "LONG" in POSISI and self.kuantitas_long_svm > 0:
-                        self.order.tutup_long(
-                            self.kuantitas_long_svm, leverage=self.leverage
-                        )
-                        self.kuantitas_long_svm = 0
-                    if "SHORT" not in POSISI:
-                        self.kuantitas_short_svm = self.order.buka_short(
-                            kuantitas_koin, leverage=self.leverage
-                        )
+            if MODE_MA_SMOOTHING == "MA_SMOOTH_NAIK":
+                # cek apakah masih ada short
+                # if "SHORT" in POSISI and self.kuantitas_short_svm > 0:
+                if "SHORT" in POSISI:
+                    self.order.tutup_short(
+                        self.kuantitas_short_svm, leverage=self.leverage
+                    )
+                    self.kuantitas_short_svm = 0
+                if "LONG" not in POSISI:
+                    self.kuantitas_long_svm = self.order.buka_long(
+                        kuantitas_koin, leverage=self.leverage
+                    )
+            elif MODE_MA_SMOOTHING == "MA_SMOOTH_TURUN":
+                # cek apakah masih ada long
+                # if "LONG" in POSISI and self.kuantitas_long_svm > 0:
+                if "LONG" in POSISI:
+                    self.order.tutup_long(
+                        self.kuantitas_long_svm, leverage=self.leverage
+                    )
+                    self.kuantitas_long_svm = 0
+                if "SHORT" not in POSISI:
+                    self.kuantitas_short_svm = self.order.buka_short(
+                        kuantitas_koin, leverage=self.leverage
+                    )
 
         # FUNGSI BACKTEST
         def backtest(list_data: list = self.data) -> str:
@@ -2102,7 +2101,9 @@ class Strategi:
             # Untuk live dilakukan perubahan data yang dikembalikan untuk
             # memasukkan harga terakhir (belum tutup) jika self.mode_harga_penutupan
             # adalah False dan sebaliknya
-            self.df = self.df.iloc[-3:-1] if self.mode_harga_penutupan else self.df.iloc[-2:]
+            self.df = (
+                self.df.iloc[-3:-1] if self.mode_harga_penutupan else self.df.iloc[-2:]
+            )
 
         # spread tutup dan buka Heiken Ashi upscale 100000
         self.df = self.df.assign(
@@ -2144,7 +2145,9 @@ class Strategi:
         for baris in range(len(self.df)):
             if baris != 0:
                 # Merubah keadaan_ha dari membesar atau mengecil menjadi positif atau negatif
-                positif = self.df.iloc[baris].ha_spread > self.df.iloc[baris - 1].ha_spread
+                positif = (
+                    self.df.iloc[baris].ha_spread > self.df.iloc[baris - 1].ha_spread
+                )
                 # membesar = abs(self.df.iloc[baris].ha_spread) >= abs(
                 #     self.df.iloc[baris - 1].ha_spread
                 # )
@@ -2217,11 +2220,7 @@ class Strategi:
                 nilai=round(tutup_ha, 8),
                 spasi_label=50,
             )
-            self.ui.label_nilai(
-                label=f"Keadaan HA",
-                nilai=keadaan_ha,
-                spasi_label=50
-            )
+            self.ui.label_nilai(label=f"Keadaan HA", nilai=keadaan_ha, spasi_label=50)
             self.ui.label_nilai(
                 label=f"Warna HA",
                 nilai=warna_ha,
@@ -2233,7 +2232,7 @@ class Strategi:
 
             # Pada dasarnya terdapat dua kondisi, HA_MERAH dan HA_HIJAU, tergantung warna_ha, kita akan melakukan hedging
             # Contoh: Saat HA_MERAH kita ingin membuka dan menjaga posisi SHORT namun pada warna_ha HA_MERAH dan keadaan_ha POSITIF kita juga akan membuka LONG,
-            # LONG ini ditutup jika keadaan_ha berubah menjadi NEGATIF dan warna_ha masih HA_MERAH. Sebaliknya, kita ingin membuka dan menjaga posisi LONG saat 
+            # LONG ini ditutup jika keadaan_ha berubah menjadi NEGATIF dan warna_ha masih HA_MERAH. Sebaliknya, kita ingin membuka dan menjaga posisi LONG saat
             # warna_ha HIJAU dan membuka SHORT jika keadaan_ha berubah menjadi NEGATIF, SHORT ini akan ditutup jika keadaan_ha berubah menjadi POSITIF
             # SKENARIO I (HA_MERAH)
             # if warna_ha == "HA_MERAH":
@@ -2307,7 +2306,6 @@ class Strategi:
                     self.kuantitas_long_dsha = self.order.buka_long(
                         kuantitas_koin, leverage=self.leverage
                     )
-
 
             # Perubahan menggunakan heiken ashi 1 1 dan perubahan posisi long short hanya berdasar warna ha, interval cek dibuat lebih rendah dari interval chart dan tidak mengimplementasikan hedge
             # hanya ada 1 posisi pada 1 waktu tertentu
@@ -2410,7 +2408,6 @@ class Strategi:
                     harga_short.clear()
 
                 if baris != 0:
-
                     # KONDISI EXIT
                     # 5. jika ada posisi LONG
                     if (

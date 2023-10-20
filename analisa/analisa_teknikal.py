@@ -132,10 +132,11 @@ class AnalisaTeknikal:
 
         # Jika bukan backtest, kembalikan kolom k_lambat dan d_lambat dari baris terakhir data
         # Dengan perubahan data API endpoint ke tradingview, baris terakhir akan menghasilkan nilai yang berjalan dan belum close, ambil data pada urutan baris kedua terakhir saja (dalam kasus backtest false) atau sampai dengan dua baris terakhir saja (dalam kasus backtest true)
+        # Untuk mendapatkan realtime posisi, pada live, slicing diubah menjadi [-2:, :] yang sebelumnya [-3:-1, :]
         if not self.backtest:
             self.df = self.df[
                 [k_tinggi, k_rendah, k_tutup, "k_lambat", "d_lambat"]
-            ].iloc[-3:-1, :]
+            ].iloc[-2:, :]
         else:
             self.df = self.df[
                 [k_tinggi, k_rendah, k_tutup, "k_lambat", "d_lambat"]
@@ -359,5 +360,5 @@ class AnalisaTeknikal:
         #     return df.iloc[-3: -1] if mode_harga_penutupan else df.iloc[-2:]
         # else:
         #     return df.iloc[:-1]
-        
+
         return df
