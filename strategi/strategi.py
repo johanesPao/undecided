@@ -2052,8 +2052,12 @@ class Strategi:
 
         waktu = [self.fungsi.konverter_waktu(self.inter_chart[0])] if not hedging else [self.fungsi.konverter_waktu(self.inter_chart[0]), self.fungsi.konverter_waktu(self.inter_eval[0])]
         if hedging:
-            long_indeks = 0 if waktu[0] > waktu[1] else 1
-            short_indeks = 0 if waktu[0] < waktu[1] else 1
+            waktu_chart = self.inter_chart[0].split(' ')
+            waktu_eval = self.inter_eval[0].split(' ')
+            detik_chart = float(waktu_chart[0]) * self.fungsi.konverter_detik(waktu_chart[1])
+            detik_eval = float(waktu_eval[0]) * self.fungsi.konverter_detik(waktu_eval[1])
+            long_indeks = 0 if detik_chart > detik_eval else 1
+            short_indeks = 0 if detik_chart < detik_eval else 1
 
         # self.data = []
 

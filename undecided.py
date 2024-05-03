@@ -33,7 +33,7 @@ INTERVAL_CHART = ["1 hari"]
 ASET_DATA = "1000SHIBUSDT.P"
 ASET = "1000SHIBUSDT"
 EXCHANGE = "BINANCE"
-LEVERAGE = 20
+LEVERAGE = 10
 INISIATOR_WAKTU = True
 JUMLAH_ERROR = 0
 JUMLAH_TRADE_USDT = 17
@@ -196,7 +196,7 @@ while True:
         # strategi.jpao_ride_the_ema(interval=INTERVAL_CHART, periode_ema=37, smoothing=2, dual_ema=True, periode_ema_cepat=5)  # type: ignore
         # strategi.jpao_smooth_ma_velocity(interval=INTERVAL_CHART, periode_ma=3, smoothing=2)  # type: ignore
         # strategi.jpao_ride_the_wave(interval=INTERVAL_CHART, periode_ma_cepat=4, periode_ma_lambat=49)  # type: ignore
-        strategi.jpao_double_smoothed_heiken_ashi(smoothed_ha=True, tipe_ma_smoothing=["ema"], smoothing_1=10, smoothing_2=10)  # type: ignore
+        strategi.jpao_double_smoothed_heiken_ashi(smoothed_ha=True, tipe_ma_smoothing=["ema"], smoothing_1=10, smoothing_2=10, hedging=True)  # type: ignore
 
         # Reset jumlah error b2eruntun
         JUMLAH_ERROR = 0
