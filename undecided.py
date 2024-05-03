@@ -16,7 +16,7 @@ __author__ = "Johanes Indra Pradana Pao"
 __copyright__ = "Copyright 2022, Undecided"
 __license__ = "GPL"
 __version__ = "1.0.0"
-__maintainer = "Johanes Indra Pradana Pao"
+__maintainer__ = "Johanes Indra Pradana Pao"
 __email__ = "johanes.pao@gmail.com"
 __status__ = "Development"
 
@@ -26,17 +26,17 @@ PERIODE_BACKTEST = 1000
 # Interval waktu yang digunakan untuk melakukan evaluasi tindakan
 # Interval ini berbeda dengan interval waktu yang dipergunakan dalam
 # dalam menarik data chart
-INTERVAL_EVALUASI = ["0.5 menit"]
+INTERVAL_EVALUASI = ["1 jam"]
 # Interval waktu chart yang dikembalikan oleh tradingview
-INTERVAL_CHART = ["1 jam"]
+INTERVAL_CHART = ["1 hari"]
 # VARIABEL ASET
-ASET_DATA = "SOLUSDT.P"
-ASET = "SOLUSDT"
+ASET_DATA = "1000SHIBUSDT.P"
+ASET = "1000SHIBUSDT"
 EXCHANGE = "BINANCE"
 LEVERAGE = 20
 INISIATOR_WAKTU = True
 JUMLAH_ERROR = 0
-JUMLAH_TRADE_USDT = 2.5
+JUMLAH_TRADE_USDT = 17
 inisiasi_konektor = Inisiasi()
 konektor_exchange = inisiasi_konektor.exchange()
 info_akun = InfoAkun(konektor_exchange)
@@ -194,9 +194,9 @@ while True:
         # Eksekusi strategi
         # strategi.jpao_niten_ichi_ryu_28_16_8(interval=INTERVAL_CHART, k_cepat=24, k_lambat=16, d_lambat=8)  # type: ignore
         # strategi.jpao_ride_the_ema(interval=INTERVAL_CHART, periode_ema=37, smoothing=2, dual_ema=True, periode_ema_cepat=5)  # type: ignore
-        strategi.jpao_smooth_ma_velocity(interval=INTERVAL_CHART, periode_ma=3, smoothing=2)  # type: ignore
+        # strategi.jpao_smooth_ma_velocity(interval=INTERVAL_CHART, periode_ma=3, smoothing=2)  # type: ignore
         # strategi.jpao_ride_the_wave(interval=INTERVAL_CHART, periode_ma_cepat=4, periode_ma_lambat=49)  # type: ignore
-        # strategi.jpao_double_smoothed_heiken_ashi(smoothed_ha=True, tipe_ma_smoothing=["ema"], smoothing_1=5, smoothing_2=35)  # type: ignore
+        strategi.jpao_double_smoothed_heiken_ashi(smoothed_ha=True, tipe_ma_smoothing=["ema"], smoothing_1=10, smoothing_2=10)  # type: ignore
 
         # Reset jumlah error b2eruntun
         JUMLAH_ERROR = 0
