@@ -63,9 +63,9 @@ class AnalisaTeknikal:
         periode_k_lambat: int = 3,
         periode_d_lambat: int = 3,
         backtest: bool = False,
-        k_tinggi: str = "High",
-        k_rendah: str = "Low",
-        k_tutup: str = "Close",
+        k_tinggi: str = "high",
+        k_rendah: str = "low",
+        k_tutup: str = "close",
     ) -> pd.DataFrame:
         """
         Implementasi dari analisa teknikal Stochastic. Mengembalikan nilai stochastic terakhir atau keseluruhan dataframe jika backtest adalah True
@@ -227,10 +227,10 @@ class AnalisaTeknikal:
         tipe_ma: List[Literal["sma", "ema"]] = ["sma"],
         smooth_period_1: int = 1,
         smooth_period_2: int = 1,
-        k_buka: str = "Open",
-        k_tinggi: str = "High",
-        k_rendah: str = "Low",
-        k_tutup: str = "Close",
+        k_buka: str = "open",
+        k_tinggi: str = "high",
+        k_rendah: str = "low",
+        k_tutup: str = "close",
         mode_harga_penutupan: bool = True,
         backtest: bool = False,
     ) -> None | pd.DataFrame:
@@ -275,10 +275,10 @@ class AnalisaTeknikal:
 
         def olah_heiken_ashi(
             data: pd.DataFrame,
-            k_buka: str = "Open",
-            k_tinggi: str = "High",
-            k_rendah: str = "Low",
-            k_tutup: str = "Close",
+            k_buka: str = "open",
+            k_tinggi: str = "high",
+            k_rendah: str = "low",
+            k_tutup: str = "close",
             mulai_hitung: int = 1,
         ) -> pd.DataFrame:
             list_buka_ha = []
