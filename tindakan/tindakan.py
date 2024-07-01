@@ -119,13 +119,13 @@ class Order:
             )
 
             kalimat = f"\nPosisi LONG senilai {saldo_long} USDT / {round(kuantitas)} {self.aset} berhasil dibuka untuk {self.aset} pada harga {harga_masuk_long} USDT dengan biaya komisi {pnl} USDT"
-            try:
-                self.fungsi.kirim_bot_telegram(
-                    judul="POSISI LONG DIBUKA", isi_pesan=kalimat
-                )
-            except Exception as e:
-                print(e)
-                print("\nTerjadi kesalahan dalam mengirimkan notifikasi telegram")
+            # try:
+            #     self.fungsi.kirim_bot_telegram(
+            #         judul="POSISI LONG DIBUKA", isi_pesan=kalimat
+            #     )
+            # except Exception as e:
+            #     print(e)
+            #     print("\nTerjadi kesalahan dalam mengirimkan notifikasi telegram")
             print(kalimat)
             return round(kuantitas)
         except Exception as e:
@@ -172,13 +172,13 @@ class Order:
             )
 
             kalimat = f"\nPosisi SHORT senilai {saldo_short} USDT / {round(kuantitas)} {self.aset} berhasil dibuka untuk {self.aset} pada harga {harga_masuk_short} USDT dengan biaya komisi {pnl} USDT"
-            try:
-                self.fungsi.kirim_bot_telegram(
-                    judul="POSISI SHORT DIBUKA", isi_pesan=kalimat
-                )
-            except Exception as e:
-                print(e)
-                print("\nTerjadi kesalahan dalam mengirimkan notifikasi telegram")
+            # try:
+            #     self.fungsi.kirim_bot_telegram(
+            #         judul="POSISI SHORT DIBUKA", isi_pesan=kalimat
+            #     )
+            # except Exception as e:
+            #     print(e)
+            #     print("\nTerjadi kesalahan dalam mengirimkan notifikasi telegram")
             print(kalimat)
             return round(kuantitas)
         except Exception as e:
@@ -227,13 +227,13 @@ class Order:
             )
 
             kalimat = f"\nPosisi LONG senilai {saldo_long} USDT / {round(kuantitas)} {self.aset} berhasil ditutup untuk {self.aset} pada harga {harga_tutup_posisi} dan profit/loss sebesar {pnl} USDT (sudah dipotong komisi)"
-            try:
-                self.fungsi.kirim_bot_telegram(
-                    judul="POSISI LONG DITUTUP", isi_pesan=kalimat
-                )
-            except Exception as e:
-                print(e)
-                print("\nTerjadi kesalahan dalam mengirimkan notifikasi telegram")
+            # try:
+            #     self.fungsi.kirim_bot_telegram(
+            #         judul="POSISI LONG DITUTUP", isi_pesan=kalimat
+            #     )
+            # except Exception as e:
+            #     print(e)
+            #     print("\nTerjadi kesalahan dalam mengirimkan notifikasi telegram")
             print(kalimat)
         except Exception as e:
             kalimat = f"Posisi LONG tidak berhasil ditutup untuk {self.aset}:\n{e}"
@@ -282,13 +282,13 @@ class Order:
 
             kalimat = f"\nPosisi SHORT senilai {saldo_short} USDT / {round(kuantitas)} {self.aset} berhasil ditutup untuk {self.aset} pada harga {harga_tutup_posisi} dan profit/loss sebesar {pnl} USDT (sudah dipotong komisi)"
 
-            try:
-                self.fungsi.kirim_bot_telegram(
-                    judul="POSISI SHORT DITUTUP", isi_pesan=kalimat
-                )
-            except Exception as e:
-                print(e)
-                print("\nTerjadi kesalahan dalam mengirimkan notifikasi telegram")
+            # try:
+            #     self.fungsi.kirim_bot_telegram(
+            #         judul="POSISI SHORT DITUTUP", isi_pesan=kalimat
+            #     )
+            # except Exception as e:
+            #     print(e)
+            #     print("\nTerjadi kesalahan dalam mengirimkan notifikasi telegram")
             print(kalimat)
         except Exception as e:
             kalimat = f"Posisi SHORT tidak berhasil ditutup untuk {self.aset}:\n{e}"

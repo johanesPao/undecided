@@ -4,7 +4,8 @@ Script untuk melakukan penarikan data dari API endpoint
 """
 
 import pandas as pd
-from tvDatafeed import Interval, TvDatafeed
+# from tvDatafeed import Interval, TvDatafeed
+import ccxt
 
 __author__ = "Johanes Indra Pradana Pao"
 __copyright__ = "Copyright 2022, Undecided"
@@ -31,7 +32,7 @@ class Model:
     """
 
     # set __init__ dengan kelas akun yg diinisiasi di undecided.py
-    def __init__(self, data_konektor: TvDatafeed) -> None:
+    def __init__(self, data_konektor: ccxt) -> None:
         """
         Metode inisiasi kelas Model
 
@@ -49,8 +50,7 @@ class Model:
     def ambil_data_historis(
         self,
         simbol: str,
-        exchange: str,
-        interval: Interval,
+        interval: str,
         jumlah_bar: int,
     ) -> pd.DataFrame:
         """
@@ -73,11 +73,14 @@ class Model:
             DataFrame berisikan data historis OHLCV simbol dalam exchange
         """
         self.simbol = simbol
-        self.exchange = exchange
         self.interval = interval
         self.jumlah_bar = jumlah_bar
 
         # Mengembalikan data historis menggunakan metode get_hist dari kelas TvDatafeed
-        return self.data_konektor.get_hist(
-            self.simbol, self.exchange, self.interval, self.jumlah_bar
+        fetch_data = self.data_konektor.fetch_ohlcv(
+            self.simbol, self.interval, limit=self.jumlah_bar
         )
+
+        # Buat dataframe data
+        return pd.DataFrame(fetch_data, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
+        

@@ -213,8 +213,8 @@ class Fungsi:
         except Exception as e:
             print(f"Terjadi kesalahan dalam pengiriman email:\n{e}")
 
-    def kirim_bot_telegram(self, judul: str, isi_pesan: str) -> None:
-        telegram_send.send(messages=[f"{judul}\n\n{isi_pesan}"])
+    # def kirim_bot_telegram(self, judul: str, isi_pesan: str) -> None:
+    #     telegram_send.send(messages=[f"{judul}\n\n{isi_pesan}"])
 
     def konverter_offset(
         self, interval: str, offset_kosong: bool = False
@@ -278,7 +278,7 @@ class Fungsi:
         # Mengembalikan objek DateOffset
         return offset_waktu
 
-    def konverter_waktu(self, interval: str) -> Interval:
+    def konverter_waktu(self, interval: str) -> str:
         """
         Metode untuk mengkonversi string interval waktu menjadi objek Interval yang diterima oleh modul tvDatafeed
 
@@ -309,36 +309,34 @@ class Fungsi:
             or "1 bulan"
         )
 
-        # Konversi str menjadi objek Interval tvDatafeed
+        # Konversi str menjadi str timeframe ccxt
         match interval:
-            case "1 menit":
-                konversi_interval = Interval.in_1_minute
             case "3 menit":
-                konversi_interval = Interval.in_3_minute
+                konversi_interval = '3m'
             case "5 menit":
-                konversi_interval = Interval.in_5_minute
+                konversi_interval = '5m'
             case "15 menit":
-                konversi_interval = Interval.in_15_minute
+                konversi_interval = '15m'
             case "30 menit":
-                konversi_interval = Interval.in_30_minute
+                konversi_interval = '30m'
             case "45 menit":
-                konversi_interval = Interval.in_45_minute
+                konversi_interval = '45m'
             case "1 jam":
-                konversi_interval = Interval.in_1_hour
+                konversi_interval = '1h'
             case "2 jam":
-                konversi_interval = Interval.in_2_hour
+                konversi_interval = '2h'
             case "3 jam":
-                konversi_interval = Interval.in_3_hour
+                konversi_interval = '3h'
             case "4 jam":
-                konversi_interval = Interval.in_4_hour
+                konversi_interval = '4h'
             case "1 hari":
-                konversi_interval = Interval.in_daily
+                konversi_interval = '1d'
             case "1 minggu":
-                konversi_interval = Interval.in_weekly
+                konversi_interval = '1w'
             case "1 bulan":
-                konversi_interval = Interval.in_monthly
+                konversi_interval = '1M'
             case _:
-                konversi_interval = Interval.in_1_minute
+                konversi_interval = '1m'
 
         # Mengembalikan objek Interval tvDatafeed
         return konversi_interval

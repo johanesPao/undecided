@@ -26,13 +26,14 @@ PERIODE_BACKTEST = 1000
 # Interval waktu yang digunakan untuk melakukan evaluasi tindakan
 # Interval ini berbeda dengan interval waktu yang dipergunakan dalam
 # dalam menarik data chart
-INTERVAL_EVALUASI = ["1 jam"]
+INTERVAL_EVALUASI = ["0.2 menit"]
 # Interval waktu chart yang dikembalikan oleh tradingview
 INTERVAL_CHART = ["1 hari"]
 # VARIABEL ASET
-ASET_DATA = "1000SHIBUSDT.P"
-ASET = "1000SHIBUSDT"
+ASET_DATA = "STORJ/USDT"
+ASET = "STORJUSDT"
 EXCHANGE = "BINANCE"
+DATA_EXCHANGE = "binanceusdm"
 LEVERAGE = 10
 INISIATOR_WAKTU = True
 JUMLAH_ERROR = 0
@@ -182,6 +183,7 @@ while True:
             ASET_DATA,
             ASET,
             EXCHANGE,
+            DATA_EXCHANGE,
             leverage=LEVERAGE,
             inter_eval=INTERVAL_EVALUASI,
             inter_chart=INTERVAL_CHART,
@@ -196,7 +198,8 @@ while True:
         # strategi.jpao_ride_the_ema(interval=INTERVAL_CHART, periode_ema=37, smoothing=2, dual_ema=True, periode_ema_cepat=5)  # type: ignore
         # strategi.jpao_smooth_ma_velocity(interval=INTERVAL_CHART, periode_ma=3, smoothing=2)  # type: ignore
         # strategi.jpao_ride_the_wave(interval=INTERVAL_CHART, periode_ma_cepat=4, periode_ma_lambat=49)  # type: ignore
-        strategi.jpao_double_smoothed_heiken_ashi(smoothed_ha=True, tipe_ma_smoothing=["ema"], smoothing_1=10, smoothing_2=10, hedging=True)  # type: ignore
+        # strategi.jpao_double_smoothed_heiken_ashi(smoothed_ha=True, tipe_ma_smoothing=["ema"], smoothing_1=2, smoothing_2=2)  # type: ignore
+        strategi.jpao_closing_in_ma(periode_ma=14)
 
         # Reset jumlah error b2eruntun
         JUMLAH_ERROR = 0
@@ -218,8 +221,8 @@ while True:
         JUMLAH_ERROR += 1
         if JUMLAH_ERROR % 10 == 0:
             print("Terjadi 10 kesalahan berturut - turut...")
-            fungsi.kirim_bot_telegram(
-                judul=f"KESALAHAN PADA {ui.judul()}",
-                isi_pesan=f"Terjadi kesalahan beruntun yang menyebabkan script tidak dapat melanjutkan pekerjaannya, mohon cek script pada master-server:\n{e}",
-            )
+            # fungsi.kirim_bot_telegram(
+            #     judul=f"KESALAHAN PADA {ui.judul()}",
+            #     isi_pesan=f"Terjadi kesalahan beruntun yang menyebabkan script tidak dapat melanjutkan pekerjaannya, mohon cek script pada master-server:\n{e}",
+            # )
         time.sleep(1)

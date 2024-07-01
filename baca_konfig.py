@@ -5,6 +5,7 @@ Script ini akan membaca file konfigurasi json dan melakukan inisiasi data dan ex
 
 from binance import Client
 from tvDatafeed import TvDatafeed
+import ccxt
 
 from api_rahasia.konfigurasi import Konfigurasi
 
@@ -26,6 +27,14 @@ class Inisiasi:
         USERNAME = self.konfigurasi.DataFeed["USERNAME"]
         PASSWORD = self.konfigurasi.DataFeed["PASSWORD"]
         return TvDatafeed(USERNAME, PASSWORD)
+    
+    def data(self, data_exchange: str) -> ccxt:
+        exchange_class = getattr(ccxt, data_exchange)
+        exchange = exchange_class({
+            "apiKey": f'{self.konfigurasi.Exchange["BINANCE"]["KUNCI_API"]}',
+            "secret": f'{self.konfigurasi.Exchange["BINANCE"]["RAHASIA_API"]}',
+        })
+        return exchange
 
     def exchange(self) -> Client:
         # kunci API dan rahasia API di file konfigurasi
