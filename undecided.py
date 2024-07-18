@@ -26,9 +26,9 @@ PERIODE_BACKTEST = 1000
 # Interval waktu yang digunakan untuk melakukan evaluasi tindakan
 # Interval ini berbeda dengan interval waktu yang dipergunakan dalam
 # dalam menarik data chart
-INTERVAL_EVALUASI = ["0.2 menit"]
+INTERVAL_EVALUASI = ["0.01 menit"]
 # Interval waktu chart yang dikembalikan oleh tradingview
-INTERVAL_CHART = ["1 hari"]
+INTERVAL_CHART = ["30 menit"]
 # VARIABEL ASET
 ASET_DATA = "STORJ/USDT"
 ASET = "STORJUSDT"
@@ -37,7 +37,7 @@ DATA_EXCHANGE = "binanceusdm"
 LEVERAGE = 10
 INISIATOR_WAKTU = True
 JUMLAH_ERROR = 0
-JUMLAH_TRADE_USDT = 17
+JUMLAH_TRADE_USDT = 7
 inisiasi_konektor = Inisiasi()
 konektor_exchange = inisiasi_konektor.exchange()
 info_akun = InfoAkun(konektor_exchange)
@@ -199,7 +199,7 @@ while True:
         # strategi.jpao_smooth_ma_velocity(interval=INTERVAL_CHART, periode_ma=3, smoothing=2)  # type: ignore
         # strategi.jpao_ride_the_wave(interval=INTERVAL_CHART, periode_ma_cepat=4, periode_ma_lambat=49)  # type: ignore
         # strategi.jpao_double_smoothed_heiken_ashi(smoothed_ha=True, tipe_ma_smoothing=["ema"], smoothing_1=2, smoothing_2=2)  # type: ignore
-        strategi.jpao_closing_in_ma(periode_ma=14)
+        strategi.jpao_closing_in_ma(periode_ma=2)
 
         # Reset jumlah error b2eruntun
         JUMLAH_ERROR = 0

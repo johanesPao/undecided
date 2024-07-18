@@ -2695,187 +2695,35 @@ class Strategi:
 
     def jpao_closing_in_ma(
         self,
-        periode_ma: int = 9
+        periode_ma: int = 9,
+        smoothing_period: int = 0
     ) -> None | list:
-        # self.smoothed_ha = smoothed_ha
-        # self.tipe_ma_smoothing = tipe_ma_smoothing
-        # if self.smoothed_ha:
-        #     if len(self.tipe_ma_smoothing) < 1 or len(self.tipe_ma_smoothing) > 2:
-        #         return print(
-        #             f"STRATEGI DOUBLE SMOOTHING HEIKEN ASHI MEMBUTUHKAN 1 ATAU 2 JENIS MA UNTUK SMOOTHING!"
-        #         )
-        # self.smoothing_1 = smoothing_1
-        # self.smoothing_2 = smoothing_2
-        # self.periode_ma_1 = periode_ma_1
-        # self.periode_ma_2 = periode_ma_2
 
-        # if len(self.inter_chart) != 1:
-        #     return print(
-        #         "STRATEGI INI (jpao_double_smoothed_heiken_ashi) MENGGUNAKAN INTERVAL WAKTU DALAM LIST BERJUMLAH SATU"
-        #     )
+        # jumlah_bar dasar untuk pembentukan dasar 2 moving_average terakhir adalah periode_ma + 1,
+        # namun jika smoothing_period diset bukan 0, maka kita perlu shift jumlah_bar dengan jumlah periode
+        # pada smoothing_period
+        self.jumlah_bar = periode_ma + 1 + (0 if smoothing_period == 0 else smoothing_period)
 
-        # if self.periode_ma < self.k_cepat + self.k_lambat + self.d_lambat:  # type: ignore
-        #     return print(
-        #         "JUMLAH PARAMETER k_cepat, k_lambat dan d_lambat HARUS LEBIH KECIL DARI periode_ma"
-        #     )
-
-        # Karena kalkulasi melibatkan exponential moving average, nilainya bisa tidak akurat jika jumlah_bar terlalu sedikit
-        # sesuaikan jumlah bar dengan nilai heiken ashi pada versi live production
-        self.jumlah_bar = periode_ma + 1
+        print(self.jumlah_bar)
 
         waktu = self.fungsi.konverter_waktu(self.inter_chart[0])
-
-        # print(waktu)
-
-        # self.data = []
 
         self.df = self.model.ambil_data_historis(
             self.simbol_data, waktu, self.jumlah_bar
         )
 
-        # print(self.df)
-
-        # # Cek jika smoothed ha
-        # if self.smoothed_ha:
-        #     # nilai self.smoothing_1 dan self.smoothing_2 tidak boleh kurang dari 1
-        #     if self.smoothing_1 < 1 or self.smoothing_2 < 1:
-        #         return print(
-        #             "JIKA MENGGUNAKAN METODE SMOOTHED_HA, PASTIKAN SMOOTHING_1 DAN SMOOTHING_2 LEBIH BESAR DARI 0"
-        #         )
-        # # Cek jika hedging
-        # if hedging:
-        #     if not (len(self.inter_chart) == 1 and len(self.inter_eval) == 1 and self.inter_chart != self.inter_eval):
-        #         return print("PASTIKAN self.inter_chart DAN self.inter_eval MASING - MASING MEMILIKI PANJANG 1 DAN NILAINY TIDAK SAMA")
-        
-        # MA
         self.ma = pd.DataFrame(
             self.analisa_teknikal.moving_average(
                 self.df["close"], periode_ma, backtest=self.backtest
             )
         )
-        self.ma_close = self.ma["close"].iloc[-1:].values[0]
-        self.close = self.df["close"].iloc[-1:].values[0]
-        # print("ma_close: ", self.ma_close)
-        # print("close: ", self.close)
+        self.ma_close = self.ma["close"].iloc[-2:].values
 
-        # print(self.ma)
-        # self.seri_ma_2 = [pd.DataFrame(
-        #     self.analisa_teknikal.moving_average(
-        #         df["close"], self.periode_ma_2, backtest=self.backtest
-        #     )
-        # ) for df in self.df]
+        # print('ma_close is: ', self.ma_close)
 
-        # # Heiken Ashi smoothed
-        # self.df_ha = [self.analisa_teknikal.heiken_ashi(
-        #     df,
-        #     tipe_ma=self.tipe_ma_smoothing,
-        #     smoothed=self.smoothed_ha,
-        #     smooth_period_1=self.smoothing_1,
-        #     smooth_period_2=self.smoothing_2,
-        #     mode_harga_penutupan=self.mode_harga_penutupan,
-        #     backtest=self.backtest,
-        # ) for df in self.df]
+        self.data_to_evaluate = self.ma_close if smoothing_period == 0 else self.analisa_teknikal.moving_average(self.ma["close"], smoothing_period, self.backtest).iloc[-2:].values
 
-        # # cek jika hasil seri_ma dan heiken ashi tidak None
-        # if (
-        #     self.seri_ma_1 is not None
-        #     and self.seri_ma_2 is not None
-        #     and self.df_ha is not None
-        # ):
-        #     for indeks in range(len(self.df)):
-        #         self.df[indeks][f"ma_{self.periode_ma_1}"] = self.seri_ma_1[indeks].values
-        #         self.df[indeks][f"ma_{self.periode_ma_2}"] = self.seri_ma_2[indeks].values
-        #         self.df[indeks]["buka_ha"] = self.df_ha[indeks]["buka_ha"].values
-        #         self.df[indeks]["tinggi_ha"] = self.df_ha[indeks]["tinggi_ha"].values
-        #         self.df[indeks]["rendah_ha"] = self.df_ha[indeks]["rendah_ha"].values
-        #         self.df[indeks]["tutup_ha"] = self.df_ha[indeks]["tutup_ha"].values
-
-        # # drop baris dengan nilai NaN
-        # for indeks in range(len(self.df)):
-        #     self.df[indeks].dropna(
-        #         subset=[
-        #             f"ma_{self.periode_ma_1}",
-        #             f"ma_{self.periode_ma_2}",
-        #             "buka_ha",
-        #             "tinggi_ha",
-        #             "rendah_ha",
-        #             "tutup_ha",
-        #         ],
-        #         inplace=True,
-        #     )
-
-        # # Ambil data tergantung mode backtest
-        # if self.backtest:
-        #     # Semua baris tidak termasuk baris terakhir
-        #     for indeks in range(len(self.df)):
-        #         self.df[indeks] = self.df[indeks].iloc[:-1]
-        # else:
-        #     # Dua baris data terakhir tidak termasuk baris data terakhir
-        #     # Untuk live dilakukan perubahan data yang dikembalikan untuk
-        #     # memasukkan harga terakhir (belum tutup) jika self.mode_harga_penutupan
-        #     # adalah False dan sebaliknya
-        #     for indeks in range(len(self.df)):
-        #         self.df[indeks] = (
-        #             self.df[indeks].iloc[-3:-1] if self.mode_harga_penutupan else self.df[indeks].iloc[-2:]
-        #         )
-
-        # # spread tutup dan buka Heiken Ashi upscale 100000
-        # for indeks in range(len(self.df)):
-        #     self.df[indeks] = self.df[indeks].assign(
-        #         ha_spread=lambda x: (round((x.tutup_ha - x.buka_ha) * 100000, 6))
-        #     )
-
-        # # evaluasi kondisi moving average
-        # # memilah ma_cepat
-        # periode_ma_cepat = (
-        #     self.periode_ma_1
-        #     if self.periode_ma_1 <= self.periode_ma_2
-        #     else self.periode_ma_2
-        # )
-        # periode_ma_lambat = (
-        #     self.periode_ma_2
-        #     if periode_ma_cepat == self.periode_ma_1
-        #     else self.periode_ma_1
-        # )
-        
-        # for data in self.df:
-        #     list_keadaan_ma = []
-        #     # print(data)
-        #     for baris in range(len(data)):
-        #         ma_naik = (
-        #             data.iloc[baris][f"ma_{periode_ma_cepat}"]
-        #             >= data.iloc[baris][f"ma_{periode_ma_lambat}"]
-        #         )
-        #         if ma_naik:
-        #             list_keadaan_ma.append("MA_NAIK")
-        #         else:
-        #             list_keadaan_ma.append("MA_TURUN")
-        #     # menambahkan list_keadaan_ma ke dalam self.df
-        #     data["keadaan_ma"] = list_keadaan_ma
-
-        # # jika spread negatif maka warna_ha MERAH dan jika positif HIJAU
-        # for data in self.df:
-        #     data["warna_ha"] = [
-        #         "HA_MERAH" if x <= 0 else "HA_HIJAU" for x in data["ha_spread"]
-        #     ]
-
-        # # jika spread melebar maka ha_state MEMBESAR dan jika menyempit maka has_state MENGECIL
-        # for data in self.df:
-        #     list_keadaan_ha = []
-        #     for baris in range(len(data)):
-        #         if baris != 0:
-        #             # Merubah keadaan_ha dari membesar atau mengecil menjadi positif atau negatif
-        #             positif = (
-        #                 data.iloc[baris].ha_spread > data.iloc[baris - 1].ha_spread
-        #             )
-        #             # membesar = abs(self.df.iloc[baris].ha_spread) >= abs(
-        #             #     self.df.iloc[baris - 1].ha_spread
-        #             # )
-        #             list_keadaan_ha.append("POSITIF" if positif else "NEGATIF")
-        #         else:
-        #             list_keadaan_ha.append(np.nan)
-        #     # menambahkan list_keadaan_ha ke dalam self.df
-        #     data["keadaan_ha"] = list_keadaan_ha
+        # print(f'Data to Evaluate [{'No Smoothing' if smoothing_period == 0 else f'Smoothing for {smoothing_period} Periods'}]', self.data_to_evaluate)
 
         # FUNGSI SAAT LIVE
         def live(list_data: list = self.df) -> str | None:
@@ -2900,101 +2748,28 @@ class Strategi:
             harga_koin_terakhir = self.akun.harga_koin_terakhir(self.simbol)
             kuantitas_koin = float(TRADE_USDT * self.leverage / harga_koin_terakhir)
 
-            # harga_terakhir = list_data[0].iloc[-1].close
-
-        #     buka_ha = [list_data[0].iloc[-1].buka_ha if not hedging else data.iloc[-1].buka_ha for data in list_data]
-        #     tinggi_ha = [list_data[0].iloc[-1].tinggi_ha if not hedging else data.iloc[-1].tinggi_ha for data in list_data]
-        #     rendah_ha = [list_data[0].iloc[-1].rendah_ha if not hedging else data.iloc[-1].rendah_ha for data in list_data]
-        #     tutup_ha = [list_data[0].iloc[-1].tutup_ha if not hedging else data.iloc[-1].tutup_ha for data in list_data]
-        #     keadaan_ha = [list_data[0].iloc[-1].keadaan_ha if not hedging else data.iloc[-1].keadaan_ha for data in list_data]
-
-        #     warna_ha = [list_data[0].iloc[-1].warna_ha if not hedging else data.iloc[-1].warna_ha for data in list_data]
-        #     # warna_ha_sebelumnya = list_data[0].iloc[-2].warna_ha
-
             self.ui.label_nilai(
-                label="Harga Terakhir",
-                nilai=round(self.close,7),
+                label=f'MA Sebelumnya [{'No Smoothing' if smoothing_period == 0 else f'Smoothing {smoothing_period} Periods'}]',
+                nilai=round(self.data_to_evaluate[0],7),
                 spasi_label=50,
             )
             self.ui.label_nilai(
-                label="MA Terakhir",
-                nilai=round(self.ma_close,7),
+                label=f'MA Saat Ini [{'No Smoothing' if smoothing_period == 0 else f'Smoothing {smoothing_period} Periods'}]',
+                nilai=round(self.data_to_evaluate[1],7),
                 spasi_label=50,
             )
-        #     print("")
-        #     print("Data Smoothed Heiken Ashi Terakhir:")
-        #     if hedging:
-        #         print("\nHigher time frame:")
-        #         self.ui.label_nilai(
-        #             label=f"Pembukaan",
-        #             nilai=round(buka_ha[long_indeks], 8),
-        #             spasi_label=50,
-        #         )
-        #         self.ui.label_nilai(
-        #             label=f"Tertinggi",
-        #             nilai=round(tinggi_ha[long_indeks], 8),
-        #             spasi_label=50,
-        #         )
-        #         self.ui.label_nilai(
-        #             label=f"Terendah",
-        #             nilai=round(rendah_ha[long_indeks], 8),
-        #             spasi_label=50,
-        #         )
-        #         self.ui.label_nilai(
-        #             label=f"Penutupan",
-        #             nilai=round(tutup_ha[long_indeks], 8),
-        #             spasi_label=50,
-        #         )
-        #         self.ui.label_nilai(label=f"Keadaan HA", nilai=keadaan_ha[long_indeks], spasi_label=50)
-        #         self.ui.label_nilai(
-        #             label=f"Warna HA",
-        #             nilai=warna_ha[long_indeks],
-        #             spasi_label=50,
-        #         )
-        #         print("\nLower time frame:")
-        #     self.ui.label_nilai(
-        #         label=f"Pembukaan",
-        #         nilai=round(buka_ha[0 if not hedging else short_indeks], 8),
-        #         spasi_label=50,
-        #     )
-        #     self.ui.label_nilai(
-        #         label=f"Tertinggi",
-        #         nilai=round(tinggi_ha[0 if not hedging else short_indeks], 8),
-        #         spasi_label=50,
-        #     )
-        #     self.ui.label_nilai(
-        #         label=f"Terendah",
-        #         nilai=round(rendah_ha[0 if not hedging else short_indeks], 8),
-        #         spasi_label=50,
-        #     )
-        #     self.ui.label_nilai(
-        #         label=f"Penutupan",
-        #         nilai=round(tutup_ha[0 if not hedging else short_indeks], 8),
-        #         spasi_label=50,
-        #     )
-        #     self.ui.label_nilai(label=f"Keadaan HA", nilai=keadaan_ha[0 if not hedging else short_indeks], spasi_label=50)
-        #     self.ui.label_nilai(
-        #         label=f"Warna HA",
-        #         nilai=warna_ha[0 if not hedging else short_indeks],
-        #         spasi_label=50,
-        #     )
-            print(f"\n{Fore.RED if self.close <= self.ma_close else Fore.GREEN}{"[BELOW MA]" if self.close <= self.ma_close else "[ABOVE MA]"}{Style.RESET_ALL}")
-        #     if not hedging:
-        #         print(
-        #             f"\nMODE STRATEGI: \nDOUBLE SMOOTHED HEIKEN ASHI (smoothing 1: {self.smoothing_1}; smoothing 2: {self.smoothing_2}) {Fore.RED if warna_ha[0] == 'HA_MERAH' else Fore.GREEN}[{warna_ha[0]}]{Style.RESET_ALL} {Fore.RED if keadaan_ha[0] == 'NEGATIF' else Fore.GREEN}[{keadaan_ha[0]}]{Style.RESET_ALL}"
-        #         )
-        #     else:
-        #         print(
-        #             f"\nMODE STRATEGI: \nDOUBLE SMOOTHED HEIKEN ASHI (smoothing 1: {self.smoothing_1}; smoothing 2: {self.smoothing_2}; higher time frame) {Fore.RED if warna_ha[long_indeks] == 'HA_MERAH' else Fore.GREEN}[{warna_ha[long_indeks]}]{Style.RESET_ALL} {Fore.RED if keadaan_ha[long_indeks] == 'NEGATIF' else Fore.GREEN}[{keadaan_ha[long_indeks]}]{Style.RESET_ALL}"
-        #         )
-        #         print(f"\nDOUBLE SMOOTHED HEIKEN ASHI (smoothing 1: {self.smoothing_1}; smoothing 2: {self.smoothing_2}; lower time frame) {Fore.RED if warna_ha[short_indeks] == 'HA_MERAH' else Fore.GREEN}[{warna_ha[short_indeks]}]{Style.RESET_ALL} {Fore.RED if keadaan_ha[short_indeks] == 'NEGATIF' else Fore.GREEN}[{keadaan_ha[short_indeks]}]{Style.RESET_ALL}")
 
-        #     # Pada dasarnya terdapat dua kondisi, HA_MERAH dan HA_HIJAU, tergantung warna_ha, kita akan melakukan hedging
-        #     # Contoh: Saat HA_MERAH kita ingin membuka dan menjaga posisi SHORT namun pada warna_ha HA_MERAH dan keadaan_ha POSITIF kita juga akan membuka LONG,
-        #     # LONG ini ditutup jika keadaan_ha berubah menjadi NEGATIF dan warna_ha masih HA_MERAH. Sebaliknya, kita ingin membuka dan menjaga posisi LONG saat
-        #     # warna_ha HIJAU dan membuka SHORT jika keadaan_ha berubah menjadi NEGATIF, SHORT ini akan ditutup jika keadaan_ha berubah menjadi POSITIF
-        #     # SKENARIO I (HA_MERAH)
-            if self.close <= self.ma_close * (1 - 0.00625):
+            print(f"""\n{
+                Fore.RED if self.data_to_evaluate[1] < self.data_to_evaluate[0] else 
+                Fore.CYAN if self.data_to_evaluate[1] == self.data_to_evaluate[0] 
+                else Fore.GREEN}
+                    {"[DOWNHILL MA]" if self.data_to_evaluate[1] < self.data_to_evaluate[0] else 
+                     "[FLAT MA]" if self.data_to_evaluate[1] == self.data_to_evaluate[0] else 
+                     "[UPHILL MA]"
+                    }
+                {Style.RESET_ALL}""")
+        
+            if self.data_to_evaluate[1] < self.data_to_evaluate[0]:
                 # TUTUP LONG jika ada
                 if "LONG" in POSISI:
                     self.order.tutup_long(
@@ -3006,7 +2781,7 @@ class Strategi:
                     self.kuantitas_short_dsha = self.order.buka_short(
                         kuantitas_koin, leverage=self.leverage
                     )
-            elif self.close > self.ma_close * (1 + 0.00625):
+            elif self.data_to_evaluate[1] > self.data_to_evaluate[0]:
                 # TUTUP SHORT jika ada
                 if "SHORT" in POSISI:
                     self.order.tutup_short(
@@ -3018,119 +2793,5 @@ class Strategi:
                     self.kuantitas_long_dsha = self.order.buka_long(
                         kuantitas_koin, leverage=self.leverage
                     )
-        #     # if warna_ha == "HA_MERAH":
-        #     #     # BUKA POSISI JANGKA PANJANG SHORT
-        #     #     # TIDAK DIPERLUKAN CEK POSISI LONG PADA SKENARIO INI
-        #     #     if "SHORT" not in POSISI:
-        #     #         self.kuantitas_short_dsha = self.order.buka_short(
-        #     #             kuantitas_koin, leverage=self.leverage
-        #     #         )
-        #     #     # KONDISI EXIT LONG:
-        #     #     if keadaan_ha == "NEGATIF" and "LONG" in POSISI:
-        #     #         self.order.tutup_long(
-        #     #             self.kuantitas_long_dsha, leverage=self.leverage
-        #     #         )
-        #     #         self.kuantitas_long_dsha = 0
-        #     #     # KONDISI ENTER LONG:
-        #     #     if keadaan_ha == "POSITIF" and "LONG" not in POSISI:
-        #     #         self.kuantitas_long_dsha = self.order.buka_long(
-        #     #             kuantitas_koin, leverage=self.leverage
-        #     #         )
-        #     # # SKENARIO II (HA_HIJAU)
-        #     # if warna_ha == "HA_HIJAU":
-        #     #     # BUKA POSISI JANGKA PANJANG LONG
-        #     #     # TIDAK DIPERLUKAN CEK POSISI SHORT PADA SKENARIO INI
-        #     #     if "LONG" not in POSISI:
-        #     #         self.kuantitas_long_dsha = self.order.buka_long(
-        #     #             kuantitas_koin, leverage=self.leverage
-        #     #         )
-        #     #     # KONDISI EXIT SHORT:
-        #     #     if keadaan_ha == "POSITIF" and "SHORT" in POSISI:
-        #     #         self.order.tutup_short(
-        #     #             self.kuantitas_short_dsha, leverage=self.leverage
-        #     #         )
-        #     #         self.kuantitas_short_dsha = 0
-        #     #     # KONDISI ENTER SHORT:
-        #     #     if keadaan_ha == "NEGATIF" and "SHORT" not in POSISI:
-        #     #         self.kuantitas_short_dsha = self.order.buka_short(
-        #     #             kuantitas_koin, leverage=self.leverage
-        #     #         )
-
-            # # Perubahan implementasi strategi di atas tanpa posisi hedging
-            # # Hal ini juga berarti kita tidak akan melakukan evaluasi terhadap warna_ha
-            # # Dan hanya akan memegang satu posisi di satu waktu berdasar keadaan_ha
-            # # SKENARIO I (keadaan_ha NEGATIF)
-            # if not hedging:
-            #     if keadaan_ha[0] == "NEGATIF":
-            #         # CEK POSISI LONG
-            #         if "LONG" in POSISI:
-            #             # TUTUP POSISI LONG
-            #             self.order.tutup_long(
-            #                 self.kuantitas_long_dsha, leverage=self.leverage
-            #             )
-            #             self.kuantitas_long_dsha = 0
-            #         # CEK POSISI SHORT
-            #         if "SHORT" not in POSISI:
-            #             # BUKA POSISI SHORT
-            #             self.kuantitas_short_dsha = self.order.buka_short(
-            #                 kuantitas_koin, leverage=self.leverage
-            #             )
-            #     # SKENARIO II (keadaan_ha POSITIF)
-            #     else:
-            #         # CEK POSISI SHORT
-            #         if "SHORT" in POSISI:
-            #             # TUTUP POSISI SHORT
-            #             self.order.tutup_short(
-            #                 self.kuantitas_short_dsha, leverage=self.leverage
-            #             )
-            #             self.kuantitas_short_dsha = 0
-            #         # CEK POSISI LONG
-            #         if "LONG" not in POSISI:
-            #             # BUKA POSISI LONG
-            #             self.kuantitas_long_dsha = self.order.buka_long(
-            #                 kuantitas_koin, leverage=self.leverage
-            #             )
-            # else:
-            #     # CEK POSISI PADA HIGHER TIME FRAME
-            #     if keadaan_ha[long_indeks] == 'NEGATIF':
-            #         # CEK POSISI SHORT
-            #         if "SHORT" not in POSISI:
-            #             self.kuantitas_short_dsha = self.order.buka_short(
-            #                 kuantitas_koin, leverage=self.leverage
-            #             )
-            #         # CEK DAN TUTUP POSISI LONG JIKA keadaan_ha PADA short_indeks NEGATIF
-            #         if keadaan_ha[short_indeks] == 'NEGATIF':
-            #             # CEK JIKA ADA EXISTING POSISI LONG, TUTUP LONG
-            #             if "LONG" in POSISI:
-            #                 self.order.tutup_long(
-            #                     self.kuantitas_long_dsha, leverage=self.leverage
-            #                 )
-            #                 self.kuantitas_long_dsha = 0
-            #         # CEK DAN BUKA POSISI LONG BARU JIKA keadaan_ha PADA short_indeks POSITIF dan "LONG" not in POSISI
-            #         else:
-            #             if "LONG" not in POSISI:
-            #                 self.kuantitas_long_dsha = self.order.buka_long(
-            #                     kuantitas_koin, leverage=self.leverage
-            #                 )
-            #     else:
-            #         # CEK POSISI LONG
-            #         if "LONG" not in POSISI:
-            #             self.kuantitas_long_dsha = self.order.buka_long(
-            #                 kuantitas_koin, leverage=self.leverage
-            #             )
-            #         # CEK DAN TUTUP POSISI SHORT JIKA keadaan_ha PADA short_indeks POSITIF
-            #         if keadaan_ha[short_indeks] == 'POSITIF':
-            #             # CEK JIKA ADA EXISTING POSISI SHORT, TUTUP SHORT
-            #             if "SHORT" in POSISI:
-            #                 self.order.tutup_short(
-            #                     self.kuantitas_short_dsha, leverage=self.leverage
-            #                 )
-            #                 self.kuantitas_short_dsha = 0
-            #         # CEK DAN BUKA POSISI SHORT JIKA keadaan_ha PADA short_indeks NEGATIF dan "SHORT" not in POSISI
-            #         else:
-            #             if "SHORT" not in POSISI:
-            #                 self.kuantitas_short_dsha = self.order.buka_short(
-            #                     kuantitas_koin, leverage=self.leverage
-            #                 )
 
         live()
