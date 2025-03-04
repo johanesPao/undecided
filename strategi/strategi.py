@@ -40,6 +40,7 @@ class Strategi:
         leverage: int = 10,
         inter_eval: list[str] = [],
         inter_chart: list[str] = [],
+        bar_timestamp: int = 0,
         mode_harga_penutupan: bool = True,
         backtest: bool = False,
         jumlah_periode_backtest: int = 0,
@@ -70,6 +71,7 @@ class Strategi:
         self.leverage = leverage
         self.inter_eval = inter_eval
         self.inter_chart = inter_chart
+        self.bar_timestamp = bar_timestamp
         self.mode_harga_penutupan = mode_harga_penutupan
         self.backtest = backtest
         if not self.backtest:
@@ -1999,6 +2001,92 @@ class Strategi:
         else:
             print(backtest())
 
+    def jpao_naive_strat(self, threshold_pct: float = 0.0025):
+        if len(self.inter_chart) != 1:
+            return print(
+                "STRATEGI INI (jpao_naive_strat) MENGGUNAKAN INTERVAL WAKTU DALAM LIST BERJUMLAH SATU"
+            )
+
+        # VARIABEL DAN KONSTANTA
+        DATA_POSISI_FUTURES = self.posisi_futures
+        # cek posisi aset yang dipegang saat ini
+        POSISI = DATA_POSISI_FUTURES["positionSide"].unique().tolist()
+        if "SHORT" in POSISI:
+            data_short = DATA_POSISI_FUTURES[
+                DATA_POSISI_FUTURES["positionSide"] == "SHORT"
+            ]
+            # kuantitas short yang perlu ditutup
+            self.kuantitas_short_dsha = abs(int(data_short.iloc[0]["positionAmt"]))
+        if "LONG" in POSISI:
+            data_long = DATA_POSISI_FUTURES[
+                DATA_POSISI_FUTURES["positionSide"] == "LONG"
+            ]
+            # kuantitas long yang perlu ditutup
+            self.kuantitas_long_dsha = int(data_long.iloc[0]["positionAmt"])
+
+        TRADE_USDT = self.jumlah_trade_usdt
+        harga_koin_terakhir = self.akun.harga_koin_terakhir(self.simbol)
+        kuantitas_koin = float(TRADE_USDT * self.leverage / harga_koin_terakhir)
+
+
+        waktu = self.fungsi.konverter_waktu(self.inter_chart[0])
+
+        self.df = self.model.ambil_data_historis(self.simbol_data, waktu, 2)
+
+        print(self.df)
+
+        # cek jika self.bar_timestamp kosong, means the program being run for the first time, assign it with self.df.timestamp.iloc[-1]
+        if self.bar_timestamp == 0:
+            self.bar_timestamp = self.df.timestamp.iloc[-1]
+
+        # cek close open difference
+        close_open_pct_diff = (self.df.close.iloc[-1] - self.df.open.iloc[-1]) / self.df.open.iloc[-1]
+        print(f"close_open_pct_diff: {close_open_pct_diff}")
+
+        # cek jika self.bar_timestamp berbeda dengan self.df.timestamp.iloc[-1], tutup posisi yang ada apapun itu
+        if self.bar_timestamp != self.df.timestamp.iloc[-1]:
+            if "SHORT" in POSISI:
+                # TUTUP POSISI SHORT
+                self.order.tutup_short(
+                    self.kuantitas_short_dsha, leverage=self.leverage
+                )
+                self.kuantitas_short_dsha = 0
+            if "LONG" in POSISI:
+                # TUTUP POSISI LONG
+                self.order.tutup_long(
+                    self.kuantitas_long_dsha, leverage=self.leverage
+                )
+                self.kuantitas_long_dsha = 0
+        # sebaliknya jika self.bar_timestamp sama dengan self.df.timestamp.iloc[-1]
+        else:
+            # jika close_open_pct_diff lebih besar atau sama dengan 0 + threshold_pct
+            if close_open_pct_diff >= 0 + threshold_pct:
+                # jika ada posisi SHORT tutup posisi SHORT terlebih dahulu
+                if "SHORT" in POSISI:
+                    self.order.tutup_short(
+                        self.kuantitas_short_dsha, leverage=self.leverage
+                    )
+                    self.kuantitas_short_dsha = 0
+                # then open LONG position afterward jika posisi LONG belum ada
+                if "LONG" not in POSISI:
+                    self.kuantitas_long_dsha = self.order.buka_long(
+                        kuantitas_koin, leverage=self.leverage
+                    )
+            # sebaliknya dan eksklusif hanya jika close_open_pct_diff lebih kecil atau sama dengan 0 - threshold_pct
+            if close_open_pct_diff <= 0 - threshold_pct:
+                # jika ada posisi LONG tutup posisi LONG terlebih dahulu
+                if "LONG" in POSISI:
+                    self.order.tutup_long(
+                        self.kuantitas_long_dsha, leverage=self.leverage
+                    )
+                    self.kuantitas_long_dsha = 0
+                # then open SHORT position afterward, jika posisi SHORT belum ada
+                if "SHORT" not in POSISI:
+                    self.kuantitas_short_dsha = self.order.buka_short(
+                        kuantitas_koin, leverage=self.leverage
+                    )
+        # THAT'S ALL FOLKS! :)
+
     def jpao_double_smoothed_heiken_ashi(
         self,
         smoothed_ha: bool = False,
@@ -2045,7 +2133,7 @@ class Strategi:
             if self.backtest
             else (
                 max(
-                    (self.smoothing_1 + self.smoothing_2) * 10,
+                    (self.smoothing_1 + self.smoothing_2) * 5,
                     max(self.periode_ma_1, self.periode_ma_2),
                 )
                 + 2
@@ -2185,7 +2273,7 @@ class Strategi:
                 "HA_MERAH" if x <= 0 else "HA_HIJAU" for x in data["ha_spread"]
             ]
 
-        # jika spread melebar maka ha_state MEMBESAR dan jika menyempit maka has_state MENGECIL
+        # jika spread melebar maka ha_state MEMBESAR dan jika menyempit maka ha_state MENGECIL
         for data in self.df:
             list_keadaan_ha = []
             for baris in range(len(data)):
@@ -2356,6 +2444,7 @@ class Strategi:
             # Hal ini juga berarti kita tidak akan melakukan evaluasi terhadap warna_ha
             # Dan hanya akan memegang satu posisi di satu waktu berdasar keadaan_ha
             # SKENARIO I (keadaan_ha NEGATIF)
+
             if not hedging:
                 if keadaan_ha[0] == "NEGATIF":
                     # CEK POSISI LONG
@@ -2688,10 +2777,10 @@ class Strategi:
         #     return f'Profit dan Loss menggunakan strategi ini: {float(sum(df_backtest["profit_dan_loss"].fillna(0)))} dollar'  # type: ignore
 
         # jika live stream strategi
-        # if not self.backtest:
-        #     live()
-        # else:
-        #     print(backtest())
+        if not self.backtest:
+            live()
+        else:
+            print(backtest())
 
     def jpao_closing_in_ma(
         self,
@@ -2717,7 +2806,15 @@ class Strategi:
                 self.df["close"], periode_ma, backtest=self.backtest
             )
         )
+
+        self.smooth_ma = pd.DataFrame(
+            self.analisa_teknikal.moving_average(
+                self.ma["close"], smoothing_period, backtest=self.backtest
+            )
+        )
+
         self.ma_close = self.ma["close"].iloc[-2:].values
+        self.smooth_ma_close = self.smooth_ma["close"].iloc[-2:].values
 
         # print('ma_close is: ', self.ma_close)
 
@@ -2749,13 +2846,13 @@ class Strategi:
             kuantitas_koin = float(TRADE_USDT * self.leverage / harga_koin_terakhir)
 
             self.ui.label_nilai(
-                label=f'MA Sebelumnya [{'No Smoothing' if smoothing_period == 0 else f'Smoothing {smoothing_period} Periods'}]',
-                nilai=round(self.data_to_evaluate[0],7),
+                label=f'MA Saat Ini',
+                nilai=round(self.ma_close[1],7),
                 spasi_label=50,
             )
             self.ui.label_nilai(
-                label=f'MA Saat Ini [{'No Smoothing' if smoothing_period == 0 else f'Smoothing {smoothing_period} Periods'}]',
-                nilai=round(self.data_to_evaluate[1],7),
+                label=f'MA Smoothing Saat Ini [Smoothing {smoothing_period} Periods]',
+                nilai=round(self.smooth_ma_close[1],7),
                 spasi_label=50,
             )
 
@@ -2769,7 +2866,7 @@ class Strategi:
                     }
                 {Style.RESET_ALL}""")
         
-            if self.data_to_evaluate[1] < self.data_to_evaluate[0]:
+            if self.ma_close[1] < self.ma_close[0]:
                 # TUTUP LONG jika ada
                 if "LONG" in POSISI:
                     self.order.tutup_long(
@@ -2781,7 +2878,7 @@ class Strategi:
                     self.kuantitas_short_dsha = self.order.buka_short(
                         kuantitas_koin, leverage=self.leverage
                     )
-            elif self.data_to_evaluate[1] > self.data_to_evaluate[0]:
+            elif self.ma_close[1] > self.ma_close[0]:
                 # TUTUP SHORT jika ada
                 if "SHORT" in POSISI:
                     self.order.tutup_short(

@@ -237,9 +237,9 @@ class Order:
             print(kalimat)
         except Exception as e:
             kalimat = f"Posisi LONG tidak berhasil ditutup untuk {self.aset}:\n{e}"
-            self.fungsi.kirim_bot_telegram(
-                judul="LONG GAGAL DITUTUP", isi_pesan=kalimat
-            )
+            #self.fungsi.kirim_bot_telegram(
+            #    judul="LONG GAGAL DITUTUP", isi_pesan=kalimat
+            #)
 
     def tutup_short(
         self, kuantitas: float, leverage: int = 10, tipe_order: str = "MARKET"
@@ -292,6 +292,6 @@ class Order:
             print(kalimat)
         except Exception as e:
             kalimat = f"Posisi SHORT tidak berhasil ditutup untuk {self.aset}:\n{e}"
-            self.fungsi.kirim_bot_telegram(
-                judul="SHORT GAGAL DITUTUP", isi_pesan=kalimat
-            )
+            #self.fungsi.kirim_bot_telegram(
+            #    judul="SHORT GAGAL DITUTUP", isi_pesan=kalimat
+            #)
