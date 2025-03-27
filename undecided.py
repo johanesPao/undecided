@@ -28,7 +28,7 @@ PERIODE_BACKTEST = 1000
 # dalam menarik data chart
 INTERVAL_EVALUASI = ["0.1 menit"]
 # Interval waktu chart yang dikembalikan oleh tradingview
-INTERVAL_CHART = ["1 hari"]
+INTERVAL_CHART = ["1 menit"]
 # VARIABEL ASET
 ASET_DATA = "1000SHIB/USDT"
 ASET = "1000SHIBUSDT"
@@ -37,7 +37,7 @@ DATA_EXCHANGE = "binanceusdm"
 LEVERAGE = 10
 INISIATOR_WAKTU = True
 JUMLAH_ERROR = 0
-JUMLAH_TRADE_USDT = 6
+JUMLAH_TRADE_USDT = 1
 inisiasi_konektor = Inisiasi()
 konektor_exchange = inisiasi_konektor.exchange()
 info_akun = InfoAkun(konektor_exchange)
@@ -67,6 +67,21 @@ for waktu in INTERVAL_CHART:
 # Mode ini menentukan penggunaan harga penutupan terakhir atau harga terakhir
 MODE_HARGA_PENUTUPAN = False if int_eva_konv <= min(list_int_chart) else True
 INDEX_INTERVAL_CHART_TERKECIL = list_int_chart.index(min(list_int_chart))
+
+# Initiate objek Strategi di awal
+strategi = Strategi(
+    ASET_DATA,
+    ASET,
+    EXCHANGE,
+    DATA_EXCHANGE,
+    leverage=LEVERAGE,
+    inter_eval=INTERVAL_EVALUASI,
+    inter_chart=INTERVAL_CHART,
+    mode_harga_penutupan=MODE_HARGA_PENUTUPAN,
+    backtest=MODE_BACKTEST,
+    jumlah_periode_backtest=PERIODE_BACKTEST,
+    jumlah_trade_usdt=JUMLAH_TRADE_USDT
+)
 
 while True:
     try:
@@ -178,31 +193,16 @@ while True:
         # Hentikan inisiator_waktu
         INISIATOR_WAKTU = False
 
-        # Inisiasi strategi
-        strategi = Strategi(
-            ASET_DATA,
-            ASET,
-            EXCHANGE,
-            DATA_EXCHANGE,
-            leverage=LEVERAGE,
-            inter_eval=INTERVAL_EVALUASI,
-            inter_chart=INTERVAL_CHART,
-            mode_harga_penutupan=MODE_HARGA_PENUTUPAN,
-            backtest=MODE_BACKTEST,
-            jumlah_periode_backtest=PERIODE_BACKTEST,
-            jumlah_trade_usdt=JUMLAH_TRADE_USDT,
-        )
-
         # Eksekusi strategi
         # strategi.jpao_niten_ichi_ryu_28_16_8(interval=INTERVAL_CHART, k_cepat=24, k_lambat=16, d_lambat=8)  # type: ignore
         # strategi.jpao_ride_the_ema(interval=INTERVAL_CHART, periode_ema=37, smoothing=2, dual_ema=True, periode_ema_cepat=5)  # type: ignore
         # strategi.jpao_smooth_ma_velocity(interval=INTERVAL_CHART, periode_ma=3, smoothing=2)  # type: ignore
         # strategi.jpao_ride_the_wave(interval=INTERVAL_CHART, periode_ma_cepat=4, periode_ma_lambat=49)  # type: ignore
         # strategi.jpao_double_smoothed_heiken_ashi(smoothed_ha=True, tipe_ma_smoothing=["ema"], smoothing_1=1, smoothing_2=1)  # type: ignore
-        strategi.jpao_naive_strat()
+        strategi.jpao_naive_strat(threshold_pct=0.0025)
         # strategi.jpao_closing_in_ma(periode_ma=1, smoothing_period=5)
 
-        # Reset jumlah error b2eruntun
+        # Reset jumlah error beruntun
         JUMLAH_ERROR = 0
 
         # Kalibrasi waktu untuk eksekusi selanjutnya
