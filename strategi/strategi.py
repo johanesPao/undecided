@@ -40,7 +40,6 @@ class Strategi:
         leverage: int = 10,
         inter_eval: list[str] = [],
         inter_chart: list[str] = [],
-        bar_timestamp: int = 0,
         mode_harga_penutupan: bool = True,
         backtest: bool = False,
         jumlah_periode_backtest: int = 0,
@@ -71,7 +70,6 @@ class Strategi:
         self.leverage = leverage
         self.inter_eval = inter_eval
         self.inter_chart = inter_chart
-        self.bar_timestamp = bar_timestamp
         self.mode_harga_penutupan = mode_harga_penutupan
         self.backtest = backtest
         if not self.backtest:
@@ -97,6 +95,7 @@ class Strategi:
         self.kuantitas_short_svm = 0
         self.kuantitas_long_dsha = 0
         self.kuantitas_short_dsha = 0
+        self.bar_timestamp = 0
 
     def jpao_niten_ichi_ryu_28_16_8(
         self,
@@ -2001,7 +2000,7 @@ class Strategi:
         else:
             print(backtest())
 
-    def jpao_naive_strat(self, threshold_pct: float = 0.0025):
+    def jpao_naive_strat(self, threshold_pct: float = 0.001):
         if len(self.inter_chart) != 1:
             return print(
                 "STRATEGI INI (jpao_naive_strat) MENGGUNAKAN INTERVAL WAKTU DALAM LIST BERJUMLAH SATU"
@@ -2033,15 +2032,17 @@ class Strategi:
 
         self.df = self.model.ambil_data_historis(self.simbol_data, waktu, 2)
 
-        print(self.df)
-
         # cek jika self.bar_timestamp kosong, means the program being run for the first time, assign it with self.df.timestamp.iloc[-1]
         if self.bar_timestamp == 0:
             self.bar_timestamp = self.df.timestamp.iloc[-1]
 
         # cek close open difference
         close_open_pct_diff = (self.df.close.iloc[-1] - self.df.open.iloc[-1]) / self.df.open.iloc[-1]
-        print(f"close_open_pct_diff: {close_open_pct_diff}")
+        print(f"current bar_timestamp: {self.bar_timestamp}")
+        print(f"curremt self.df.timestamp.iloc[-1]: {self.df.timestamp.iloc[-1]}")
+        print(f"self.bar_timestamp equal self.df.timestamp.iloc[-1]: {self.bar_timestamp == self.df.timestamp.iloc[-1]}")
+        print(f"target pct switching at +-{threshold_pct}")
+        print(f"current_pct: {close_open_pct_diff}")
 
         # cek jika self.bar_timestamp berbeda dengan self.df.timestamp.iloc[-1], tutup posisi yang ada apapun itu
         if self.bar_timestamp != self.df.timestamp.iloc[-1]:
@@ -2057,6 +2058,8 @@ class Strategi:
                     self.kuantitas_long_dsha, leverage=self.leverage
                 )
                 self.kuantitas_long_dsha = 0
+            # set self.bar_timestamp dengan self.df.timestamp.iloc[-1]
+            self.bar_timestamp = self.df.timestamp.iloc[-1]
         # sebaliknya jika self.bar_timestamp sama dengan self.df.timestamp.iloc[-1]
         else:
             # jika close_open_pct_diff lebih besar atau sama dengan 0 + threshold_pct
@@ -2085,6 +2088,21 @@ class Strategi:
                     self.kuantitas_short_dsha = self.order.buka_short(
                         kuantitas_koin, leverage=self.leverage
                     )
+
+        # To minimize loss on some noisy days, we want to cut loss near 0
+        if (self.df.close.iloc[-1] - self.df.open.iloc[-1]) / self.df.open.iloc[-1] <= 0 and "LONG" in POSISI:
+            # cut loss LONG
+            self.order.tutup_long(
+                self.kuantitas_long_dsha, leverage=self.leverage
+            )
+            self.kuantitas_long_dsha = 0
+        if (self.df.close.iloc[-1] - self.df.open.iloc[-1]) / self.df.open.iloc[-1] >= 0 and "SHORT" in POSISI:
+            # cut loss SHORT
+            self.order.tutup_short(
+                self.kuantitas_short_dsha, leverage=self.leverage
+            )
+            self.kuantitas_short_dsha = 0
+
         # THAT'S ALL FOLKS! :)
 
     def jpao_double_smoothed_heiken_ashi(
