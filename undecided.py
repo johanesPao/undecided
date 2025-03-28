@@ -28,7 +28,7 @@ PERIODE_BACKTEST = 1000
 # dalam menarik data chart
 INTERVAL_EVALUASI = ["0.1 menit"]
 # Interval waktu chart yang dikembalikan oleh tradingview
-INTERVAL_CHART = ["1 menit"]
+INTERVAL_CHART = ["4 jam"]
 # VARIABEL ASET
 ASET_DATA = "1000SHIB/USDT"
 ASET = "1000SHIBUSDT"
@@ -192,6 +192,9 @@ while True:
 
         # Hentikan inisiator_waktu
         INISIATOR_WAKTU = False
+
+        # update parameter dan data strategi
+        strategi.update_portfolio()
 
         # Eksekusi strategi
         # strategi.jpao_niten_ichi_ryu_28_16_8(interval=INTERVAL_CHART, k_cepat=24, k_lambat=16, d_lambat=8)  # type: ignore

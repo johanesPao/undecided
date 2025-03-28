@@ -97,6 +97,18 @@ class Strategi:
         self.kuantitas_short_dsha = 0
         self.bar_timestamp = 0
 
+    def update_portfolio(self):
+        self.akun = InfoAkun(self.konektor_exchange)
+        (
+            self.fee_tier,
+            self.total_saldo,
+            self.saldo_tersedia,
+            self.saldo_terpakai,
+            self.laba_rugi_terbuka,
+            self.saldo_plus_profit,
+            self.posisi_futures
+        ) = self.akun.akun_futures()
+
     def jpao_niten_ichi_ryu_28_16_8(
         self,
         interval: List[
